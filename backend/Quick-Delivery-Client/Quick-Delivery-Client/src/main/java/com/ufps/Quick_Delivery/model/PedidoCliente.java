@@ -13,6 +13,14 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+/*
+    * Entidad que representa un pedido realizado por un cliente.
+
+    * Incluye detalles como el cliente, restaurante, fechas, método de pago, total, estado, etc.
+
+    * También contiene campos de auditoría para seguimiento de creación y actualización.(por hacer)
+ */
+
 @Entity
 @Table(name = "pedido_cliente")
 @Data
