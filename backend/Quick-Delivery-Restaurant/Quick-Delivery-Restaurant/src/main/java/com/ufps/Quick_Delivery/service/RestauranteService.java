@@ -1,0 +1,95 @@
+package com.ufps.Quick_Delivery.service;
+
+import com.ufps.Quick_Delivery.model.Restaurante;
+import com.ufps.Quick_Delivery.repository.RestauranteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Service
+public class RestauranteService {
+
+    private final RestauranteRepository repo;
+
+    // Inyecta el passwordEncoder como bean
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    public RestauranteService(RestauranteRepository repo, BCryptPasswordEncoder passwordEncoder) {
+        this.repo = repo;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public Optional<Restaurante> findByCorreo(String correo){
+        return repo.findByCorreo(correo);
+    }
+
+    public Restaurante createIfNotExists(String correo, String rawPassword){
+        return repo.findByCorreo(correo).orElseGet(() -> {
+            Restaurante r = Restaurante.builder()
+                    .correo(correo)
+                    .password(passwordEncoder.encode(rawPassword))
+                    .activo(true)
+                    .intentosFallidos(0)
+                    .lockedUntil(null)
+                    .build();
+            return repo.save(r);
+        });
+    }
+
+    public boolean checkPassword(Restaurante restaurante, String rawPassword){
+        return passwordEncoder.matches(rawPassword, restaurante.getPassword());
+    }
+
+    /**
+     * HU032 - Autenticación con bloqueo tras 3 intentos fallidos consecutivos
+     */
+    public String attemptLogin(String correo, String rawPassword){
+        Optional<Restaurante> or = repo.findByCorreo(correo);
+        if (or.isEmpty()) return "CREDENCIALES_INVALIDAS";
+
+        Restaurante r = or.get();
+
+        if (!r.isActivo()) return "CUENTA_SUSPENDIDA";
+
+        if (r.getLockedUntil() != null && r.getLockedUntil().isAfter(LocalDateTime.now())) {
+            return "CUENTA_BLOQUEADA_TEMPORALMENTE";
+        }
+
+        if (!checkPassword(r, rawPassword)) {
+            int fallos = r.getIntentosFallidos() + 1;
+            r.setIntentosFallidos(fallos);
+            if (fallos >= 3) {
+                r.setLockedUntil(LocalDateTime.now().plusMinutes(15));
+                r.setIntentosFallidos(0);
+                repo.save(r);
+                return "CUENTA_BLOQUEADA_TEMPORALMENTE";
+            } else {
+                repo.save(r);
+                return "CREDENCIALES_INVALIDAS";
+            }
+        }
+
+        // Éxito: reset intentos y unlock
+        r.setIntentosFallidos(0);
+        r.setLockedUntil(null);
+        repo.save(r);
+        return "OK";
+    }
+
+    /**
+     * HU034 - Suspender cuenta (requiere confirmación)
+     */
+    public boolean closeAccount(Long id, boolean confirm){
+        if(!confirm) return false;
+        Optional<Restaurante> or = repo.findById(id);
+        if(or.isEmpty()) return false;
+        Restaurante r = or.get();
+        r.setActivo(false);
+        repo.save(r);
+        return true;
+    }
+}
