@@ -3,6 +3,7 @@ package com.ufps.Quick_Delivery.controller;
 import com.ufps.Quick_Delivery.dto.AuthRequest;
 import com.ufps.Quick_Delivery.dto.AuthResponse;
 import com.ufps.Quick_Delivery.dto.CloseAccountRequest;
+import com.ufps.Quick_Delivery.dto.RegisterRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.service.RestauranteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,8 +74,16 @@ public class RestauranteController {
 
 // HU31 Registro de restaurante
 @PostMapping("/registro-completo")
-public ResponseEntity<?> registroCompleto(@RequestBody Restaurante nuevo) {
+public ResponseEntity<?> registroCompleto(@RequestBody RegisterRequest req) {
     try {
+        Restaurante nuevo = new Restaurante();
+        nuevo.setNombre(req.getNombre());
+        nuevo.setDireccion(req.getDireccion());
+        nuevo.setTelefono(req.getTelefono());
+        nuevo.setCorreo(req.getCorreo());
+        nuevo.setPassword(req.getPassword());
+        nuevo.setTipoCocina(req.getTipoCocina());
+
         Restaurante creado = service.registrarNuevo(nuevo);
         return ResponseEntity.created(URI.create("/api/restaurante/" + creado.getId()))
                 .body(new AuthResponse("Registro exitoso, revisa tu correo para confirmar la cuenta"));
@@ -84,4 +93,17 @@ public ResponseEntity<?> registroCompleto(@RequestBody Restaurante nuevo) {
         return ResponseEntity.internalServerError().body(new AuthResponse("Error al registrar restaurante"));
     }
 }
+// HU031 Confirmar cuenta
+@GetMapping("/confirmar")
+public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
+    boolean activado = service.confirmarCuenta(correo);
+    if (activado) {
+        return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
+    } else {
+        return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
+    }
 }
+
+}
+
+
