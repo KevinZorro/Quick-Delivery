@@ -92,4 +92,40 @@ public class RestauranteService {
         repo.save(r);
         return true;
     }
+// HU031 es el registro de un nuevo restaurante lo q hace este metodo es validar si no hay otro con el mismo correo y lo confirma y lo guarda si todo esta bien
+public Restaurante registrarNuevo(Restaurante r) {
+    if (repo.findByCorreo(r.getCorreo()).isPresent()) {
+        throw new IllegalArgumentException("Ya existe un restaurante con este correo");
+    }
+
+    if (r.getCorreo() == null || r.getPassword() == null || r.getNombre() == null ||
+        r.getDireccion() == null || r.getTelefono() == null ||
+        r.getTipoCocina() == null || r.getDocumentosLegales() == null) {
+        throw new IllegalArgumentException("Todos los campos son obligatorios");
+    }
+
+    r.setPassword(passwordEncoder.encode(r.getPassword()));
+    r.setActivo(false);
+    r.setIntentosFallidos(0);
+    r.setLockedUntil(null);
+
+    return repo.save(r);
+}
+
+// HU031 - Confirmar cuenta o activarla
+public boolean confirmarCuenta(String correo) {
+    Optional<Restaurante> or = repo.findByCorreo(correo);
+    if (or.isEmpty()) return false;
+
+    Restaurante r = or.get();
+    if (r.isActivo()) return false;
+
+    r.setActivo(true);
+    repo.save(r);
+    return true;
+}
+
+
+
+
 }
