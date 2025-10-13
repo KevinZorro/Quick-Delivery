@@ -70,4 +70,18 @@ public class RestauranteController {
         return ResponseEntity.created(URI.create("/api/restaurante/" + r.getId()))
                 .body(new AuthResponse("Registro exitoso"));
     }
+
+// HU31 Registro de restaurante
+@PostMapping("/registro-completo")
+public ResponseEntity<?> registroCompleto(@RequestBody Restaurante nuevo) {
+    try {
+        Restaurante creado = service.registrarNuevo(nuevo);
+        return ResponseEntity.created(URI.create("/api/restaurante/" + creado.getId()))
+                .body(new AuthResponse("Registro exitoso, revisa tu correo para confirmar la cuenta"));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(new AuthResponse(e.getMessage()));
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body(new AuthResponse("Error al registrar restaurante"));
+    }
+}
 }
