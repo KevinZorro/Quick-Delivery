@@ -26,7 +26,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/restaurante/registro", "/api/restaurante/login", "/api/restaurante/registro-completo", "/api/restaurante/confirmar" ).permitAll()
+                .requestMatchers("/api/restaurante/registro", "/api/restaurante/login", "/api/restaurante/registro-completo", "/api/restaurante/confirmar", "/api/restaurante/*/reporte" ).permitAll()
                 .requestMatchers("/api/restaurante/*/cerrar").permitAll()
                 .anyRequest().authenticated()
             )

@@ -4,6 +4,7 @@ import com.ufps.Quick_Delivery.dto.AuthRequest;
 import com.ufps.Quick_Delivery.dto.AuthResponse;
 import com.ufps.Quick_Delivery.dto.CloseAccountRequest;
 import com.ufps.Quick_Delivery.dto.RegisterRequest;
+import com.ufps.Quick_Delivery.dto.ReporteRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.service.RestauranteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +105,30 @@ public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
     }
 }
 
+// 📊 HU07 - Generar reportes de desempeño
+@PostMapping("/{id}/reporte")
+public ResponseEntity<?> generarReporte(@PathVariable Long id, @RequestBody ReporteRequest req) {
+    try {
+        byte[] archivo = service.generarReporte(id, req);
+
+        String tipoArchivo = req.getTipoReporte().equalsIgnoreCase("excel")
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf";
+
+        String nombreArchivo = "reporte_" + req.getTipoReporte() + "_" + System.currentTimeMillis() +
+                (tipoArchivo.contains("pdf") ? ".pdf" : ".xlsx");
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=" + nombreArchivo)
+                .header("Content-Type", tipoArchivo)
+                .body(archivo);
+
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body("Error al generar el reporte");
+    }
+}
 }
 
 

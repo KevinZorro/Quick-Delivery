@@ -1,11 +1,13 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.dto.ReporteRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -124,8 +126,32 @@ public boolean confirmarCuenta(String correo) {
     repo.save(r);
     return true;
 }
+// HU07 generar resportes
+public byte[] generarReporte(Long id, ReporteRequest req) {
+    if (req.getFechaInicio() == null || req.getFechaFin() == null || req.getTipoReporte() == null) {
+        throw new IllegalArgumentException("Debe especificar fechaInicio, fechaFin y tipoReporte");
+    }
 
+    // Encabezado del reporte
+    StringBuilder sb = new StringBuilder();
+    sb.append("Reporte de Desempeño\n");
+    sb.append("Restaurante ID: ").append(id).append("\n");
+    sb.append("Tipo de Reporte: ").append(req.getTipoReporte()).append("\n");
+    sb.append("Rango de Fechas: ").append(req.getFechaInicio()).append(" a ").append(req.getFechaFin()).append("\n\n");
 
+    // Columnas CSV
+    sb.append("Fecha,Descripción,Métrica,Valor\n");
 
-
+    for (int i = 1; i <= 5; i++) {
+        sb.append(req.getFechaInicio().plusDays(i))
+          .append(",Ejemplo de registro ")
+          .append(i)
+          .append(",")
+          .append(req.getTipoReporte())
+          .append(",")
+          .append((int) (Math.random() * 100))
+          .append("\n");
+    }
+    return sb.toString().getBytes(StandardCharsets.UTF_8);
+}
 }
