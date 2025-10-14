@@ -105,7 +105,7 @@ public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
     }
 }
 
-// 📊 HU07 - Generar reportes de desempeño
+// 📊 HU07 Generar reportes 
 @PostMapping("/{id}/reporte")
 public ResponseEntity<?> generarReporte(@PathVariable Long id, @RequestBody ReporteRequest req) {
     try {
