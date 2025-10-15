@@ -1,6 +1,5 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.dto.ProductoDTO;
 import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.repository.ProductoRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,8 +20,9 @@ public class ProductoService {
 
     public Producto create(Producto req) {
         Producto p = new Producto();
-        p.setUuidProducto(UUID.randomUUID().toString());
-        p.setUuidRestaurante(req.getUuidRestaurante());
+        // generar uuid como String y setear campos que el repositorio/queries esperan (uuidProducto, uuidRestaurante)
+        p.setProductoId(UUID.randomUUID());
+        p.setRestauranteId(req.getRestauranteId());
         p.setNombre(req.getNombre());
         p.setDescripcion(req.getDescripcion());
         p.setPrecio(req.getPrecio());
@@ -32,7 +32,7 @@ public class ProductoService {
         return repository.save(p);
     }
 
-    public Producto update(String uuidProducto, Producto req) {
+    public Producto update(UUID uuidProducto, Producto req) {
         Producto p = findByUuidProducto(uuidProducto);
         p.setNombre(req.getNombre());
         p.setDescripcion(req.getDescripcion());
@@ -43,33 +43,38 @@ public class ProductoService {
         return repository.save(p);
     }
 
-    public void delete(String uuidProducto) {
+    public void delete(UUID uuidProducto) {
         Producto p = findByUuidProducto(uuidProducto);
         repository.delete(p);
     }
 
     @Transactional(readOnly = true)
-    public List<Producto> buscarPorNombre(String uuidRestaurante, String nombre) {
+    public List<Producto> findByRestaurante(UUID uuidRestaurante) {
+        return repository.findByUuidRestaurante(uuidRestaurante);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Producto> buscarPorNombre(UUID uuidRestaurante, String nombre) {
         return repository.findByUuidRestauranteAndNombreContainingIgnoreCase(uuidRestaurante, nombre);
     }
 
     @Transactional(readOnly = true)
-    public List<Producto> filtrarPorPrecio(String uuidRestaurante, BigDecimal min, BigDecimal max) {
+    public List<Producto> filtrarPorPrecio(UUID uuidRestaurante, BigDecimal min, BigDecimal max) {
         return repository.findByUuidRestauranteAndPrecioBetween(uuidRestaurante, min, max);
     }
 
     @Transactional(readOnly = true)
-    public List<Producto> porCategoria(String uuidRestaurante, String categoria) {
+    public List<Producto> porCategoria(UUID uuidRestaurante, String categoria) {
         return repository.findByUuidRestauranteAndCategoria(uuidRestaurante, categoria);
     }
 
     @Transactional(readOnly = true)
-    public List<Producto> disponibles(String uuidRestaurante) {
+    public List<Producto> disponibles(UUID uuidRestaurante) {
         return repository.findByUuidRestauranteAndDisponible(uuidRestaurante, true);
     }
 
     @Transactional(readOnly = true)
-    public Producto findByUuidProducto(String uuidProducto) {
+    public Producto findByUuidProducto(UUID uuidProducto) {
         return repository.findByUuidProducto(uuidProducto)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
     }
