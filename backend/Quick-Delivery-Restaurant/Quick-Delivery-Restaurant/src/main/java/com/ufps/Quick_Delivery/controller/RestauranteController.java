@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/restaurante")
@@ -42,7 +43,7 @@ public class RestauranteController {
 
     // 🗑️ HU034: Cerrar cuenta
     @PostMapping("/{id}/cerrar")
-    public ResponseEntity<AuthResponse> cerrarCuenta(@PathVariable Long id,
+    public ResponseEntity<AuthResponse> cerrarCuenta(@PathVariable UUID id,
                                                      @RequestBody CloseAccountRequest req) {
         if (!req.isConfirm()) {
             return ResponseEntity.badRequest().body(new AuthResponse("Confirmación requerida"));
