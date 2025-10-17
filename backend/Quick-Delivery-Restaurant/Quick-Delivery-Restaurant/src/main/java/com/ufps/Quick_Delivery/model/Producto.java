@@ -18,23 +18,21 @@ import java.util.UUID;
  */
 
 @Entity
-@Table(name = "producto_restaurante")
+@Table(name = "producto", schema = "restaurante")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Producto implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @NotNull(message = "El UUID del producto no puede ser nulo")
-    @Column(name = "producto_id", nullable = false, unique = true)
-    private UUID productoId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false, unique = true)
+    private UUID id;
 
-    @NotNull(message = "El UUID del restaurante no puede ser nulo")
-    @Column(name = "restaurante_id", nullable = false)
-    private UUID restauranteId;
+    @ManyToOne
+    @JoinColumn(name = "restaurante_id", referencedColumnName = "id")
+    private Restaurante restaurante;
 
     @NotBlank(message = "El nombre no puede estar vacío")
     @Size(max = 120, message = "El nombre no puede exceder 120 caracteres")
@@ -80,7 +78,7 @@ public class Producto implements Serializable {
     void prePersist() {
         this.fechaCreacion = LocalDateTime.now();
         if (this.disponible == null) this.disponible = Boolean.TRUE;
-        if (this.productoId == null) this.productoId = UUID.randomUUID();
+        if (this.id == null) this.id = UUID.randomUUID();
     }
 
     @PreUpdate

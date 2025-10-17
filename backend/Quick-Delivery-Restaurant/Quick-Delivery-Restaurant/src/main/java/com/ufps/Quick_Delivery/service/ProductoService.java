@@ -18,17 +18,20 @@ public class ProductoService {
 
     private final ProductoRepository repository;
 
+    public List<Producto> getAllPedidos() {
+        return repository.findAll();
+    }
+
     public Producto create(Producto req) {
         Producto p = new Producto();
-        // generar uuid como String y setear campos que el repositorio/queries esperan (uuidProducto, uuidRestaurante)
-        p.setProductoId(UUID.randomUUID());
-        p.setRestauranteId(req.getRestauranteId());
+        p.setRestaurante(req.getRestaurante());
         p.setNombre(req.getNombre());
         p.setDescripcion(req.getDescripcion());
         p.setPrecio(req.getPrecio());
         p.setCategoria(req.getCategoria());
         p.setDisponible(req.getDisponible() != null ? req.getDisponible() : Boolean.TRUE);
         p.setImagenUrl(req.getImagenUrl());
+        System.err.println("perrita?");
         return repository.save(p);
     }
 
@@ -50,32 +53,27 @@ public class ProductoService {
 
     @Transactional(readOnly = true)
     public List<Producto> findByRestaurante(UUID uuidRestaurante) {
-        return repository.findByUuidRestaurante(uuidRestaurante);
+        return repository.findByRestauranteId(uuidRestaurante);
     }
 
     @Transactional(readOnly = true)
     public List<Producto> buscarPorNombre(UUID uuidRestaurante, String nombre) {
-        return repository.findByUuidRestauranteAndNombreContainingIgnoreCase(uuidRestaurante, nombre);
+        return repository.findByRestauranteIdAndNombreContainingIgnoreCase(uuidRestaurante, nombre);
     }
 
     @Transactional(readOnly = true)
     public List<Producto> filtrarPorPrecio(UUID uuidRestaurante, BigDecimal min, BigDecimal max) {
-        return repository.findByUuidRestauranteAndPrecioBetween(uuidRestaurante, min, max);
+        return repository.findByRestauranteIdAndPrecioBetween(uuidRestaurante, min, max);
     }
 
     @Transactional(readOnly = true)
     public List<Producto> porCategoria(UUID uuidRestaurante, String categoria) {
-        return repository.findByUuidRestauranteAndCategoria(uuidRestaurante, categoria);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Producto> disponibles(UUID uuidRestaurante) {
-        return repository.findByUuidRestauranteAndDisponible(uuidRestaurante, true);
+        return repository.findByRestauranteIdAndCategoria(uuidRestaurante, categoria);
     }
 
     @Transactional(readOnly = true)
     public Producto findByUuidProducto(UUID uuidProducto) {
-        return repository.findByUuidProducto(uuidProducto)
+        return repository.findById(uuidProducto)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
     }
 }

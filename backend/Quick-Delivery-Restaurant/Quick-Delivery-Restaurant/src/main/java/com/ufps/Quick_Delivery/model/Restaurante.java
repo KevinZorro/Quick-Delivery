@@ -1,19 +1,24 @@
 package com.ufps.Quick_Delivery.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
-@Table(name = "restaurantes")
+@Table(name = "restaurante", schema = "restaurante")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Restaurante {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull(message = "El UUID del producto no puede ser nulo")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false, unique = true)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String correo;
