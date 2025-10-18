@@ -2,7 +2,6 @@ package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,6 @@ public class RestauranteService {
     // Inyecta el passwordEncoder como bean
     private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
     public RestauranteService(RestauranteRepository repo, BCryptPasswordEncoder passwordEncoder) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;

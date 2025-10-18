@@ -5,7 +5,6 @@ import com.ufps.Quick_Delivery.dto.AuthResponse;
 import com.ufps.Quick_Delivery.dto.CloseAccountRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.service.RestauranteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +16,6 @@ import java.util.UUID;
 public class RestauranteController {
 
     private final RestauranteService service;
-
-    @Autowired
     public RestauranteController(RestauranteService service) {
         this.service = service;
     }
