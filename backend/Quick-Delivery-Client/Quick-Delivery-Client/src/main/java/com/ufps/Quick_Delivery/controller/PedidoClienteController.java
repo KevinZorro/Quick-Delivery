@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +26,7 @@ public class PedidoClienteController {
 
     // Obtener un pedido por ID
     @GetMapping("/{id}")
-    public ResponseEntity<PedidoCliente> getPedidoById(@PathVariable Long id) {
+    public ResponseEntity<PedidoCliente> getPedidoById(@PathVariable UUID id) {
         Optional<PedidoCliente> pedido = pedidoClienteService.getPedidoById(id);
         return pedido.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -35,13 +35,14 @@ public class PedidoClienteController {
     // Crear un nuevo pedido
     @PostMapping
     public ResponseEntity<PedidoCliente> createPedido(@RequestBody @Valid PedidoCliente pedidoCliente) {
+        
         PedidoCliente creado = pedidoClienteService.createPedido(pedidoCliente);
         return ResponseEntity.ok(creado);
     }
 
     // Actualizar pedido
     @PutMapping("/{id}")
-    public ResponseEntity<PedidoCliente> updatePedido(@PathVariable Long id, @RequestBody @Valid PedidoCliente pedidoCliente) {
+    public ResponseEntity<PedidoCliente> updatePedido(@PathVariable UUID id, @RequestBody @Valid PedidoCliente pedidoCliente) {
         try {
             PedidoCliente actualizado = pedidoClienteService.updatePedido(id, pedidoCliente);
             return ResponseEntity.ok(actualizado);
@@ -52,7 +53,7 @@ public class PedidoClienteController {
 
     // Eliminar pedido
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePedido(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePedido(@PathVariable UUID id) {
         try {
             pedidoClienteService.deletePedido(id);
             return ResponseEntity.noContent().build();
