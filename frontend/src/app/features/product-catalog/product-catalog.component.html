@@ -1,1 +1,47 @@
-<p>product-catalog works!</p>
+<div class="catalog-container">
+  <!-- Header -->
+  <header class="catalog-header">
+    <h1>Catálogo de Productos</h1>
+    <p>Encuentra los mejores productos de nuestros restaurantes</p>
+  </header>
+
+  <!-- Loading spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner" role="status" aria-label="Cargando productos"></div>
+    <p>Cargando productos...</p>
+  </div>
+
+  <!-- Products Grid -->
+  <div *ngIf="!isLoading" class="products-grid">
+    <div *ngFor="let producto of productos" class="product-card">
+      <div class="product-image">
+        <span *ngIf="!producto.disponible" class="badge-no-disponible">
+          No disponible
+        </span>
+      </div>
+      
+      <div class="product-info">
+        <h3 class="product-title">{{ producto.nombre }}</h3>
+        <p class="product-description">{{ producto.descripcion }}</p>
+        <div class="product-footer">
+          <span class="product-price">
+            ${{ producto.precio | number:'1.2-2' }}
+          </span>
+          <button
+            class="btn-add-cart"
+            (click)="agregarAlCarrito(producto)"
+            [disabled]="!producto.disponible"
+          >
+            <span *ngIf="producto.disponible">Agregar</span>
+            <span *ngIf="!producto.disponible">No disponible</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && productos.length === 0" class="empty-state">
+    <p>No hay productos disponibles en este momento</p>
+  </div>
+</div>
