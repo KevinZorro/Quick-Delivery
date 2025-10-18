@@ -27,7 +27,6 @@ public class ProductoController {
 
     @GetMapping
     public List<Producto> getAllPedidos() {
-            System.err.println("HPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
         return service.getAllPedidos();
     }
 
@@ -37,7 +36,7 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> obtener(@PathVariable UUID id) {
+    public ResponseEntity<Producto> obtener(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(service.findByUuidProducto(id));
     }
 
@@ -45,12 +44,10 @@ public class ProductoController {
 public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoDTO req) {
     Producto p = new Producto();
     Restaurante restaurante = restauranteService.findById(req.getRestauranteId());
-    System.err.println("HPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
     if (restaurante == null) {
         System.err.println("Restaurante no encontrado");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
-    System.err.println("PERRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
     p.setRestaurante(restaurante);
     p.setNombre(req.getNombre());
     p.setDescripcion(req.getDescripcion());

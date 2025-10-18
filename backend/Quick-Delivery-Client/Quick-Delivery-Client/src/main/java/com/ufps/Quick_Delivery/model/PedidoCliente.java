@@ -35,12 +35,15 @@ public class PedidoCliente implements Serializable {
     private UUID id;
 
     // Relación con Cliente
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente_id", nullable = false)
-    private Cliente cliente;
+    @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false, referencedColumnName = "id")
+    private Cliente clienteId;
+
 
     @Column(name = "producto_id", nullable = false)
-    private UUID producto;
+    private UUID productoId;
+
+
     
 
     @NotNull(message = "La fecha del pedido no puede ser nula")
@@ -72,9 +75,6 @@ public class PedidoCliente implements Serializable {
 
     @Column(name = "direccion_entrega_id")
     private UUID direccionEntregaId;
-
-    @Column(name = "nde_pedido", nullable = false, unique = true)
-    private long ndepedido;
 
     // Campos de auditoría
     @Column(name = "fecha_creacion", nullable = false, updatable = false)

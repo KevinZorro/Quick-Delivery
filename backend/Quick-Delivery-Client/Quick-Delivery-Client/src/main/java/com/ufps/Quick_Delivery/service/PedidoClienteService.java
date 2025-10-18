@@ -1,9 +1,10 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.client.ProductoClient;
+import com.ufps.Quick_Delivery.DTO.ProductoDTO;
 import com.ufps.Quick_Delivery.model.PedidoCliente;
 import com.ufps.Quick_Delivery.repository.PedidoClienteRepository;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -11,9 +12,13 @@ import java.util.Optional;
 @Service
 public class PedidoClienteService {
 
-    @Autowired
-    private PedidoClienteRepository pedidoClienteRepository;
+    private final PedidoClienteRepository pedidoClienteRepository;
+    private final ProductoClient productoClient;
 
+    public PedidoClienteService(PedidoClienteRepository pedidoClienteRepository, ProductoClient productoClient) {
+        this.pedidoClienteRepository = pedidoClienteRepository;
+        this.productoClient = productoClient;
+    }
     // Obtener todos los pedidos
     public List<PedidoCliente> getAllPedidos() {
         return pedidoClienteRepository.findAll();
@@ -24,13 +29,23 @@ public class PedidoClienteService {
         return pedidoClienteRepository.findById(id);
     }
 
-    // Crear nuevo pedido
-    public PedidoCliente createPedido(PedidoCliente pedidoCliente) {
-        if (pedidoCliente.getCliente() == null || pedidoCliente.getProducto() == null) {
+// Crear nuevo pedido
+public PedidoCliente createPedido(PedidoCliente pedidoCliente) {
+    System.err.println("loquito por ti loco loco");
+
+    if (pedidoCliente.getClienteId() == null || pedidoCliente.getProductoId() == null) {
         throw new IllegalArgumentException("El pedido debe tener cliente y restaurante asignados");
-        }
-        return pedidoClienteRepository.save(pedidoCliente);
     }
+    
+    // Llama al microservicio restaurante para obtener datos reales
+    ProductoDTO producto = productoClient.getProductoById(pedidoCliente.getProductoId());
+
+
+    System.out.println("Producto recibido desde microservicio restaurante: " + producto.getNombre());
+
+    // Ahora sí puedes guardar el pedido
+    return pedidoClienteRepository.save(pedidoCliente);
+}
 
     // Actualizar pedido
  public PedidoCliente updatePedido(UUID id, PedidoCliente pedidoActualizado) {

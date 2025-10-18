@@ -3,6 +3,7 @@ package com.ufps.Quick_Delivery.DTO;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,4 +20,7 @@ public class PedidoClienteDTO {
     private BigDecimal total;
     private String estado;
     private String instrucciones;
+    private LocalDateTime fechaCreacion;
+    private UUID clienteId;
+    private UUID productoId;
 }
