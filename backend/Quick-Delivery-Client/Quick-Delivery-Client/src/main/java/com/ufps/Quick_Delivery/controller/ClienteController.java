@@ -2,62 +2,44 @@ package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.service.ClienteService;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/clientes")
+@RequiredArgsConstructor
+@Validated
 public class ClienteController {
 
     private final ClienteService clienteService;
 
-    public ClienteController(ClienteService clienteService) {
-        this.clienteService = clienteService;
-    }
-
-    // Crear cliente
     @PostMapping
-    public ResponseEntity<Cliente> create(@RequestBody Cliente cliente) {
-        System.err.println("perro?");
-        Cliente creado = clienteService.create(cliente);
-        return new ResponseEntity<>(creado, HttpStatus.CREATED);
+    public ResponseEntity<Cliente> crearCliente(@Valid @RequestBody Cliente cliente) {
+        Cliente creado = clienteService.guardarCliente(cliente);
+        return ResponseEntity.ok(creado);
     }
 
-    // Listar todos los clientes
-    @GetMapping
-    public ResponseEntity<List<Cliente>> findAll() {
-        List<Cliente> lista = clienteService.findAll();
-        return ResponseEntity.ok(lista);
-    }
-
-    // Obtener cliente por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> findById(@PathVariable UUID id) {
-        Optional<Cliente> clienteOpt = clienteService.findById(id);
-        return clienteOpt.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Cliente> obtenerCliente(@PathVariable UUID id) {
+        return clienteService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // Actualizar cliente
-    @PutMapping("/{id}")
-    public ResponseEntity<Cliente> update(@PathVariable UUID id, @RequestBody Cliente cliente) {
-        try {
-            Cliente actualizado = clienteService.update(id, cliente);
-            return ResponseEntity.ok(actualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping
+    public ResponseEntity<List<Cliente>> listarClientes() {
+        return ResponseEntity.ok(clienteService.listarTodos());
     }
 
-    // Eliminar cliente
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        clienteService.delete(id);
+    public ResponseEntity<Void> eliminarCliente(@PathVariable UUID id) {
+        clienteService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.DTO;
+package com.ufps.Quick_Delivery.dto;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductoDTO {
+public class ProductoDto {
 
     @NotNull
     private UUID Id;
