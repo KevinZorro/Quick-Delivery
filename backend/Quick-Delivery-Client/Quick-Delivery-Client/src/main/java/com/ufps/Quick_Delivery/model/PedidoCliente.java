@@ -22,23 +22,29 @@ import java.util.UUID;
  */
 
 @Entity
-@Table(name = "pedido_cliente")
+@Table(name = "pedido_cliente", schema = "cliente")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PedidoCliente implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull(message = "El UUID del pedido no puede ser nulo")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false, unique = true)
+    private UUID id;
 
-    @NotBlank(message = "El UUID del cliente no puede estar vacío")
-    @Column(name = "cliente_id", nullable = false)
-    private UUID clienteId;
+    // Relación con Cliente
+    @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false, referencedColumnName = "id")
+    private Cliente clienteId;
 
-    @NotBlank(message = "El UUID del restaurante no puede estar vacío")
-    @Column(name = "restaurante_id", nullable = false)
-    private UUID restauranteId;
+
+    @Column(name = "producto_id", nullable = false)
+    private UUID productoId;
+
+
+    
 
     @NotNull(message = "La fecha del pedido no puede ser nula")
     @Column(name = "fecha_pedido", nullable = false)

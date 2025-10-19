@@ -27,6 +27,7 @@ repositories {
 extra["springCloudVersion"] = "2025.0.0"
 
 dependencies {
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-hateoas")
@@ -42,7 +43,7 @@ dependencies {
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")
-	runtimeOnly("com.mysql:mysql-connector-j")
+	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
