@@ -1,9 +1,14 @@
 package com.ufps.Quick_Delivery.security;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 @Configuration
@@ -15,14 +20,25 @@ public class JwtAuthenticationFilter {
         http
           // Permitir acceso libre a la consola H2
           .authorizeHttpRequests(authz -> authz
-             .requestMatchers("/h2-console/**").permitAll()
              .anyRequest().permitAll()
           )
           // Deshabilitar CSRF para la consola H2 (mejor que deshabilitar CSRF globalmente)
-          .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
-          // Desactivar X-Frame-Options para permitir iframe en H2 Console
-          .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+          .csrf(csrf -> csrf.ignoringRequestMatchers("/**"));
 
         return http.build();
+    }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Usa allowedOriginPatterns en lugar de allowedOrigins para permitir cualquier origen
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

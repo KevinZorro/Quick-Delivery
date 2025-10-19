@@ -2,12 +2,12 @@ package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class RestauranteService {
@@ -17,10 +17,13 @@ public class RestauranteService {
     // Inyecta el passwordEncoder como bean
     private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
     public RestauranteService(RestauranteRepository repo, BCryptPasswordEncoder passwordEncoder) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public Restaurante findById(UUID id){
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
     }
 
     public Optional<Restaurante> findByCorreo(String correo){
@@ -83,7 +86,7 @@ public class RestauranteService {
     /**
      * HU034 - Suspender cuenta (requiere confirmación)
      */
-    public boolean closeAccount(Long id, boolean confirm){
+    public boolean closeAccount(UUID id, boolean confirm){
         if(!confirm) return false;
         Optional<Restaurante> or = repo.findById(id);
         if(or.isEmpty()) return false;
