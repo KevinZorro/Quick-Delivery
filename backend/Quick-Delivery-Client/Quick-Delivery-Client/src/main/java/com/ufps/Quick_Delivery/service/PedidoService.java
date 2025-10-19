@@ -1,12 +1,19 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.client.RestauranteClient;
+import com.ufps.Quick_Delivery.dto.RestauranteDto;
+import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
+
+import feign.FeignException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,12 +22,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.ufps.Quick_Delivery.repository.ClienteRepository;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
+    private final ClienteRepository clienteRepository;
+    private final RestauranteClient restauranteClient;
 
     // Crear o actualizar pedido, validando la entidad
     public Pedido guardarPedido(@Valid Pedido pedido) {
@@ -31,6 +42,21 @@ public class PedidoService {
         if (pedido.getFechaCreacion() == null) {
             pedido.setFechaCreacion(LocalDateTime.now());
         }
+
+        // Validar que el restaurante exista y obtener datos
+        try {
+            RestauranteDto restaurante = restauranteClient.obtenerRestaurantePorId(pedido.getRestauranteId());
+            pedido.setRestauranteId(restaurante.getId());
+            System.out.println(restaurante.getCorreo());
+            // Puedes usar datos de restaurante aquí para lógica adicional
+        } catch (FeignException.NotFound e) {
+            throw new IllegalArgumentException("Restaurante no existe con ID: " + pedido.getRestauranteId());
+        }
+
+        Cliente cliente = new Cliente();
+        cliente.setUsuarioId(UUID.randomUUID());
+        clienteRepository.save(cliente);
+        pedido.setCliente(cliente);
         return pedidoRepository.save(pedido);
     }
 

@@ -12,4 +12,6 @@ import lombok.AllArgsConstructor;
 public class RestauranteDto {
     
     private UUID id;
+
+    private String correo;
 }

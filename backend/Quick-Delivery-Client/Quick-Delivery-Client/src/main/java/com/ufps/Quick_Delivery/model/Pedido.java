@@ -31,7 +31,7 @@ public class Pedido implements Serializable {
 
     // Relación con Cliente (Many pedidos pueden pertenecer al mismo cliente)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente", nullable = false)
+    @JoinColumn(name = "cliente"/*,nullable = false*/)
     private Cliente cliente;
 
     // Campo que referencia al restaurante (por ID, puede ser ajustado a ManyToOne si deseas)

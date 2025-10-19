@@ -8,7 +8,7 @@ import com.ufps.Quick_Delivery.dto.ProductoDto;
 
 import java.util.UUID;
 
-@FeignClient(name = "restaurante-service", url = "http://localhost:8081")
+@FeignClient(name = "producto-service", url = "http://localhost:8081")
 public interface ProductoClient {
 
     @GetMapping("/productos/{id}")
