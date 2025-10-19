@@ -2,10 +2,15 @@ package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
+
+import jakarta.validation.constraints.NotNull;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +25,18 @@ public class RestauranteService {
     public RestauranteService(RestauranteRepository repo, BCryptPasswordEncoder passwordEncoder) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    // Buscar pedido por ID (solo lectura)
+    @Transactional(readOnly = true)
+    public Optional<Restaurante> buscarPorId(@NotNull UUID id) {
+        return repo.findById(id);
+    }
+
+    // Listar todos los pedidos
+    @Transactional(readOnly = true)
+    public List<Restaurante> listarTodos() {
+        return repo.findAll();
     }
 
     public Restaurante findById(UUID id){
