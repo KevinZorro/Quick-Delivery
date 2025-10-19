@@ -26,9 +26,11 @@ public class Restaurante {
     @Column(nullable = false)
     private String password; // almacenada en BCRYPT
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean activo = true; // true = cuenta activa
 
+    @Builder.Default
     @Column(nullable = false)
     private int intentosFallidos = 0;
 
