@@ -8,3 +8,5 @@ import java.util.UUID;
 public interface RestauranteRepository extends JpaRepository<Restaurante, UUID> {
     Optional<Restaurante> findByCorreo(String correo);
 }
+
+//hola
