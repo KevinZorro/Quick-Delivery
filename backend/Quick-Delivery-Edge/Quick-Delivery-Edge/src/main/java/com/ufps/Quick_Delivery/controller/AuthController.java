@@ -1,33 +1,140 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.Auth.AuthRequest;
+import com.ufps.Quick_Delivery.Auth.AuthResponse;
+import com.ufps.Quick_Delivery.model.Usuario;
+import com.ufps.Quick_Delivery.repository.UsuarioRepository;
+import com.ufps.Quick_Delivery.service.JwtService;
 
-import com.ufps.Quick_Delivery.dto.AuthRequest;
-import com.ufps.Quick_Delivery.dto.AuthResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:4200") // URL del frontend (NO SE CUAL ES XD)
 public class AuthController {
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
-        if (req.getCorreo() == null || req.getPassword() == null || req.getRol() == null) {
-            return ResponseEntity.badRequest().body(new AuthResponse("Faltan campos obligatorios"));
-        }
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-        switch (req.getRol().toUpperCase()) {
-            case "RESTAURANTE":
-                // TODO: llamada al servicio de Restaurante
-                return ResponseEntity.ok(new AuthResponse("Login restaurante correcto"));
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        try {
+            if (request.getEmail() == null || request.getPassword() == null) {
+                return ResponseEntity.badRequest()
+                        .body(new AuthResponse(false, "Email y contraseña son obligatorios", null, null, null));
+            }
+
+            Optional<Usuario> userOpt = usuarioRepository.findByEmail(request.getEmail());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse(false, "Credenciales inválidas", null, null, null));
+            }
+
+            Usuario user = userOpt.get();
+
+            if (!user.isActivo()) { // Cambia si tu campo es enabled o activo
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new AuthResponse(false, "Usuario deshabilitado", null, null, null));
+            }
+
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse(false, "Credenciales inválidas", null, null, null));
+            }
+
+            String token = jwtService.generateToken(user.getEmail(), user.getRol().name(), user.getId());
+
+            user.setLastLogin(LocalDateTime.now());
+            usuarioRepository.save(user);
+
+            String serviceUrl = getServiceUrlByRole(user.getRol().name());
+
+            return ResponseEntity.ok(new AuthResponse(true, "Login exitoso", token, user.getRol().name(), serviceUrl));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponse(false, "Error en el servidor: " + e.getMessage(), null, null, null));
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Usuario user) {
+        try {
+            if (usuarioRepository.existsByEmail(user.getEmail())) {
+                return ResponseEntity.badRequest()
+                        .body(new AuthResponse(false, "El email ya está registrado", null, null, null));
+            }
+
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setActivo(true);
+
+            Usuario savedUser = usuarioRepository.save(user);
+            String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRol().name(), savedUser.getId());
+            String serviceUrl = getServiceUrlByRole(savedUser.getRol().name());
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new AuthResponse(true, "Usuario registrado exitosamente", token,
+                            savedUser.getRol().name(), serviceUrl));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponse(false, "Error al registrar usuario: " + e.getMessage(), null, null, null));
+        }
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse(false, "Token no proporcionado", null, null, null));
+            }
+
+            String token = authHeader.substring(7);
+            if (jwtService.validateToken(token)) {
+                String email = jwtService.extractEmail(token);
+                String role = jwtService.extractRole(token);
+                return ResponseEntity.ok(new AuthResponse(true, "Token válido", token, role, null));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse(false, "Token inválido o expirado", null, null, null));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse(false, "Error al validar token", null, null, null));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        return ResponseEntity.ok(new AuthResponse(true, "Sesión cerrada exitosamente", null, null, null));
+    }
+
+    private String getServiceUrlByRole(String role) {
+        switch (role.toUpperCase()) {
             case "CLIENTE":
-                // TODO: llamada al servicio de Cliente
-                return ResponseEntity.ok(new AuthResponse("Login cliente correcto"));
+                return "http://localhost:8080";
+            case "RESTAURANTE":
+                return "http://localhost:8081";
             case "REPARTIDOR":
-                // TODO: llamada al servicio de Delivery
-                return ResponseEntity.ok(new AuthResponse("Login repartidor correcto"));
+                return "http://localhost:8082";
+            case "ADMIN":
+                return "http://localhost:8084";
             default:
-                return ResponseEntity.badRequest().body(new AuthResponse("Rol no válido"));
+                return null;
         }
     }
 }

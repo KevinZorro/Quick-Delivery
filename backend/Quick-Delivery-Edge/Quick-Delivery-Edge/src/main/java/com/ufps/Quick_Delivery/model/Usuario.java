@@ -17,13 +17,16 @@ public class Usuario {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String correo;
+    private String email;
 
     @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Rol rol; // CLIENTE, RESTAURANTE, REPARTIDOR
+
+    private LocalDateTime lastLogin;
+    
 
     private boolean activo = true;
     private int intentosFallidos = 0;
