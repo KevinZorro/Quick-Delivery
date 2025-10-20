@@ -7,8 +7,8 @@ import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.service.RestauranteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -16,11 +16,24 @@ import java.util.UUID;
 public class RestauranteController {
 
     private final RestauranteService service;
+
     public RestauranteController(RestauranteService service) {
         this.service = service;
     }
 
-    // 🔐 HU032: Inicio de sesión
+        @GetMapping("/{id}")
+    public ResponseEntity<Restaurante> obtenerPedido(@PathVariable UUID id) {
+        return service.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Restaurante>> listarPedidos() {
+        return ResponseEntity.ok(service.listarTodos());
+    }
+
+    //  HU032: Inicio de sesión
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
         if (req.getCorreo() == null || req.getPassword() == null) {
@@ -28,20 +41,26 @@ public class RestauranteController {
         }
 
         String result = service.attemptLogin(req.getCorreo(), req.getPassword());
+        
+        if (result.equals("OK")) {
+            // Obtener el restaurante para devolver su UUID
+            Restaurante r = service.findByCorreo(req.getCorreo()).orElseThrow();
+            return ResponseEntity.ok(new AuthResponse("Acceso correcto", r.getId()));
+        }
+        
         return switch (result) {
-            case "OK" -> ResponseEntity.ok(new AuthResponse("Acceso correcto"));
             case "CUENTA_SUSPENDIDA" ->
-                    ResponseEntity.status(423).body(new AuthResponse("Cuenta suspendida"));
+                ResponseEntity.status(423).body(new AuthResponse("Cuenta suspendida"));
             case "CUENTA_BLOQUEADA_TEMPORALMENTE" ->
-                    ResponseEntity.status(423).body(new AuthResponse("Cuenta bloqueada temporalmente (intenta más tarde)"));
+                ResponseEntity.status(423).body(new AuthResponse("Cuenta bloqueada temporalmente (intenta más tarde)"));
             default -> ResponseEntity.status(401).body(new AuthResponse("Credenciales inválidas"));
         };
     }
 
-    // 🗑️ HU034: Cerrar cuenta
+    //  HU034: Cerrar cuenta
     @PostMapping("/{id}/cerrar")
     public ResponseEntity<AuthResponse> cerrarCuenta(@PathVariable UUID id,
-                                                     @RequestBody CloseAccountRequest req) {
+                                                      @RequestBody CloseAccountRequest req) {
         if (!req.isConfirm()) {
             return ResponseEntity.badRequest().body(new AuthResponse("Confirmación requerida"));
         }
@@ -52,9 +71,9 @@ public class RestauranteController {
         return ResponseEntity.status(404).body(new AuthResponse("Cuenta no encontrada"));
     }
 
-    // 🧾 Registro (solo pruebas o nuevos restaurantes)
+    //  Registro (solo pruebas o nuevos restaurantes)
     @PostMapping("/registro")
-    public ResponseEntity<?> registro(@RequestBody AuthRequest req) {
+    public ResponseEntity<AuthResponse> registro(@RequestBody AuthRequest req) {
         if (req.getCorreo() == null || req.getPassword() == null) {
             return ResponseEntity.badRequest().body(new AuthResponse("Correo y contraseña son requeridos"));
         }
