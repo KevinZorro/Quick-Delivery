@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "restaurante", schema = "restaurante")
+@Table(name = "restaurante")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,9 +26,11 @@ public class Restaurante {
     @Column(nullable = false)
     private String password; // almacenada en BCRYPT
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean activo = true; // true = cuenta activa
 
+    @Builder.Default
     @Column(nullable = false)
     private int intentosFallidos = 0;
 

@@ -1,53 +1,52 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Cliente;
-import com.ufps.Quick_Delivery.repository.ClienteRepository;
-import org.springframework.stereotype.Service;
+import com.ufps.Quick_Delivery.client.UsuarioClient;
+import com.ufps.Quick_Delivery.dto.UsuarioDto;
 
-import java.util.List;
+import com.ufps.Quick_Delivery.repository.ClienteRepository;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class ClienteService {
-
     private final ClienteRepository clienteRepository;
+    private final UsuarioClient usuarioClient;
 
-    public ClienteService(ClienteRepository clienteRepository) {
-        this.clienteRepository = clienteRepository;
-    }
-
-    // Crear nuevo cliente
-    public Cliente create(Cliente cliente) {
+    public Cliente guardarCliente(@Valid Cliente cliente) {
+        // Aquí puedes validar si el usuario existe llamando a usuarioClient
+        usuarioClient.obtenerUsuarioPorId(cliente.getUsuarioId());
         return clienteRepository.save(cliente);
     }
 
-    // Listar todos los clientes
-    public List<Cliente> findAll() {
-        return clienteRepository.findAll();
+    public Optional<UsuarioDto> obtenerDatosUsuario(UUID usuarioId) {
+        return Optional.ofNullable(usuarioClient.obtenerUsuarioPorId(usuarioId));
     }
 
-    // Buscar cliente por ID
-    public Optional<Cliente> findById(UUID id) {
+    // Buscar cliente por Id
+    @Transactional(readOnly = true)
+    public Optional<Cliente> buscarPorId(/*@NotNull */  UUID id) {
         return clienteRepository.findById(id);
     }
 
-    // Actualizar cliente
-    public Cliente update(UUID id, Cliente clienteData) {
-        Optional<Cliente> optionalCliente = clienteRepository.findById(id);
-        if(optionalCliente.isEmpty()) {
-            throw new RuntimeException("Cliente no encontrado");
-        }
-        Cliente cliente = optionalCliente.get();
-        cliente.setNombre(clienteData.getNombre());
-        cliente.setTelefono(clienteData.getTelefono());
-        cliente.setEmail(clienteData.getEmail());
-        cliente.setActivo(clienteData.getActivo());
-        return clienteRepository.save(cliente);
+    // Obtener todos los clientes
+    @Transactional(readOnly = true)
+    public List<Cliente> listarTodos() {
+        return clienteRepository.findAll();
     }
 
-    // Eliminar cliente
-    public void delete(UUID id) {
+    // Eliminar cliente por ID 
+    public void eliminarPorId(/* @NotNull*/  UUID id) {
+        if (!clienteRepository.existsById(id)) {
+            throw new IllegalArgumentException("No existe cliente con ID: " + id);
+        }
         clienteRepository.deleteById(id);
     }
 }

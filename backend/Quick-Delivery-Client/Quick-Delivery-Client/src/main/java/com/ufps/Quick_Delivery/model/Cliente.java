@@ -1,7 +1,6 @@
 package com.ufps.Quick_Delivery.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +10,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cliente", schema = "cliente")
+@Table(name = "cliente")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,19 +22,6 @@ public class Cliente implements Serializable {
     @Column(name = "id", nullable = false, unique = true)
     private UUID id;
 
-    @NotBlank(message = "El nombre no puede estar vacío")
-    @Column(nullable = false, length = 150)
-    private String nombre;
-
-    @NotBlank(message = "El teléfono no puede estar vacío")
-    @Column(nullable = false, length = 30)
-    private String telefono;
-
-    @NotBlank(message = "El email no puede estar vacío")
-    @Column(nullable = false, length = 150, unique = true)
-    private String email;
-
-    @NotNull(message = "El estado activo no puede ser nulo")
-    @Column(nullable = false)
-    private Boolean activo = true;
+    @Column(name = "usuario_id", unique = true)
+    private UUID usuarioId;
 }

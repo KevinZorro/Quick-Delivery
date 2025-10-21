@@ -45,3 +45,11 @@
     <p>No hay productos disponibles en este momento</p>
   </div>
 </div>
+
+<!-- Modal de Pedido (FUERA del catalog-container) -->
+<app-pedido 
+  *ngIf="mostrarModalPedido && productoSeleccionado"
+  [producto]="productoSeleccionado"
+  [clienteId]="'cliente-uuid-aqui'"
+  (cerrarModal)="cerrarModalPedido()"
+></app-pedido>

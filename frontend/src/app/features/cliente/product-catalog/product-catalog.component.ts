@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { PedidoComponent } from '../pedido/pedido.component';
 
 interface Producto {
   id: string;
@@ -14,13 +15,16 @@ interface Producto {
 @Component({
   selector: 'app-product-catalog',
   standalone: true,
-  imports: [CommonModule],  // Esto importa ngIf, ngFor, pipes, etc.
+  imports: [CommonModule, PedidoComponent],
   templateUrl: './product-catalog.component.html',
   styleUrls: ['./product-catalog.component.css']
 })
 export class ProductCatalogComponent implements OnInit {
   productos: Producto[] = [];
   isLoading = true;
+  productoSeleccionado: Producto | null = null;
+  mostrarModalPedido = false;
+
 
   constructor(private http: HttpClient) {}
 
@@ -42,8 +46,14 @@ export class ProductCatalogComponent implements OnInit {
       });
   }
 
-  agregarAlCarrito(producto: Producto): void {
-    console.log('Producto agregado:', producto);
-    alert(`${producto.nombre} agregado al carrito`);
-  }
+
+agregarAlCarrito(producto: Producto): void {
+  this.productoSeleccionado = producto;
+  this.mostrarModalPedido = true;
+}
+
+cerrarModalPedido(): void {
+  this.mostrarModalPedido = false;
+  this.productoSeleccionado = null;
+}
 }
