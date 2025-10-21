@@ -21,8 +21,8 @@ public class RestauranteController {
         this.service = service;
     }
 
-        @GetMapping("/{id}")
-    public ResponseEntity<Restaurante> obtenerPedido(@PathVariable UUID id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Restaurante> obtenerPedido(@PathVariable("id") UUID id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
