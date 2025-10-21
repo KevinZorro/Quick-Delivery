@@ -1,5 +1,5 @@
-package com.ufps.Quick_Delivery.DTO;
+package com.ufps.Quick_Delivery.dto;
 
-public class ClienteDTO {
+public class ClienteDto {
     
 }

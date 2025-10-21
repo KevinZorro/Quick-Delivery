@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.DTO;
+package com.ufps.Quick_Delivery.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PedidoClienteDTO {
+public class PedidoDto{
     private LocalDateTime fechaPedido;
     private ZonedDateTime fechaHoraEstimada;
     private String metodoPago;

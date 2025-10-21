@@ -8,6 +8,7 @@ import com.ufps.Quick_Delivery.service.RestauranteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,6 +19,18 @@ public class RestauranteController {
 
     public RestauranteController(RestauranteService service) {
         this.service = service;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Restaurante> obtenerPedido(@PathVariable("id") UUID id) {
+        return service.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Restaurante>> listarPedidos() {
+        return ResponseEntity.ok(service.listarTodos());
     }
 
     //  HU032: Inicio de sesión
