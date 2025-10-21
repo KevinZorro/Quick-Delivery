@@ -1,0 +1,25 @@
+# === Java / Spring Boot ===
+target/
+*.jar
+*.war
+*.class
+
+# === Logs ===
+*.log
+
+# === Node / Angular ===
+node_modules/
+dist/
+.angular/
+.cache/
+coverage/
+front/.angular/
+
+# === IDEs (VS Code, IntelliJ, etc.) ===
+.vscode/
+.idea/
+*.iml
+
+# === Sistema operativo ===
+.DS_Store
+Thumbs.db
