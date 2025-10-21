@@ -22,10 +22,7 @@
       
       <div class="product-info">
         <h3 class="product-title">{{ producto.nombre }}</h3>
-<<<<<<< HEAD:frontend/src/app/features/product-catalog/product-catalog.component.html
         <img url="xxx", title="product-image"/>
-=======
->>>>>>> origin/main:frontend/src/app/features/cliente/product-catalog/product-catalog.component.html
         <p class="product-description">{{ producto.descripcion }}</p>
         <div class="product-footer">
           <span class="product-price">
@@ -49,14 +46,3 @@
     <p>No hay productos disponibles en este momento</p>
   </div>
 </div>
-<<<<<<< HEAD:frontend/src/app/features/product-catalog/product-catalog.component.html
-=======
-
-<!-- Modal de Pedido (FUERA del catalog-container) -->
-<app-pedido 
-  *ngIf="mostrarModalPedido && productoSeleccionado"
-  [producto]="productoSeleccionado"
-  [clienteId]="'cliente-uuid-aqui'"
-  (cerrarModal)="cerrarModalPedido()"
-></app-pedido>
->>>>>>> origin/main:frontend/src/app/features/cliente/product-catalog/product-catalog.component.html
