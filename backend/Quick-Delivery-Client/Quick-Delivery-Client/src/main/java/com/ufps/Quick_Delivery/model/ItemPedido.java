@@ -10,7 +10,7 @@ import java.util.UUID;
  * Entidad que representa un ítem dentro de un pedido.
  */
 @Entity
-@Table(name = "item_pedido", schema = "cliente")
+@Table(name = "item_pedido")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
