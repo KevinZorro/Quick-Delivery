@@ -1,6 +1,5 @@
 package com.ufps.Quick_Delivery.controller;
 
-
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ public class UsuarioController {
 
     @PostMapping("/registro")
     public ResponseEntity<?> registrar(@RequestBody Usuario usuario) {
-        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
+        if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
             return ResponseEntity.badRequest().body("❌ El correo ya está registrado");
         }
         usuario.setActivo(true);
@@ -30,7 +29,7 @@ public class UsuarioController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Usuario request) {
-        return usuarioRepository.findByEmail(request.getEmail())
+        return usuarioRepository.findByCorreo(request.getCorreo())
                 .map(usuario -> {
                     if (usuario.getPassword().equals(request.getPassword())) {
                         usuario.setLastLogin(LocalDateTime.now());

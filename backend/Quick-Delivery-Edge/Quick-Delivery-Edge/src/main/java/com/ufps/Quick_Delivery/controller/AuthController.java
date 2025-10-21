@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200") // URL del frontend (NO SE CUAL ES XD)
+@CrossOrigin(origins = "http://localhost:4200") // URL del frontend
 public class AuthController {
 
     @Autowired
@@ -32,12 +32,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
-            if (request.getEmail() == null || request.getPassword() == null) {
+            if (request.getCorreo() == null || request.getPassword() == null) {
                 return ResponseEntity.badRequest()
-                        .body(new AuthResponse(false, "Email y contraseña son obligatorios", null, null, null));
+                        .body(new AuthResponse(false, "Correo y contraseña son obligatorios", null, null, null));
             }
 
-            Optional<Usuario> userOpt = usuarioRepository.findByEmail(request.getEmail());
+            Optional<Usuario> userOpt = usuarioRepository.findByCorreo(request.getCorreo());
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new AuthResponse(false, "Credenciales inválidas", null, null, null));
@@ -45,7 +45,7 @@ public class AuthController {
 
             Usuario user = userOpt.get();
 
-            if (!user.isActivo()) { // Cambia si tu campo es enabled o activo
+            if (!user.isActivo()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new AuthResponse(false, "Usuario deshabilitado", null, null, null));
             }
@@ -55,7 +55,7 @@ public class AuthController {
                         .body(new AuthResponse(false, "Credenciales inválidas", null, null, null));
             }
 
-            String token = jwtService.generateToken(user.getEmail(), user.getRol().name(), user.getId());
+            String token = jwtService.generateToken(user.getCorreo(), user.getRol().name(), user.getId());
 
             user.setLastLogin(LocalDateTime.now());
             usuarioRepository.save(user);
@@ -73,16 +73,16 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Usuario user) {
         try {
-            if (usuarioRepository.existsByEmail(user.getEmail())) {
+            if (usuarioRepository.existsByCorreo(user.getCorreo())) {
                 return ResponseEntity.badRequest()
-                        .body(new AuthResponse(false, "El email ya está registrado", null, null, null));
+                        .body(new AuthResponse(false, "El correo ya está registrado", null, null, null));
             }
 
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setActivo(true);
 
             Usuario savedUser = usuarioRepository.save(user);
-            String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRol().name(), savedUser.getId());
+            String token = jwtService.generateToken(savedUser.getCorreo(), savedUser.getRol().name(), savedUser.getId());
             String serviceUrl = getServiceUrlByRole(savedUser.getRol().name());
 
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -105,7 +105,7 @@ public class AuthController {
 
             String token = authHeader.substring(7);
             if (jwtService.validateToken(token)) {
-                String email = jwtService.extractEmail(token);
+                String correo = jwtService.extractCorreo(token); // si usas extractEmail cámbialo a extractCorreo
                 String role = jwtService.extractRole(token);
                 return ResponseEntity.ok(new AuthResponse(true, "Token válido", token, role, null));
             } else {

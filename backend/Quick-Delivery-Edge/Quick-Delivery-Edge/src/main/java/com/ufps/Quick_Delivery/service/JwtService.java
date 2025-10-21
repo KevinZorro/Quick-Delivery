@@ -10,17 +10,17 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final String SECRET_KEY = "EsteEsUnSecretoMuyLargoParaFirmarElTokenJWT123456"; // cambia por algo más seguro
+    private final String SECRET_KEY = "EsteEsUnSecretoMuyLargoParaFirmarElTokenJWT123456"; // cámbialo por algo más seguro
     private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hora
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // 👉 Generar token con email, rol e ID
-    public String generateToken(String email, String role, Long id) {
+    // 👉 Generar token con correo, rol e ID
+    public String generateToken(String correo, String role, Long id) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(correo)
                 .claim("role", role)
                 .claim("id", id)
                 .setIssuedAt(new Date())
@@ -42,8 +42,8 @@ public class JwtService {
         }
     }
 
-    // 👉 Extraer email del token
-    public String extractEmail(String token) {
+    // 👉 Extraer correo del token
+    public String extractCorreo(String token) {
         return getClaims(token).getSubject();
     }
 

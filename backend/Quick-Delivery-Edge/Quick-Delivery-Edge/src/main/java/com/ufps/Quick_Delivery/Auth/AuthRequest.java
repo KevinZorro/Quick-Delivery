@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthRequest {
-    private String email;
+    private String correo;
     private String password;
     private String rol; // CLIENTE, RESTAURANTE, REPARTIDOR
 }
