@@ -17,7 +17,7 @@ import java.util.UUID;
  * También contiene campos de auditoría para seguimiento de creación y actualización.
  */
 @Entity
-@Table(name = "pedido", schema = "cliente")
+@Table(name = "pedido")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

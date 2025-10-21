@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @FeignClient(name = "restaurante-service", url = "http://localhost:8081")
 public interface RestauranteClient {
-    @GetMapping("/restaurantes/{id}")
+    @GetMapping("/api/restaurante/{id}")
     RestauranteDto obtenerRestaurantePorId(@PathVariable("id") UUID id);
 }
