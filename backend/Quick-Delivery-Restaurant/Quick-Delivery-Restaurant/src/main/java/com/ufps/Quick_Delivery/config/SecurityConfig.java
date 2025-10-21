@@ -1,35 +1,45 @@
-package com.ufps.Quick_Delivery.security;
-
-import java.util.List;
+package com.ufps.Quick_Delivery.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+import java.util.List;
 
 @Configuration
-@EnableWebSecurity
-public class JwtAuthenticationFilter {
+public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-          // Permitir acceso libre a la consola H2
-          .authorizeHttpRequests(authz -> authz
-             .anyRequest().permitAll()
-          )
-          // Deshabilitar CSRF para la consola H2 (mejor que deshabilitar CSRF globalmente)
-          .csrf(csrf -> csrf.ignoringRequestMatchers("/**"));
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                //.requestMatchers("/api/restaurante/registro", "/api/restaurante/login").permitAll()
+                //.requestMatchers("/api/restaurante/*/cerrar").permitAll()
+                //.requestMatchers("/api/v1/productos") .permitAll()
+                
+                .anyRequest().permitAll()
+            )
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(form -> form.disable());
 
         return http.build();
     }
 
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Usa allowedOriginPatterns en lugar de allowedOrigins para permitir cualquier origen
         configuration.setAllowedOriginPatterns(List.of("*"));
