@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuickDelivery - Panel Restaurante</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="title">QuickDelivery</h1>
+            <p class="subtitle">¿Deseas cerrar tu cuenta de restaurante?</p>
+            <p class="description">Esta acción suspenderá tu perfil y pedidos.</p>
+
+            <button class="btn-danger" id="cerrarCuentaBtn">Cerrar mi cuenta</button>
+            <button class="btn-secondary" id="volverBtn">Volver al panel</button>
+
+            <div id="mensaje" class="mensaje"></div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar cierre de cuenta</h2>
+            <p>¿Estás seguro de que deseas cerrar tu cuenta? Esta acción suspenderá tu perfil.</p>
+            <button class="btn-danger" id="confirmarBtn">Sí, cerrar cuenta</button>
+            <button class="btn-secondary" id="cancelarBtn">Cancelar</button>
+        </div>
+    </div>
+
+    <script src="js/home.js"></script>
+</body>
+</html>
