@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { PedidoComponent } from '../pedido/pedido.component';
+import { environment } from '../../../../environments/environment';
 
 interface Producto {
   id: string;
@@ -25,7 +26,6 @@ export class ProductCatalogComponent implements OnInit {
   productoSeleccionado: Producto | null = null;
   mostrarModalPedido = false;
 
-
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -33,7 +33,8 @@ export class ProductCatalogComponent implements OnInit {
   }
 
   loadProductos(): void {
-    this.http.get<Producto[]>('http://localhost:8081/productos')
+    console.error(`${environment.restaurantesApi}`)
+    this.http.get<Producto[]>(`${environment.restaurantesApi}/productos`)
       .subscribe({
         next: (data) => {
           this.productos = data.filter(p => p.disponible);
@@ -46,14 +47,13 @@ export class ProductCatalogComponent implements OnInit {
       });
   }
 
+  agregarAlCarrito(producto: Producto): void {
+    this.productoSeleccionado = producto;
+    this.mostrarModalPedido = true;
+  }
 
-agregarAlCarrito(producto: Producto): void {
-  this.productoSeleccionado = producto;
-  this.mostrarModalPedido = true;
-}
-
-cerrarModalPedido(): void {
-  this.mostrarModalPedido = false;
-  this.productoSeleccionado = null;
-}
+  cerrarModalPedido(): void {
+    this.mostrarModalPedido = false;
+    this.productoSeleccionado = null;
+  }
 }
