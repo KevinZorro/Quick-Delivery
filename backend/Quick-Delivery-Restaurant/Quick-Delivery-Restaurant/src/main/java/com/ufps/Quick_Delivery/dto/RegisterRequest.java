@@ -12,3 +12,5 @@ public class RegisterRequest {
     private String tipoCocina;
     private String documentosLegales;
 }
+
+

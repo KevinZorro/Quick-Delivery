@@ -42,8 +42,8 @@ public class Restaurante {
     @Column(nullable = false)
     private String telefono;
 
-    @Column(nullable = false)
-    private String documentosLegales;
+    @Column(nullable = true)
+   private String documentosLegales;
 
     @Column(nullable = false)
     private String tipoCocina; // string tipo cocina como antes

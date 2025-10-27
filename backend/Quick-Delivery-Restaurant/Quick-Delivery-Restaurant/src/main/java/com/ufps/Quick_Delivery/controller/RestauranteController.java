@@ -77,33 +77,53 @@ public class RestauranteController {
                 .body(new AuthResponse("Registro exitoso"));
     }
 
-    @GetMapping("/confirmar")
-    public ResponseEntity<String> confirmarCuenta(@RequestParam String correo) {
-        boolean activado = service.confirmarCuenta(correo);
-        if (activado) {
-            return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
-        } else {
-            return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
+// HU31 Registro de restaurante
+@PostMapping("/registro-completo")
+public ResponseEntity<?> registroCompleto(@RequestBody RegisterRequest req) {
+    try {
+        // Validación de campos obligatorios
+        if (req.getNombre() == null || req.getDireccion() == null || req.getTelefono() == null ||
+            req.getCorreo() == null || req.getPassword() == null || req.getTipoCocina() == null) {
+            return ResponseEntity.badRequest()
+                    .body(new AuthResponse("Faltan campos obligatorios"));
         }
-    }
 
-    @PostMapping("/{id}/reporte")
-    public ResponseEntity<?> generarReporte(@PathVariable Long id, @RequestBody ReporteRequest req) {
-        try {
-            byte[] archivo = service.generarReporte(id, req);
-            String tipoArchivo = req.getTipoReporte().equalsIgnoreCase("excel")
-                    ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    : "application/pdf";
-            String nombreArchivo = "reporte_" + req.getTipoReporte() + "_" + System.currentTimeMillis() +
-                    (tipoArchivo.contains("pdf") ? ".pdf" : ".xlsx");
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=" + nombreArchivo)
-                    .header("Content-Type", tipoArchivo)
-                    .body(archivo);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al generar el reporte");
+        Restaurante nuevo = new Restaurante();
+        nuevo.setNombre(req.getNombre());
+        nuevo.setDireccion(req.getDireccion());
+        nuevo.setTelefono(req.getTelefono());
+        nuevo.setCorreo(req.getCorreo());
+        nuevo.setPassword(req.getPassword());
+        nuevo.setTipoCocina(req.getTipoCocina());
+
+        // Guardar documentos legales solo si vienen en la petición
+        if (req.getDocumentosLegales() != null) {
+            nuevo.setDocumentosLegales(req.getDocumentosLegales());
         }
+
+        Restaurante creado = service.registrarNuevo(nuevo);
+
+        return ResponseEntity.created(URI.create("/api/restaurante/" + creado.getId()))
+                .body(new AuthResponse("Registro exitoso,tu cuenta esta activa"));
+
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(new AuthResponse(e.getMessage()));
+    } catch (Exception e) {
+        e.printStackTrace(); // Para depuración en consola
+        return ResponseEntity.internalServerError()
+                .body(new AuthResponse("Error al registrar restaurante"));
     }
 }
+// HU031 Confirmar cuenta
+@GetMapping("/confirmar")
+public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
+    boolean activado = service.confirmarCuenta(correo);
+    if (activado) {
+        return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
+    } else {
+        return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
+    }
+}
+}
+
+
