@@ -25,11 +25,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                //.requestMatchers("/api/restaurante/registro", "/api/restaurante/login").permitAll()
-                //.requestMatchers("/api/restaurante/*/cerrar").permitAll()
-                //.requestMatchers("/api/v1/productos") .permitAll()
-                
-                .anyRequest().permitAll()
+                .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/api/restaurante/registro", "/api/restaurante/login", "/api/restaurante/registro-completo", "/api/restaurante/confirmar", "/api/restaurante/*/reporte" ).permitAll()
+                .requestMatchers("/api/restaurante/*/cerrar").permitAll()
+                .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .httpBasic(httpBasic -> httpBasic.disable())

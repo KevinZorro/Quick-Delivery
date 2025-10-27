@@ -2,78 +2,57 @@ package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.repository.ProductoRepository;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class ProductoService {
 
-    private final ProductoRepository repository;
+    private final ProductoRepository repo;
+
+    public ProductoService(ProductoRepository repo) {
+        this.repo = repo;
+    }
 
     public List<Producto> getAllPedidos() {
-        return repository.findAll();
+        return repo.findAll();
     }
 
-    public Producto create(Producto req) {
-        Producto p = new Producto();
-        p.setRestaurante(req.getRestaurante());
-        p.setNombre(req.getNombre());
-        p.setDescripcion(req.getDescripcion());
-        p.setPrecio(req.getPrecio());
-        p.setCategoria(req.getCategoria());
-        p.setDisponible(req.getDisponible() != null ? req.getDisponible() : Boolean.TRUE);
-        p.setImagenUrl(req.getImagenUrl());
-        System.err.println("perrita?");
-        return repository.save(p);
+    public List<Producto> findByRestaurante(UUID restauranteId) {
+        return repo.findByRestauranteId(restauranteId);
     }
 
-    public Producto update(UUID uuidProducto, Producto req) {
-        Producto p = findByUuidProducto(uuidProducto);
-        p.setNombre(req.getNombre());
-        p.setDescripcion(req.getDescripcion());
-        p.setPrecio(req.getPrecio());
-        p.setCategoria(req.getCategoria());
-        if (req.getDisponible() != null) p.setDisponible(req.getDisponible());
-        p.setImagenUrl(req.getImagenUrl());
-        return repository.save(p);
+    public Producto findByUuidProducto(UUID id) {
+        return repo.findById(id).orElse(null);
     }
 
-    public void delete(UUID uuidProducto) {
-        Producto p = findByUuidProducto(uuidProducto);
-        repository.delete(p);
+    public Producto create(Producto producto) {
+        return repo.save(producto);
     }
 
-    @Transactional(readOnly = true)
-    public List<Producto> findByRestaurante(UUID uuidRestaurante) {
-        return repository.findByRestauranteId(uuidRestaurante);
+    public Producto update(UUID id, Producto producto) {
+        producto.setId(id);
+        return repo.save(producto);
     }
 
-    @Transactional(readOnly = true)
-    public List<Producto> buscarPorNombre(UUID uuidRestaurante, String nombre) {
-        return repository.findByRestauranteIdAndNombreContainingIgnoreCase(uuidRestaurante, nombre);
+    public void delete(UUID id) {
+        repo.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
-    public List<Producto> filtrarPorPrecio(UUID uuidRestaurante, BigDecimal min, BigDecimal max) {
-        return repository.findByRestauranteIdAndPrecioBetween(uuidRestaurante, min, max);
+    public List<Producto> buscarPorNombre(UUID restauranteId, String nombre) {
+        return repo.findByRestauranteIdAndNombreContainingIgnoreCase(restauranteId, nombre);
     }
 
-    @Transactional(readOnly = true)
-    public List<Producto> porCategoria(UUID uuidRestaurante, String categoria) {
-        return repository.findByRestauranteIdAndCategoria(uuidRestaurante, categoria);
+    public List<Producto> filtrarPorPrecio(UUID restauranteId, BigDecimal min, BigDecimal max) {
+        return repo.findByRestauranteIdAndPrecioBetween(restauranteId, min, max);
     }
 
-    @Transactional(readOnly = true)
-    public Producto findByUuidProducto(UUID uuidProducto) {
-        return repository.findById(uuidProducto)
-                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
+    public List<Producto> porCategoria(UUID restauranteId, String categoria) {
+        return repo.findByRestauranteIdAndCategoria(restauranteId, categoria);
     }
 }
