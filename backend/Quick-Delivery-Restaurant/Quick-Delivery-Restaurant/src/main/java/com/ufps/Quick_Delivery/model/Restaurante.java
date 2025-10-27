@@ -1,9 +1,10 @@
 package com.ufps.Quick_Delivery.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -15,26 +16,23 @@ import java.util.UUID;
 public class Restaurante {
 
     @Id
-    @NotNull(message = "El UUID del producto no puede ser nulo")
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false, unique = true)
     private UUID id;
 
     @Column(nullable = false, unique = true)
     private String correo;
 
     @Column(nullable = false)
-    private String password; // almacenada en BCRYPT
+    private String password;
 
-    @Builder.Default
     @Column(nullable = false)
-    private boolean activo = true; // true = cuenta activa
+    private boolean activo;
 
-    @Builder.Default
     @Column(nullable = false)
-    private int intentosFallidos = 0;
+    private int intentosFallidos;
 
-// Nefer Estas son las que voy a usar para HU31
+    private LocalDateTime lockedUntil;
+
     @Column(nullable = false)
     private String nombre;
 
@@ -48,9 +46,11 @@ public class Restaurante {
     private String documentosLegales;
 
     @Column(nullable = false)
-    private String tipoCocina;
-// Hasta aqui va HU31  
+    private String tipoCocina; // string tipo cocina como antes
 
-    // Si lockedUntil es posterior a now(), la cuenta está bloqueada temporalmente
-    private LocalDateTime lockedUntil;
+    @Column(nullable = true)//esto se debe cambiar a false y colocar una imagen por defecto
+    private String imagenUrl;
+
+    @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Producto> productos;
 }

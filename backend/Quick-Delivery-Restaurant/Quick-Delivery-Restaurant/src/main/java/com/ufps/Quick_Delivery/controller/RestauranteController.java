@@ -35,7 +35,6 @@ public class RestauranteController {
         return ResponseEntity.ok(service.listarTodos());
     }
 
-    //  HU032: Inicio de sesión
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
         if (req.getCorreo() == null || req.getPassword() == null) {
@@ -43,109 +42,68 @@ public class RestauranteController {
         }
 
         String result = service.attemptLogin(req.getCorreo(), req.getPassword());
-        
+
         if (result.equals("OK")) {
-            // Obtener el restaurante para devolver su UUID
             Restaurante r = service.findByCorreo(req.getCorreo()).orElseThrow();
             return ResponseEntity.ok(new AuthResponse("Acceso correcto", r.getId()));
         }
-        
+
         return switch (result) {
             case "CUENTA_SUSPENDIDA" ->
-                ResponseEntity.status(423).body(new AuthResponse("Cuenta suspendida"));
+                    ResponseEntity.status(423).body(new AuthResponse("Cuenta suspendida"));
             case "CUENTA_BLOQUEADA_TEMPORALMENTE" ->
-                ResponseEntity.status(423).body(new AuthResponse("Cuenta bloqueada temporalmente (intenta más tarde)"));
+                    ResponseEntity.status(423).body(new AuthResponse("Cuenta bloqueada temporalmente (intenta más tarde)"));
             default -> ResponseEntity.status(401).body(new AuthResponse("Credenciales inválidas"));
         };
     }
 
-    //  HU034: Cerrar cuenta
     @PostMapping("/{id}/cerrar")
-    public ResponseEntity<AuthResponse> cerrarCuenta(@PathVariable UUID id,
-                                                      @RequestBody CloseAccountRequest req) {
+    public ResponseEntity<AuthResponse> cerrarCuenta(@PathVariable UUID id, @RequestBody CloseAccountRequest req) {
         if (!req.isConfirm()) {
             return ResponseEntity.badRequest().body(new AuthResponse("Confirmación requerida"));
         }
 
         boolean ok = service.closeAccount(id, true);
+
         if (ok)
             return ResponseEntity.ok(new AuthResponse("Cuenta suspendida correctamente"));
         return ResponseEntity.status(404).body(new AuthResponse("Cuenta no encontrada"));
     }
 
-    //  Registro (solo pruebas o nuevos restaurantes)
     @PostMapping("/registro")
-    public ResponseEntity<AuthResponse> registro(@RequestBody AuthRequest req) {
-        if (req.getCorreo() == null || req.getPassword() == null) {
-            return ResponseEntity.badRequest().body(new AuthResponse("Correo y contraseña son requeridos"));
-        }
-
-        Restaurante existing = service.findByCorreo(req.getCorreo()).orElse(null);
-        if (existing != null) {
-            return ResponseEntity.status(409).body(new AuthResponse("Ya existe un restaurante con este correo"));
-        }
-
-        Restaurante r = service.createIfNotExists(req.getCorreo(), req.getPassword());
+    public ResponseEntity<AuthResponse> registro(@RequestBody RegisterRequest req) {
+        Restaurante r = service.createIfNotExists(req);
         return ResponseEntity.created(URI.create("/api/restaurante/" + r.getId()))
                 .body(new AuthResponse("Registro exitoso"));
     }
 
-// HU31 Registro de restaurante
-@PostMapping("/registro-completo")
-public ResponseEntity<?> registroCompleto(@RequestBody RegisterRequest req) {
-    try {
-        Restaurante nuevo = new Restaurante();
-        nuevo.setNombre(req.getNombre());
-        nuevo.setDireccion(req.getDireccion());
-        nuevo.setTelefono(req.getTelefono());
-        nuevo.setCorreo(req.getCorreo());
-        nuevo.setPassword(req.getPassword());
-        nuevo.setTipoCocina(req.getTipoCocina());
+    @GetMapping("/confirmar")
+    public ResponseEntity<String> confirmarCuenta(@RequestParam String correo) {
+        boolean activado = service.confirmarCuenta(correo);
+        if (activado) {
+            return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
+        } else {
+            return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
+        }
+    }
 
-        Restaurante creado = service.registrarNuevo(nuevo);
-        return ResponseEntity.created(URI.create("/api/restaurante/" + creado.getId()))
-                .body(new AuthResponse("Registro exitoso, revisa tu correo para confirmar la cuenta"));
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(new AuthResponse(e.getMessage()));
-    } catch (Exception e) {
-        return ResponseEntity.internalServerError().body(new AuthResponse("Error al registrar restaurante"));
+    @PostMapping("/{id}/reporte")
+    public ResponseEntity<?> generarReporte(@PathVariable Long id, @RequestBody ReporteRequest req) {
+        try {
+            byte[] archivo = service.generarReporte(id, req);
+            String tipoArchivo = req.getTipoReporte().equalsIgnoreCase("excel")
+                    ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    : "application/pdf";
+            String nombreArchivo = "reporte_" + req.getTipoReporte() + "_" + System.currentTimeMillis() +
+                    (tipoArchivo.contains("pdf") ? ".pdf" : ".xlsx");
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=" + nombreArchivo)
+                    .header("Content-Type", tipoArchivo)
+                    .body(archivo);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al generar el reporte");
+        }
     }
 }
-// HU031 Confirmar cuenta
-@GetMapping("/confirmar")
-public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
-    boolean activado = service.confirmarCuenta(correo);
-    if (activado) {
-        return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
-    } else {
-        return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
-    }
-}
-
-// 📊 HU07 Generar reportes 
-@PostMapping("/{id}/reporte")
-public ResponseEntity<?> generarReporte(@PathVariable Long id, @RequestBody ReporteRequest req) {
-    try {
-        byte[] archivo = service.generarReporte(id, req);
-
-        String tipoArchivo = req.getTipoReporte().equalsIgnoreCase("excel")
-                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                : "application/pdf";
-
-        String nombreArchivo = "reporte_" + req.getTipoReporte() + "_" + System.currentTimeMillis() +
-                (tipoArchivo.contains("pdf") ? ".pdf" : ".xlsx");
-
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=" + nombreArchivo)
-                .header("Content-Type", tipoArchivo)
-                .body(archivo);
-
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-    } catch (Exception e) {
-        return ResponseEntity.internalServerError().body("Error al generar el reporte");
-    }
-}
-}
-
-

@@ -31,6 +31,5 @@ public class ProductoDTO {
 
     private String imagenUrl;
 
-    // opcional: usuario que crea/actualiza
     private String usuario;
 }
