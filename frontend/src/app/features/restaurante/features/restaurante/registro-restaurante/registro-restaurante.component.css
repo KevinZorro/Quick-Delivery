@@ -1,0 +1,93 @@
+.registro-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #ffcc00;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .registro-card {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 350px;
+    text-align: center;
+  }
+  
+  .titulo {
+    color: #e53935;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .titulo span {
+    font-weight: 700;
+  }
+  
+  h2 {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  input,
+  select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+    transition: 0.3s;
+  }
+  
+  input:focus,
+  select:focus {
+    border-color: #e53935;
+    box-shadow: 0 0 5px rgba(229, 57, 53, 0.5);
+  }
+  
+  .documentos-label {
+    text-align: left;
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 10px;
+  }
+  
+  .btn-registrar {
+    background-color: #e53935;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+  
+  .btn-registrar:hover {
+    background-color: #c62828;
+  }
+  
+  .login-text {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #444;
+  }
+  
+  .link-login {
+    color: #e53935;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  .link-login:hover {
+    text-decoration: underline;
+  }
+  

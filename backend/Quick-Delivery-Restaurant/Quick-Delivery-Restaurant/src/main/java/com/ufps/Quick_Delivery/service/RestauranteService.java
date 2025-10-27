@@ -120,19 +120,22 @@ public Restaurante registrarNuevo(Restaurante r) {
         throw new IllegalArgumentException("Ya existe un restaurante con este correo");
     }
 
+    // Validar solo los campos obligatorios
     if (r.getCorreo() == null || r.getPassword() == null || r.getNombre() == null ||
-        r.getDireccion() == null || r.getTelefono() == null ||
-        r.getTipoCocina() == null || r.getDocumentosLegales() == null) {
-        throw new IllegalArgumentException("Todos los campos son obligatorios");
+        r.getDireccion() == null || r.getTelefono() == null || r.getTipoCocina() == null) {
+        throw new IllegalArgumentException("Faltan campos obligatorios");
     }
 
+    // Codificar contraseña y configurar campos de control
     r.setPassword(passwordEncoder.encode(r.getPassword()));
-    r.setActivo(false);
+    r.setActivo(false); // cuenta inicialmente inactiva
     r.setIntentosFallidos(0);
     r.setLockedUntil(null);
 
+    // Guardar en la base de datos
     return repo.save(r);
 }
+
 
 // HU031 - Confirmar cuenta o activarla
 public boolean confirmarCuenta(String correo) {
@@ -174,4 +177,5 @@ public byte[] generarReporte(Long id, ReporteRequest req) {
     }
     return sb.toString().getBytes(StandardCharsets.UTF_8);
 }
+
 }

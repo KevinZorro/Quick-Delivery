@@ -1,0 +1,73 @@
+<div class="registro-container">
+  <div class="registro-card">
+    <h1 class="titulo">Quick<span>Delivery</span></h1>
+    <h2>Registro de Restaurante</h2>
+
+    <form (ngSubmit)="registrar()" #formRestaurante="ngForm">
+      <input 
+        type="text" 
+        placeholder="Nombre del restaurante" 
+        [(ngModel)]="restaurante.nombre" 
+        name="nombre" 
+        required 
+      />
+
+      <input 
+        type="text" 
+        placeholder="Dirección" 
+        [(ngModel)]="restaurante.direccion" 
+        name="direccion" 
+        required 
+      />
+
+      <input 
+        type="tel" 
+        placeholder="Teléfono de contacto" 
+        [(ngModel)]="restaurante.telefono" 
+        name="telefono" 
+        required 
+      />
+
+      <input 
+        type="email" 
+        placeholder="Correo electrónico" 
+        [(ngModel)]="restaurante.correo" 
+        name="correo" 
+        required 
+      />
+
+      <input 
+        type="password" 
+        placeholder="Contraseña" 
+        [(ngModel)]="restaurante.password" 
+        name="password" 
+        required 
+      />
+
+      <select [(ngModel)]="restaurante.tipoCocina" name="tipoCocina" required>
+        <option value="" disabled>Seleccione tipo de cocina</option>
+        <option>Comida Rápida</option>
+        <option>Italiana</option>
+        <option>Mexicana</option>
+        <option>Asiática</option>
+        <option>Colombiana</option>
+      </select>
+
+      <label class="documentos-label">Documentos legales:</label>
+      <input 
+        type="file" 
+        (change)="onFileSelected($event)" 
+      />
+
+      <button type="submit" class="btn-registrar">Registrar</button>
+    </form>
+
+    <!-- Mostrar mensaje de éxito o error -->
+    <p *ngIf="mensaje" class="mensaje">{{ mensaje }}</p>
+
+    <p class="login-text">
+      ¿Ya tienes cuenta?
+      <a href="#" class="link-login">Inicia sesión</a>
+    </p>
+  </div>
+</div>
