@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
-import { ProductCatalogComponent } from './features/cliente/product-catalog/product-catalog.component';
+import { IndexComponent } from './features/restaurante/index/index.component';
+import { CerrarComponent } from './features/restaurante/cerrar/cerrar.component';
 
 export const routes: Routes = [
-  { path: '', component: ProductCatalogComponent },  // Ruta principal
-  { path: 'catalogo', component: ProductCatalogComponent }
+  { path: '', component: IndexComponent },  // Ruta principal restaurante
+  { path: 'cerrar', component: CerrarComponent }
 ];
