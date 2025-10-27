@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/api/restaurante/registro", "/api/restaurante/login", "/api/restaurante/registro-completo", "/api/restaurante/confirmar", "/api/restaurante/*/reporte" ).permitAll()
                 .requestMatchers("/api/restaurante/*/cerrar").permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll() // cambiar a autenticade cuando deje de probar
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .httpBasic(httpBasic -> httpBasic.disable())

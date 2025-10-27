@@ -4,7 +4,6 @@ import com.ufps.Quick_Delivery.dto.AuthRequest;
 import com.ufps.Quick_Delivery.dto.AuthResponse;
 import com.ufps.Quick_Delivery.dto.CloseAccountRequest;
 import com.ufps.Quick_Delivery.dto.RegisterRequest;
-import com.ufps.Quick_Delivery.dto.ReporteRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.service.RestauranteService;
 import org.springframework.http.ResponseEntity;
