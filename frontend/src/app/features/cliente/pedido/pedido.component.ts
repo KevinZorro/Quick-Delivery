@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../environments/environment';
 
 interface Producto {
   id: string;
@@ -38,9 +39,7 @@ export class PedidoComponent {
   }
 
   enviarPedido(): void {
-    if (this.pedidoForm.invalid || !this.producto) {
-      return;
-    }
+    if (this.pedidoForm.invalid || !this.producto) return;
 
     this.isSubmitting = true;
 
@@ -56,15 +55,16 @@ export class PedidoComponent {
       estado: 'CREADO'
     };
 
-    this.http.post('http://localhost:8080/api/pedidos', pedido)
+    // 👇 Usa la URL dinámica desde environment
+    this.http.post(`${environment.clientesApi}/api/pedidos`, pedido)
       .subscribe({
         next: (response) => {
           console.log('Pedido creado:', response);
-          alert('Pedido realizado con éxito');
+          alert('✅ Pedido realizado con éxito');
           this.cerrar();
         },
         error: (error) => {
-          console.error('Error al crear pedido:', error);
+          console.error('❌ Error al crear pedido:', error);
           alert('Error al crear el pedido');
           this.isSubmitting = false;
         }

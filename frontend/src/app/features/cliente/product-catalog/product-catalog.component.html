@@ -22,6 +22,7 @@
       
       <div class="product-info">
         <h3 class="product-title">{{ producto.nombre }}</h3>
+        <img url="xxx", title="product-image"/>
         <p class="product-description">{{ producto.descripcion }}</p>
         <div class="product-footer">
           <span class="product-price">
@@ -45,11 +46,3 @@
     <p>No hay productos disponibles en este momento</p>
   </div>
 </div>
-
-<!-- Modal de Pedido (FUERA del catalog-container) -->
-<app-pedido 
-  *ngIf="mostrarModalPedido && productoSeleccionado"
-  [producto]="productoSeleccionado"
-  [clienteId]="'cliente-uuid-aqui'"
-  (cerrarModal)="cerrarModalPedido()"
-></app-pedido>
