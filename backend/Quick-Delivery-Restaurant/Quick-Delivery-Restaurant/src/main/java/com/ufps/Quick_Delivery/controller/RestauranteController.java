@@ -115,15 +115,15 @@ public ResponseEntity<?> registroCompleto(@RequestBody RegisterRequest req) {
     }
 }
 // HU031 Confirmar cuenta
-@GetMapping("/confirmar")
-public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
-    boolean activado = service.confirmarCuenta(correo);
-    if (activado) {
-        return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
-    } else {
-        return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
-    }
-}
+//@GetMapping("/confirmar")
+//public ResponseEntity<?> confirmarCuenta(@RequestParam String correo) {
+//    boolean activado = service.confirmarCuenta(correo);
+//    if (activado) {
+//        return ResponseEntity.ok("Cuenta confirmada correctamente. Ya puede iniciar sesión.");
+//    } else {
+//        return ResponseEntity.badRequest().body("Cuenta no encontrada o ya estaba activa.");
+//    }
+//}
 }
 
 
