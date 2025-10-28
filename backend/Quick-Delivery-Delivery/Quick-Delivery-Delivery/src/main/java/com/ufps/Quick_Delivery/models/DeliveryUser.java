@@ -21,6 +21,7 @@ public class DeliveryUser {
     @Column(name = "vehiculo")
     private TipoVehiculo vehiculo;
 
+    @Builder.Default
     @Column(name = "calificacion_promedio")
     private Double calificacionPromedio = 0.0;
 
