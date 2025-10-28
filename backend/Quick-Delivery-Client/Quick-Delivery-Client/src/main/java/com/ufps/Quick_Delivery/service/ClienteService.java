@@ -1,8 +1,6 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Cliente;
-import com.ufps.Quick_Delivery.dto.UsuarioDto;
-
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
