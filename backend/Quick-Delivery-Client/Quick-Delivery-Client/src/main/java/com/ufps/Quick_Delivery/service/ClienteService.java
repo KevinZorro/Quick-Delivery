@@ -1,7 +1,6 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.model.Cliente;
-import com.ufps.Quick_Delivery.client.UsuarioClient;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
 
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
@@ -18,16 +17,9 @@ import java.util.List;
 @Transactional
 public class ClienteService {
     private final ClienteRepository clienteRepository;
-    private final UsuarioClient usuarioClient;
 
     public Cliente guardarCliente(@Valid Cliente cliente) {
-        // Aquí puedes validar si el usuario existe llamando a usuarioClient
-        usuarioClient.obtenerUsuarioPorId(cliente.getUsuarioId());
         return clienteRepository.save(cliente);
-    }
-
-    public Optional<UsuarioDto> obtenerDatosUsuario(UUID usuarioId) {
-        return Optional.ofNullable(usuarioClient.obtenerUsuarioPorId(usuarioId));
     }
 
     // Buscar cliente por Id

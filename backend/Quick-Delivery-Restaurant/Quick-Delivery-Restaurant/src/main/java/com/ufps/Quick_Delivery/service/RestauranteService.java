@@ -127,31 +127,21 @@ public Restaurante registrarNuevo(Restaurante r) {
 
 
 // HU031 - Confirmar cuenta o activarla
-public boolean confirmarCuenta(String correo) {
-    Optional<Restaurante> or = repo.findByCorreo(correo);
-    if (or.isEmpty()) return false;
-
-        if (r.getCorreo() == null || r.getPassword() == null || r.getNombre() == null ||
-                r.getDireccion() == null || r.getTelefono() == null ||
-                r.getTipoCocina() == null || r.getDocumentosLegales() == null) {
-            throw new IllegalArgumentException("Todos los campos son obligatorios");
-        }
-        r.setPassword(passwordEncoder.encode(r.getPassword()));
-        r.setActivo(false);
-        r.setIntentosFallidos(0);
-        r.setLockedUntil(null);
-        return repo.save(r);
-    }
-
-    public boolean confirmarCuenta(String correo) {
-        Optional<Restaurante> or = repo.findByCorreo(correo);
-        if (or.isEmpty()) return false;
-        Restaurante r = or.get();
-        if (r.isActivo()) return false;
-        r.setActivo(true);
-        repo.save(r);
-        return true;
-    }
+//public boolean confirmarCuenta(Restaurante r) {
+//    Optional<Restaurante> or = repo.findByCorreo(correo);
+//    if (or.isEmpty()) return false;
+//
+//        if (r.getCorreo() == null || r.getPassword() == null || r.getNombre() == null ||
+//                r.getDireccion() == null || r.getTelefono() == null ||
+//                r.getTipoCocina() == null || r.getDocumentosLegales() == null) {
+//            throw new IllegalArgumentException("Todos los campos son obligatorios");
+//        }
+//        r.setPassword(passwordEncoder.encode(r.getPassword()));
+//        r.setActivo(false);
+//        r.setIntentosFallidos(0);
+//        r.setLockedUntil(null);
+//        return repo.save(r);
+//    }
 
     public byte[] generarReporte(Long id, ReporteRequest req) {
         if (req.getFechaInicio() == null || req.getFechaFin() == null || req.getTipoReporte() == null) {
@@ -175,7 +165,4 @@ public boolean confirmarCuenta(String correo) {
         }
         return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
-    return sb.toString().getBytes(StandardCharsets.UTF_8);
-}
-
 }
