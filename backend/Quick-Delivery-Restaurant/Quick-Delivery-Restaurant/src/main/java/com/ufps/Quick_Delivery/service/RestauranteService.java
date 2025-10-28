@@ -1,16 +1,14 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.dto.RegisterRequest;
 import com.ufps.Quick_Delivery.dto.ReporteRequest;
+import com.ufps.Quick_Delivery.dto.RestauranteRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,11 +17,9 @@ import java.util.UUID;
 public class RestauranteService {
 
     private final RestauranteRepository repo;
-    private final BCryptPasswordEncoder passwordEncoder;
 
-    public RestauranteService(RestauranteRepository repo, BCryptPasswordEncoder passwordEncoder) {
+    public RestauranteService(RestauranteRepository repo) {
         this.repo = repo;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -36,123 +32,117 @@ public class RestauranteService {
         return repo.findAll();
     }
 
-    public Optional<Restaurante> findByCorreo(String correo) {
-        return repo.findByCorreo(correo);
+    @Transactional(readOnly = true)
+    public List<Restaurante> listarPorUsuarioId(UUID usuarioId) {
+        return repo.findByUsuarioId(usuarioId);
     }
 
-    public Restaurante createIfNotExists(RegisterRequest req) {
-        return repo.findByCorreo(req.getCorreo()).orElseGet(() -> {
-            Restaurante r = Restaurante.builder()
-                    .correo(req.getCorreo())
-                    .password(passwordEncoder.encode(req.getPassword()))
-                    .activo(true)
-                    .intentosFallidos(0)
-                    .lockedUntil(null)
-                    .nombre(req.getNombre())
-                    .direccion(req.getDireccion())
-                    .telefono(req.getTelefono())
-                    .documentosLegales(req.getDocumentosLegales())
-                    .tipoCocina(req.getTipoCocina())
-                    .imagenUrl(null)
-                    .build();
-            return repo.save(r);
-        });
-    }
-
-    public boolean checkPassword(Restaurante restaurante, String rawPassword) {
-        return passwordEncoder.matches(rawPassword, restaurante.getPassword());
-    }
-
-    public String attemptLogin(String correo, String rawPassword) {
-        Optional<Restaurante> or = repo.findByCorreo(correo);
-        if (or.isEmpty()) return "CREDENCIALES_INVALIDAS";
-        Restaurante r = or.get();
-
-        if (!r.isActivo()) return "CUENTA_SUSPENDIDA";
-        if (r.getLockedUntil() != null && r.getLockedUntil().isAfter(LocalDateTime.now())) {
-            return "CUENTA_BLOQUEADA_TEMPORALMENTE";
+    @Transactional
+    public Restaurante crear(Restaurante restaurante) {
+        // Validar que el usuario no tenga ya un restaurante con el mismo nombre
+        Optional<Restaurante> existente = repo.findByUsuarioIdAndDescripcion(
+                restaurante.getUsuarioId(), 
+                restaurante.getDescripcion()
+        );
+        
+        if (existente.isPresent()) {
+            throw new IllegalArgumentException("Ya existe un restaurante con esta descripción para este usuario");
         }
 
-        if (!checkPassword(r, rawPassword)) {
-            int fallos = r.getIntentosFallidos() + 1;
-            r.setIntentosFallidos(fallos);
-            if (fallos >= 3) {
-                r.setLockedUntil(LocalDateTime.now().plusMinutes(15));
-                r.setIntentosFallidos(0);
-                repo.save(r);
-                return "CUENTA_BLOQUEADA_TEMPORALMENTE";
-            } else {
-                repo.save(r);
-                return "CREDENCIALES_INVALIDAS";
-            }
+        // Validar campos obligatorios
+        if (restaurante.getUsuarioId() == null || restaurante.getDescripcion() == null || 
+            restaurante.getCategoria() == null || restaurante.getCalificacionPromedio() == null) {
+            throw new IllegalArgumentException("Faltan campos obligatorios");
         }
 
-        r.setIntentosFallidos(0);
-        r.setLockedUntil(null);
-        repo.save(r);
-        return "OK";
+        // Validar rango de calificación
+        if (restaurante.getCalificacionPromedio() < 0.0 || restaurante.getCalificacionPromedio() > 5.0) {
+            throw new IllegalArgumentException("La calificación debe estar entre 0.0 y 5.0");
+        }
+
+        // Si no tiene imagen, asignar una por defecto
+        if (restaurante.getImagenUrl() == null || restaurante.getImagenUrl().isEmpty()) {
+            restaurante.setImagenUrl("/assets/images/restaurante-default.jpg");
+        }
+
+        return repo.save(restaurante);
     }
 
-    public boolean closeAccount(UUID id, boolean confirm) {
-        if(!confirm) return false;
+    @Transactional
+    public Restaurante actualizar(UUID id, RestauranteRequest req) {
         Optional<Restaurante> or = repo.findById(id);
-        if(or.isEmpty()) return false;
+        if (or.isEmpty()) return null;
 
         Restaurante r = or.get();
-        r.setActivo(false);
+
+        if (req.getDescripcion() != null) {
+            r.setDescripcion(req.getDescripcion());
+        }
+        
+        if (req.getCategoria() != null) {
+            r.setCategoria(req.getCategoria());
+        }
+        
+        if (req.getCalificacionPromedio() != null) {
+            if (req.getCalificacionPromedio() < 0.0 || req.getCalificacionPromedio() > 5.0) {
+                throw new IllegalArgumentException("La calificación debe estar entre 0.0 y 5.0");
+            }
+            r.setCalificacionPromedio(req.getCalificacionPromedio());
+        }
+        
+        if (req.getImagenUrl() != null) {
+            r.setImagenUrl(req.getImagenUrl());
+        }
+
+        return repo.save(r);
+    }
+
+    @Transactional
+    public boolean eliminar(UUID id) {
+        if (!repo.existsById(id)) {
+            return false;
+        }
+        repo.deleteById(id);
+        return true;
+    }
+
+    @Transactional
+    public boolean actualizarCalificacion(UUID id, Double nuevaCalificacion) {
+        Optional<Restaurante> or = repo.findById(id);
+        if (or.isEmpty()) return false;
+
+        if (nuevaCalificacion < 0.0 || nuevaCalificacion > 5.0) {
+            throw new IllegalArgumentException("La calificación debe estar entre 0.0 y 5.0");
+        }
+
+        Restaurante r = or.get();
+        r.setCalificacionPromedio(nuevaCalificacion);
         repo.save(r);
         return true;
     }
-// HU031 es el registro de un nuevo restaurante lo q hace este metodo es validar si no hay otro con el mismo correo y lo confirma y lo guarda si todo esta bien
-public Restaurante registrarNuevo(Restaurante r) {
-    if (repo.findByCorreo(r.getCorreo()).isPresent()) {
-        throw new IllegalArgumentException("Ya existe un restaurante con este correo");
-    }
 
-    // Validar solo los campos obligatorios
-    if (r.getCorreo() == null || r.getPassword() == null || r.getNombre() == null ||
-        r.getDireccion() == null || r.getTelefono() == null || r.getTipoCocina() == null) {
-        throw new IllegalArgumentException("Faltan campos obligatorios");
-    }
-
-    // Codificar contraseña y configurar campos de control
-    r.setPassword(passwordEncoder.encode(r.getPassword()));
-    r.setActivo(false); // cuenta inicialmente inactiva
-    r.setIntentosFallidos(0);
-    r.setLockedUntil(null);
-
-    // Guardar en la base de datos
-    return repo.save(r);
-}
-
-
-// HU031 - Confirmar cuenta o activarla
-//public boolean confirmarCuenta(Restaurante r) {
-//    Optional<Restaurante> or = repo.findByCorreo(correo);
-//    if (or.isEmpty()) return false;
-//
-//        if (r.getCorreo() == null || r.getPassword() == null || r.getNombre() == null ||
-//                r.getDireccion() == null || r.getTelefono() == null ||
-//                r.getTipoCocina() == null || r.getDocumentosLegales() == null) {
-//            throw new IllegalArgumentException("Todos los campos son obligatorios");
-//        }
-//        r.setPassword(passwordEncoder.encode(r.getPassword()));
-//        r.setActivo(false);
-//        r.setIntentosFallidos(0);
-//        r.setLockedUntil(null);
-//        return repo.save(r);
-//    }
-
-    public byte[] generarReporte(Long id, ReporteRequest req) {
+    public byte[] generarReporte(UUID id, ReporteRequest req) {
         if (req.getFechaInicio() == null || req.getFechaFin() == null || req.getTipoReporte() == null) {
             throw new IllegalArgumentException("Debe especificar fechaInicio, fechaFin y tipoReporte");
         }
+
+        Optional<Restaurante> or = repo.findById(id);
+        if (or.isEmpty()) {
+            throw new IllegalArgumentException("Restaurante no encontrado");
+        }
+
+        Restaurante r = or.get();
+
         StringBuilder sb = new StringBuilder();
         sb.append("Reporte de Desempeño\n");
         sb.append("Restaurante ID: ").append(id).append("\n");
+        sb.append("Descripción: ").append(r.getDescripcion()).append("\n");
+        sb.append("Categoría: ").append(r.getCategoria().getNombre()).append("\n");
+        sb.append("Calificación Promedio: ").append(r.getCalificacionPromedio()).append("\n");
         sb.append("Tipo de Reporte: ").append(req.getTipoReporte()).append("\n");
         sb.append("Rango de Fechas: ").append(req.getFechaInicio()).append(" a ").append(req.getFechaFin()).append("\n\n");
         sb.append("Fecha,Descripción,Métrica,Valor\n");
+
         for (int i = 1; i <= 5; i++) {
             sb.append(req.getFechaInicio().plusDays(i))
                     .append(",Ejemplo de registro ")
@@ -163,6 +153,7 @@ public Restaurante registrarNuevo(Restaurante r) {
                     .append((int) (Math.random() * 100))
                     .append("\n");
         }
+
         return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 }
