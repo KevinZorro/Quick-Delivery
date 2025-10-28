@@ -4,6 +4,9 @@ import com.ufps.Quick_Delivery.dto.AuthResponse;
 import com.ufps.Quick_Delivery.dto.RestauranteRequest;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.service.RestauranteService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,48 +42,22 @@ public class RestauranteController {
     }
 
     @PostMapping
-    public ResponseEntity<AuthResponse> crearRestaurante(@RequestBody RestauranteRequest req) {
-        try {
-            // Validación de campos obligatorios
-            if (req.getUsuarioId() == null || req.getDescripcion() == null || 
-                req.getCategoria() == null || req.getCalificacionPromedio() == null) {
-                return ResponseEntity.badRequest()
-                        .body(new AuthResponse("Faltan campos obligatorios"));
-            }
-
-            Restaurante nuevo = Restaurante.builder()
-                    .usuarioId(req.getUsuarioId())
-                    .descripcion(req.getDescripcion())
-                    .categoria(req.getCategoria())
-                    .calificacionPromedio(req.getCalificacionPromedio())
-                    .imagenUrl(req.getImagenUrl())
-                    .build();
-
-            Restaurante creado = service.crear(nuevo);
-
-            return ResponseEntity.created(URI.create("/api/restaurante/" + creado.getId()))
-                    .body(new AuthResponse("Restaurante creado exitosamente"));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new AuthResponse(e.getMessage()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(new AuthResponse("Error al crear restaurante"));
-        }
+    public ResponseEntity<Restaurante> crearRestaurante(@Valid @RequestBody Restaurante restaurante) {
+        Restaurante creado = service.crear(restaurante);
+        return ResponseEntity.ok(creado);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AuthResponse> actualizarRestaurante(
-            @PathVariable UUID id, 
+            @PathVariable UUID id,
             @RequestBody RestauranteRequest req) {
         try {
             Restaurante actualizado = service.actualizar(id, req);
-            
+
             if (actualizado != null) {
                 return ResponseEntity.ok(new AuthResponse("Restaurante actualizado correctamente"));
             }
-            
+
             return ResponseEntity.notFound().build();
 
         } catch (Exception e) {
@@ -93,25 +70,25 @@ public class RestauranteController {
     @DeleteMapping("/{id}")
     public ResponseEntity<AuthResponse> eliminarRestaurante(@PathVariable UUID id) {
         boolean eliminado = service.eliminar(id);
-        
+
         if (eliminado) {
             return ResponseEntity.ok(new AuthResponse("Restaurante eliminado correctamente"));
         }
-        
+
         return ResponseEntity.status(404).body(new AuthResponse("Restaurante no encontrado"));
     }
 
     @PutMapping("/{id}/calificacion")
     public ResponseEntity<AuthResponse> actualizarCalificacion(
-            @PathVariable UUID id, 
+            @PathVariable UUID id,
             @RequestParam Double nuevaCalificacion) {
         try {
             boolean actualizado = service.actualizarCalificacion(id, nuevaCalificacion);
-            
+
             if (actualizado) {
                 return ResponseEntity.ok(new AuthResponse("Calificación actualizada"));
             }
-            
+
             return ResponseEntity.notFound().build();
 
         } catch (Exception e) {

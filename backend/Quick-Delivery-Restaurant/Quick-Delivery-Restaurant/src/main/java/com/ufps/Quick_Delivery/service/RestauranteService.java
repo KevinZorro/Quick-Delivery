@@ -50,14 +50,8 @@ public class RestauranteService {
         }
 
         // Validar campos obligatorios
-        if (restaurante.getUsuarioId() == null || restaurante.getDescripcion() == null || 
-            restaurante.getCategoria() == null || restaurante.getCalificacionPromedio() == null) {
+        if (restaurante.getUsuarioId() == null) {
             throw new IllegalArgumentException("Faltan campos obligatorios");
-        }
-
-        // Validar rango de calificación
-        if (restaurante.getCalificacionPromedio() < 0.0 || restaurante.getCalificacionPromedio() > 5.0) {
-            throw new IllegalArgumentException("La calificación debe estar entre 0.0 y 5.0");
         }
 
         // Si no tiene imagen, asignar una por defecto
