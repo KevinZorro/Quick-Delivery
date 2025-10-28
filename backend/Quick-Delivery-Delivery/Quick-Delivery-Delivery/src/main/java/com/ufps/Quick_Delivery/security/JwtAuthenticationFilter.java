@@ -11,7 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.ufps.Quick_Delivery.service.JwtService;
+import com.ufps.Quick_Delivery.services.JwtService;
 
 import java.io.IOException;
 import java.util.List;

@@ -26,8 +26,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/restaurante/registro", "/api/restaurante/login", "/api/restaurante/registro-completo", "/api/restaurante/confirmar", "/api/restaurante/*/reporte" ).permitAll()
+                .requestMatchers("/api/restaurante/registro-completo", "/api/restaurante/confirmar", "/api/restaurante/*/reporte" ).permitAll()
                 .requestMatchers("/api/restaurante/*/cerrar").permitAll()
+                .requestMatchers("/productos/**").authenticated()
                 .anyRequest().permitAll() // cambiar a autenticade cuando deje de probar
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
