@@ -41,23 +41,27 @@ export class LoginComponent implements OnInit {
     this.authService.login(correo, contraseña).subscribe({
       next: (res) => {
         this.loading = false;
-        if (res.rol === 'CLIENTE') {
-          this.router.navigate(['/main']);
-        } else if (res.rol === 'RESTAURANTE') {
-          this.router.navigate(['/restaurante-dashboard']);
-        } else if (res.rol === 'DELIVERY') {
-          this.router.navigate(['/delivery-dashboard']);
+        
+        // Redirigir según el rol del usuario
+        if (res.rol === 'RESTAURANTE') {
+          this.router.navigate(['/inicio']);
+        } else if (res.rol === 'CLIENTE') {
+          this.router.navigate(['/dashboard-cliente']);
+        } else if (res.rol === 'DOMICILIARIO') {
+          this.router.navigate(['/dashboard-domiciliario']);
         } else {
-          this.errorMessage = 'Rol de usuario desconocido';
+          this.router.navigate(['/']);
         }
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = 'Correo o contraseña incorrectos';
-      },
+        this.errorMessage = err.error?.message || 'Error al iniciar sesión. Verifica tus credenciales.';
+        console.error(err);
+      }
     });
   }
 
+  // ✅ MÉTODO FALTANTE - AGREGADO AQUÍ
   navigateToRegister(): void {
     this.router.navigate(['/register']);
   }
