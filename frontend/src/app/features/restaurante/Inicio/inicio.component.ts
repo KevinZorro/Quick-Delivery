@@ -17,7 +17,7 @@ export class InicioComponent implements OnInit {
   errorMessage: string | null = null;
 
   // Simulamos el ID del usuario logueado (deberías obtenerlo del token o servicio de auth)
-  usuarioId = '123e4567-e89b-12d3-a456-426614174000'; // Cambia esto por el ID real del usuario
+  usuarioId = 'e9bd706d-0975-471f-ae15-284a60c448c2'; // Cambia esto por el ID real del usuario
 
   constructor(
     private restauranteService: RestauranteService,
