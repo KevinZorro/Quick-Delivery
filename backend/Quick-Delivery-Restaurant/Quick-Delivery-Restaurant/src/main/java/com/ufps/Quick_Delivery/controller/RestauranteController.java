@@ -2,7 +2,9 @@ package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.dto.AuthResponse;
 import com.ufps.Quick_Delivery.dto.RestauranteRequest;
+import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.model.Restaurante;
+import com.ufps.Quick_Delivery.service.ProductoService;
 import com.ufps.Quick_Delivery.service.RestauranteService;
 
 import jakarta.validation.Valid;
@@ -18,9 +20,11 @@ import java.util.UUID;
 public class RestauranteController {
 
     private final RestauranteService service;
+    private final ProductoService productoService;
 
-    public RestauranteController(RestauranteService service) {
-        this.service = service;
+    public RestauranteController(RestauranteService restauranteService, ProductoService productoService) {
+        this.service = restauranteService;
+        this.productoService = productoService;
     }
 
     @GetMapping("/{id}")
@@ -95,4 +99,15 @@ public class RestauranteController {
                     .body(new AuthResponse("Error al actualizar calificación"));
         }
     }
+
+
+@GetMapping("/{id}/productos")
+public ResponseEntity<List<Producto>> listarProductos(@PathVariable("id") UUID id) {
+    if (service.buscarPorId(id).isEmpty()) {
+        return ResponseEntity.notFound().build();
+    }
+    List<Producto> productos = productoService.findByRestaurante(id);
+    return ResponseEntity.ok(productos);
+}
+
 }

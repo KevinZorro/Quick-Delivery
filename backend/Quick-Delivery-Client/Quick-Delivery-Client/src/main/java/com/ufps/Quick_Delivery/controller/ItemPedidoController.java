@@ -1,18 +1,20 @@
 package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.model.ItemPedido;
+import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.service.ItemPedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import com.ufps.Quick_Delivery.dto.CarritoRequest;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/itemspedido")
+@RequestMapping("/api/itemspedido")
 @RequiredArgsConstructor
 @Validated
 public class ItemPedidoController {
@@ -47,4 +49,18 @@ public class ItemPedidoController {
         itemPedidoService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
     }
+
+@PostMapping("/carrito")
+public ResponseEntity<Pedido> agregarAlCarrito(
+        @RequestBody CarritoRequest carritoRequest) {
+    
+    Pedido pedidoActualizado = itemPedidoService.agregarProductosAlCarrito(
+        carritoRequest.getCliente(),
+        carritoRequest.getRestauranteId(),
+        carritoRequest.getItems()
+    );
+    return ResponseEntity.ok(pedidoActualizado);
+}
+
+
 }

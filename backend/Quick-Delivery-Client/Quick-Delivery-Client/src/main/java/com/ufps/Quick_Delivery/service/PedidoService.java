@@ -1,98 +1,112 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.client.RestauranteClient;
-import com.ufps.Quick_Delivery.dto.RestauranteDto;
-import com.ufps.Quick_Delivery.model.Cliente;
-import com.ufps.Quick_Delivery.model.EstadoPedido;
-import com.ufps.Quick_Delivery.model.MetodoPago;
-import com.ufps.Quick_Delivery.model.Pedido;
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
+import com.ufps.Quick_Delivery.model.*;
+import com.ufps.Quick_Delivery.repository.ClienteRepository;
+import com.ufps.Quick_Delivery.repository.ItemPedidoRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
-
-import feign.FeignException;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.ufps.Quick_Delivery.repository.ClienteRepository;
-
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
+    private final ItemPedidoRepository itemPedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final RestauranteClient restauranteClient;
+    // Si tienes un servicio o Feign Client para obtener productos del microservicio de restaurantes:
+    // private final ProductoService productoService;
 
-    // Crear o actualizar pedido, validando la entidad
-    public Pedido guardarPedido(@Valid Pedido pedido) {
-        if (pedido.getTotal() <= 0) {
-            throw new IllegalArgumentException("El total debe ser positivo");
-        }
-        pedido.setFechaActualizacion(LocalDateTime.now());
-        if (pedido.getFechaCreacion() == null) {
-            pedido.setFechaCreacion(LocalDateTime.now());
-        }
+    @Transactional
+    public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
+        // 1. Buscar el cliente
+        Cliente cliente = clienteRepository.findById(request.getClienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
-        // Validar que el restaurante exista y obtener datos
-        try {
-            RestauranteDto restaurante = restauranteClient.obtenerRestaurantePorId(pedido.getRestauranteId());
-            pedido.setRestauranteId(restaurante.getId());
-            System.out.println(restaurante.getCorreo());
-            // Puedes usar datos de restaurante aquí para lógica adicional
-        } catch (FeignException.NotFound e) {
-            throw new IllegalArgumentException("Restaurante no existe con ID: " + pedido.getRestauranteId());
-        }
-
-        Cliente cliente = new Cliente();
-        cliente.setUsuarioId(UUID.randomUUID());
-        clienteRepository.save(cliente);
+        // 2. Crear el pedido (sin ID, será generado automáticamente)
+        Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
+        pedido.setRestauranteId(request.getRestauranteId());
+        pedido.setDireccionEntregaId(request.getDireccionEntregaId());
+        pedido.setPreferencias(request.getPreferencias());
+        pedido.setEstado(EstadoPedido.INICIADO); // Estado inicial
+
+        // 3. Calcular el total y crear los items
+        int totalPedido = 0;
+
+        for (ItemPedidoDto itemDto : request.getItems()) {
+            // Aquí deberías obtener el precio del producto desde el microservicio de restaurantes
+            // Por ahora, asumimos que el precio viene en itemDto o lo calculas
+            // Ejemplo: ProductoDto producto = productoService.obtenerProducto(itemDto.getProductoId());
+            
+            // Por simplicidad, voy a asumir que tienes el precio disponible
+            // Si no, debes hacer una llamada HTTP/Feign al microservicio de productos
+            int precioUnidad = obtenerPrecioProducto(itemDto.getProductoId());
+            
+            ItemPedido item = new ItemPedido();
+            item.setProductoId(itemDto.getProductoId());
+            item.setCantidad(itemDto.getCantidad());
+            item.setPrecioUnidad(precioUnidad);
+            item.setSubtotal(precioUnidad * itemDto.getCantidad());
+            
+            pedido.addItem(item); // Esto agrega el item y establece la relación bidireccional
+            
+            totalPedido += item.getSubtotal();
+        }
+
+        pedido.setTotal(totalPedido);
+
+        // 4. Guardar el pedido (esto guardará también los items por el cascade)
         return pedidoRepository.save(pedido);
     }
 
-    // Buscar pedido por ID (solo lectura)
-    @Transactional(readOnly = true)
-    public Optional<Pedido> buscarPorId(@NotNull UUID id) {
+    // Método auxiliar para obtener el precio del producto
+    // Implementa esto según tu arquitectura (REST Template, Feign, etc.)
+    private int obtenerPrecioProducto(UUID productoId) {
+        // TODO: Llamar al microservicio de productos/restaurantes
+        // Por ahora retorna un valor de ejemplo
+        return 10000; // Precio en centavos o pesos
+    }
+
+    public Optional<Pedido> buscarPorId(UUID id) {
         return pedidoRepository.findById(id);
     }
 
-    // Listar todos los pedidos
-    @Transactional(readOnly = true)
     public List<Pedido> listarTodos() {
         return pedidoRepository.findAll();
     }
 
-    // Eliminar pedido por ID
-    public void eliminarPorId(@NotNull UUID id) {
-        if (!pedidoRepository.existsById(id)) {
-            throw new IllegalArgumentException("No existe pedido con ID: " + id);
-        }
+    @Transactional
+    public void eliminarPorId(UUID id) {
         pedidoRepository.deleteById(id);
     }
 
-    // Cambiar estado del pedido
-    public Pedido actualizarEstadoPedido(@NotNull UUID id, EstadoPedido nuevoEstado) {
-        Pedido pedido = buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado con ID: " + id));
+    @Transactional
+    public Pedido actualizarEstadoPedido(UUID id, EstadoPedido nuevoEstado) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
         pedido.setEstado(nuevoEstado);
-        pedido.setFechaActualizacion(LocalDateTime.now());
         return pedidoRepository.save(pedido);
     }
 
-    // Cambiar método de pago
-    public Pedido actualizarMetodoPago(@NotNull UUID id, MetodoPago metodoPago) {
-        Pedido pedido = buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado con ID: " + id));
+    @Transactional
+    public Pedido actualizarMetodoPago(UUID id, MetodoPago metodoPago) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
         pedido.setMetodoPago(metodoPago);
-        pedido.setFechaActualizacion(LocalDateTime.now());
+        return pedidoRepository.save(pedido);
+    }
+
+    // Si necesitas mantener el método antiguo para compatibilidad
+    @Deprecated
+    public Pedido guardarPedido(Pedido pedido) {
         return pedidoRepository.save(pedido);
     }
 }

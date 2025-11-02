@@ -36,7 +36,4 @@ public class ItemPedido {
 
     @Column(name = "subtotal", nullable = false)
     private int subtotal;
-
-    @Column(name = "preferencias", length = 255)
-    private String preferencias;
 }

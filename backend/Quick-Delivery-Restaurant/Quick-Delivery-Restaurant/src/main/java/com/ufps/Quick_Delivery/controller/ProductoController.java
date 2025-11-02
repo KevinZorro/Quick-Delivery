@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/productos")
+@RequestMapping("api/productos")
 @RequiredArgsConstructor
 @CrossOrigin
 public class ProductoController {
@@ -31,7 +31,7 @@ public class ProductoController {
     }
 
     @GetMapping("/restaurante/{restauranteId}")
-    public ResponseEntity<List<Producto>> listarPorRestaurante(@PathVariable UUID restauranteId) {
+    public ResponseEntity<List<Producto>> listarPorRestaurante(@PathVariable("restauranteId") UUID restauranteId) {
         return ResponseEntity.ok(service.findByRestaurante(restauranteId));
     }
 
@@ -61,7 +61,7 @@ public class ProductoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizar(@PathVariable UUID id,
-                                               @Valid @RequestBody ProductoDTO request) {
+            @Valid @RequestBody ProductoDTO request) {
         Producto p = new Producto();
         p.setNombre(request.getNombre());
         p.setDescripcion(request.getDescripcion());
@@ -80,20 +80,20 @@ public class ProductoController {
 
     @GetMapping("/restaurante/{restauranteId}/buscar")
     public ResponseEntity<List<Producto>> buscarNombre(@PathVariable UUID restauranteId,
-                                                      @RequestParam String nombre) {
+            @RequestParam String nombre) {
         return ResponseEntity.ok(service.buscarPorNombre(restauranteId, nombre));
     }
 
     @GetMapping("/restaurante/{restauranteId}/precio")
     public ResponseEntity<List<Producto>> filtrarPrecio(@PathVariable UUID restauranteId,
-                                                       @RequestParam BigDecimal min,
-                                                       @RequestParam BigDecimal max) {
+            @RequestParam BigDecimal min,
+            @RequestParam BigDecimal max) {
         return ResponseEntity.ok(service.filtrarPorPrecio(restauranteId, min, max));
     }
 
     @GetMapping("/restaurante/{restauranteId}/categoria/{categoria}")
     public ResponseEntity<List<Producto>> porCategoria(@PathVariable UUID restauranteId,
-                                                       @PathVariable String categoria) {
+            @PathVariable String categoria) {
         return ResponseEntity.ok(service.porCategoria(restauranteId, categoria));
     }
 }
