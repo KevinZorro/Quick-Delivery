@@ -32,6 +32,11 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
+    // ⭐ NUEVO MÉTODO
+    public Optional<Cliente> buscarPorUsuarioId(UUID usuarioId) {
+        return clienteRepository.findByUsuarioId(usuarioId);
+    }
+
     // Eliminar cliente por ID 
     public void eliminarPorId(/* @NotNull*/  UUID id) {
         if (!clienteRepository.existsById(id)) {
