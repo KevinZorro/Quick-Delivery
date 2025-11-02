@@ -19,7 +19,7 @@ public class PedidoDto{
     private Integer tiempoEstimado;
     private BigDecimal total;
     private String estado;
-    private String instrucciones;
+    private String preferencias;
     private LocalDateTime fechaCreacion;
     private UUID clienteId;
     private UUID productoId;

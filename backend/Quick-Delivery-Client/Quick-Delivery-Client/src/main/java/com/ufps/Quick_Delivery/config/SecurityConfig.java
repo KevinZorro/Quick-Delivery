@@ -3,6 +3,7 @@ package com.ufps.Quick_Delivery.config;
 import com.ufps.Quick_Delivery.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,7 +29,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .cors(withDefaults())
-            .headers(headers -> headers.frameOptions().disable());
+            .headers(headers -> headers.frameOptions(Customizer.withDefaults()));
 
         return http.build();
     }

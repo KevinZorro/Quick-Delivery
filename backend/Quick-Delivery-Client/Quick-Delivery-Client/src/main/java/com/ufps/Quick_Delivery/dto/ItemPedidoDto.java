@@ -14,11 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ItemPedidoDto {
 
-    private UUID id;
-    private UUID pedidoId;
     private UUID productoId;
     private short cantidad;
-    private int precioUnidad;
-    private int subtotal;
-    private String preferencias;
 }

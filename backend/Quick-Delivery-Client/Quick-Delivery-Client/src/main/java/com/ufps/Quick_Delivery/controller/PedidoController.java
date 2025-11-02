@@ -1,5 +1,6 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
@@ -14,13 +15,21 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/pedidos")
+@RequestMapping("/api/pedidos")
 @RequiredArgsConstructor
 @Validated
 public class PedidoController {
 
     private final PedidoService pedidoService;
 
+    // ⭐ NUEVO ENDPOINT PARA CREAR PEDIDO DESDE CARRITO
+    @PostMapping("/crear-desde-carrito")
+    public ResponseEntity<Pedido> crearPedidoDesdeCarrito(@Valid @RequestBody CrearPedidoRequestDto request) {
+        Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
+        return ResponseEntity.ok(pedidoCreado);
+    }
+
+    // Mantén el método antiguo si lo necesitas
     @PostMapping
     public ResponseEntity<Pedido> crearPedido(@Valid @RequestBody Pedido pedido) {
         Pedido creado = pedidoService.guardarPedido(pedido);
