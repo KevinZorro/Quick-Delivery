@@ -1,23 +1,27 @@
-import { Injectable } from '@angular/core';
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
+// auth.interceptor.ts
+import { HttpInterceptorFn } from '@angular/common/http';
 
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  console.log('🌐 Interceptor ejecutado para:', req.url);
+  
+  // Obtener el token del localStorage
+  const token = localStorage.getItem('quick-delivery-token');
+  
+  console.log('🔍 Token existe:', token ? 'SÍ' : 'NO');
 
-  constructor(private authService: AuthService) {}
+  if (token) {
+    req = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.authService.getToken();
-
-    if (token) {
-      const cloned = req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${token}`)
-      });
-      return next.handle(cloned);
-    }
-
-    return next.handle(req);
+    console.log('🔑 Token agregado al header');
+    console.log('📄 Token (primeros 50 chars):', token.substring(0, 50) + '...');
+  } else {
+    console.warn('⚠️ NO hay token en localStorage');
+    console.warn('📦 Claves en localStorage:', Object.keys(localStorage));
   }
-}
+
+  return next(req);
+};

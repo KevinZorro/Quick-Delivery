@@ -42,4 +42,12 @@ public class ClienteController {
         clienteService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
     }
+
+        // ⭐ NUEVO ENDPOINT: Buscar cliente por usuarioId
+    @GetMapping("/por-usuario/{usuarioId}")
+    public ResponseEntity<Cliente> obtenerClientePorUsuarioId(@PathVariable UUID usuarioId) {
+        return clienteService.buscarPorUsuarioId(usuarioId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

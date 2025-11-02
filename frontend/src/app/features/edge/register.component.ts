@@ -27,7 +27,8 @@ export class RegisterComponent implements OnInit {
       nombre: ['', [Validators.required]],
       correo: ['', [Validators.required, Validators.email]],
       contraseña: ['', [Validators.required, Validators.minLength(6)]],
-      telefono: ['']
+      telefono: [''],
+      rol: ['CLIENTE', [Validators.required]] // ⭐ AGREGAR campo rol con valor por defecto
     });
   }
 
@@ -42,6 +43,8 @@ export class RegisterComponent implements OnInit {
     this.loading = true;
     const formData = this.registerForm.value;
 
+    console.log('📝 Datos de registro:', formData); // ⭐ LOG para debugging
+
     this.authService.register(formData).subscribe({
       next: (res) => {
         this.loading = false;
@@ -52,6 +55,7 @@ export class RegisterComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
+        console.error('Error en registro:', err);
         this.errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
       },
     });

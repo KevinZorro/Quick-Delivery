@@ -41,7 +41,7 @@ public class UsuarioController {
 
     // Obtener uno por id
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerPorId(@PathVariable UUID id) {
+    public ResponseEntity<Usuario> obtenerPorId(@PathVariable("id") UUID id) {
         return usuarioService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
