@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RestauranteService, Restaurante, Producto } from './restaurante.service';
 import { CarritoService } from './carrito.service';
+import { PedidoService } from './pedido.service'; // ⭐ IMPORTAR
 import { FormsModule } from '@angular/forms';
 import { CarritoItem } from './carrito.service';
-import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-restaurante-detalle',
@@ -37,24 +37,16 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   preferenciasPago: string = '';
   estadoPedido = 'INICIADO';
 
-  // Cliente (deberías obtenerlo del servicio de autenticación)
-  clienteId: string = ''; // ⚠️ Debes obtener esto del usuario autenticado
-
   constructor(
-    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private restauranteService: RestauranteService,
-    private carritoService: CarritoService
+    private carritoService: CarritoService,
+    private pedidoService: PedidoService // ⭐ INYECTAR PedidoService
   ) {}
 
   ngOnInit(): void {
     this.restauranteId = this.route.snapshot.paramMap.get('id') || '';
-    
-    // ⚠️ IMPORTANTE: Obtén el clienteId del usuario autenticado
-    // Ejemplo: this.clienteId = this.authService.getCurrentUserId();
-    // Por ahora lo hardcodeo, pero debes reemplazarlo:
-    this.clienteId = 'uuid-del-cliente-actual'; // 🔴 CAMBIAR POR EL REAL
     
     if (this.restauranteId) {
       this.loadRestauranteData();
@@ -168,67 +160,97 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   cerrarModalPago(): void {
     this.modalPagoAbierto = false;
   }
+// En restaurante-detalle.component.ts - método confirmarPago()
 
-  confirmarPago(): void {
-    if (!this.metodoPagoSeleccionado) {
-      alert('Por favor selecciona un método de pago');
-      return;
-    }
-
-    if (!this.clienteId) {
-      alert('Error: No se pudo identificar el cliente');
-      return;
-    }
-
-    // Construir el request con los items del carrito
-    const pedidoRequest = {
-      clienteId: this.clienteId,
-      restauranteId: this.restauranteId,
-      direccionEntregaId: null, // Si tienes dirección, agrégala aquí
-      preferencias: this.preferenciasPago,
-      items: this.carritoItems.map(item => ({
-        productoId: item.producto.id,
-        cantidad: item.cantidad
-      }))
-    };
-
-    console.log('Enviando pedido:', pedidoRequest);
-
-    // ⭐ Crear el pedido usando el nuevo endpoint
-    this.http.post('/api/pedidos/crear-desde-carrito', pedidoRequest).subscribe({
-      next: (pedidoCreado: any) => {
-        console.log('Pedido creado:', pedidoCreado);
-
-        // Actualizar estado a EN_COCINA
-        this.http.patch(`/api/pedidos/${pedidoCreado.id}/estado`, null, { 
-          params: { estado: 'EN_COCINA' }
-        }).subscribe({
-          next: () => console.log('Estado actualizado a EN_COCINA'),
-          error: (err) => console.error('Error al actualizar estado:', err)
-        });
-        
-        // Actualizar método de pago
-        this.http.patch(`/api/pedidos/${pedidoCreado.id}/metodopago`, null, { 
-          params: { metodoPago: this.metodoPagoSeleccionado }
-        }).subscribe({
-          next: () => console.log('Método de pago actualizado'),
-          error: (err) => console.error('Error al actualizar método de pago:', err)
-        });
-
-        // Limpiar y cerrar todo
-        alert('¡Pago realizado con éxito! El pedido está EN COCINA');
-        this.vaciarCarrito();
-        this.modalPagoAbierto = false;
-        this.panelCarritoAbierto = false;
-        this.estadoPedido = 'EN_COCINA';
-
-        // Opcional: redirigir a página de seguimiento del pedido
-        // this.router.navigate(['/pedidos', pedidoCreado.id]);
-      },
-      error: (error) => {
-        console.error('Error completo:', error);
-        alert('Error al procesar el pago: ' + (error.error?.message || error.message));
-      }
-    });
+confirmarPago(): void {
+  if (!this.metodoPagoSeleccionado) {
+    alert('Por favor selecciona un método de pago');
+    return;
   }
+
+  if (this.carritoItems.length === 0) {
+    alert('El carrito está vacío');
+    return;
+  }
+
+  // ⭐ Obtener el clienteId del localStorage (lo guardamos en el login)
+  const clienteId = localStorage.getItem('quick-delivery-userId');
+  
+  if (!clienteId) {
+    alert('Error: No se pudo identificar el cliente. Por favor inicia sesión nuevamente.');
+    this.router.navigate(['/login']);
+    return;
+  }
+
+  // ⭐ Construir el request COMPLETO con TODA la información
+  const pedidoRequest = {
+    clienteId: clienteId,                    // ⭐ AGREGAR
+    restauranteId: this.restauranteId,
+    metodoPago: this.metodoPagoSeleccionado, // ⭐ AGREGAR
+    direccionEntregaId: null,
+    preferencias: this.preferenciasPago,
+    items: this.carritoItems.map(item => ({
+      productoId: item.producto.id,
+      cantidad: item.cantidad
+    }))
+  };
+
+  console.log('═══════════════════════════════════════');
+  console.log('📦 ENVIANDO PEDIDO COMPLETO AL BACKEND');
+  console.log('═══════════════════════════════════════');
+  console.log('🆔 Cliente ID:', pedidoRequest.clienteId);
+  console.log('🍽️ Restaurante ID:', pedidoRequest.restauranteId);
+  console.log('💳 Método de pago:', pedidoRequest.metodoPago);
+  console.log('📝 Items:', pedidoRequest.items);
+  console.log('💬 Preferencias:', pedidoRequest.preferencias);
+  console.log('═══════════════════════════════════════');
+
+  // ⭐ Usar el servicio
+  this.pedidoService.crearPedidoDesdeCarrito(pedidoRequest).subscribe({
+    next: (pedidoCreado) => {
+      console.log('═══════════════════════════════════════');
+      console.log('✅ PEDIDO CREADO EXITOSAMENTE');
+      console.log('═══════════════════════════════════════');
+      console.log('🆔 ID del pedido:', pedidoCreado.id);
+      console.log('💰 Total:', pedidoCreado.total);
+      console.log('📊 Estado:', pedidoCreado.estado);
+      console.log('💳 Método de pago:', pedidoCreado.metodoPago);
+      console.log('═══════════════════════════════════════');
+
+      // ⭐ YA NO necesitas actualizar estado ni método de pago porque ya se enviaron
+      
+      alert('¡Pago realizado con éxito! Tu pedido está siendo preparado.');
+      this.vaciarCarrito();
+      this.modalPagoAbierto = false;
+      this.panelCarritoAbierto = false;
+      this.estadoPedido = 'EN_COCINA';
+    },
+    error: (error) => {
+      console.error('═══════════════════════════════════════');
+      console.error('❌ ERROR AL CREAR PEDIDO');
+      console.error('═══════════════════════════════════════');
+      console.error('Status:', error.status);
+      console.error('Mensaje:', error.error);
+      console.error('Error completo:', error);
+      console.error('═══════════════════════════════════════');
+      
+      let mensajeError = 'Error al procesar el pago';
+      
+      if (error.status === 401) {
+        mensajeError = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
+        this.router.navigate(['/login']);
+      } else if (error.status === 403) {
+        mensajeError = 'No se pudo autenticar. Por favor inicia sesión nuevamente.';
+        this.router.navigate(['/login']);
+      } else if (error.status === 0) {
+        mensajeError = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+      } else if (error.error && typeof error.error === 'string') {
+        mensajeError = error.error;
+      }
+      
+      alert(mensajeError);
+    }
+  });
+}
+
 }

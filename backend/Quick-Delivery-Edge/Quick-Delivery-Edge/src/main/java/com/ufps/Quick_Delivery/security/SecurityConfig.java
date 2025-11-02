@@ -24,8 +24,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // ⭐ Rutas públicas sin autenticación
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().permitAll()
+                        // ⭐ Puedes agregar más rutas públicas aquí si las necesitas
+                        .anyRequest().permitAll() // Esto está bien para desarrollo
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

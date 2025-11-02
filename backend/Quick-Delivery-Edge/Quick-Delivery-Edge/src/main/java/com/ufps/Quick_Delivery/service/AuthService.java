@@ -28,7 +28,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    // Registro
     @Transactional
     public Usuario registrar(UsuarioDto dto) {
         Usuario usuario = new Usuario();
@@ -66,7 +65,7 @@ public class AuthService {
         return guardado;
     }
 
-    // Login
+    // ⭐ Login actualizado para incluir userId en la respuesta
     public Optional<LoginResponseDto> login(LoginRequestDto dto) {
         try {
             return usuarioRepository.findByCorreo(dto.getCorreo())
@@ -75,15 +74,15 @@ public class AuthService {
                         String token = jwtService.generateToken(usuario);
                         LoginResponseDto res = new LoginResponseDto();
                         res.setToken(token);
+                        res.setUserId(usuario.getId());  // ⭐ AGREGAR UUID
                         res.setNombre(usuario.getNombre());
                         res.setCorreo(usuario.getCorreo());
                         res.setRol(usuario.getRol().name());
                         return res;
                     });
         } catch (Exception e) {
-            e.printStackTrace(); // para ver el error real en consola
+            e.printStackTrace();
             return Optional.empty();
         }
     }
-
 }

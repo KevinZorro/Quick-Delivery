@@ -7,6 +7,7 @@ import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.service.PedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,19 +23,54 @@ public class PedidoController {
 
     private final PedidoService pedidoService;
 
-    // ⭐ NUEVO ENDPOINT PARA CREAR PEDIDO DESDE CARRITO
-    @PostMapping("/crear-desde-carrito")
-    public ResponseEntity<Pedido> crearPedidoDesdeCarrito(@Valid @RequestBody CrearPedidoRequestDto request) {
-        Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
-        return ResponseEntity.ok(pedidoCreado);
-    }
+@PostMapping("/crear-desde-carrito")
+public ResponseEntity<?> crearPedidoDesdeCarrito(
+        @Valid @RequestBody CrearPedidoRequestDto request) {
+    
+    try {
+        // Log detallado
+        System.out.println("═══════════════════════════════════════");
+        System.out.println("📦 CREANDO PEDIDO");
+        System.out.println("═══════════════════════════════════════");
+        System.out.println("🆔 Cliente ID: " + request.getClienteId());
+        System.out.println("🍽️ Restaurante ID: " + request.getRestauranteId());
+        System.out.println("💳 Método de pago: " + request.getMetodoPago());
+        System.out.println("📝 Cantidad de items: " + request.getItems().size());
+        System.out.println("═══════════════════════════════════════");
 
-    // Mantén el método antiguo si lo necesitas
-    @PostMapping
-    public ResponseEntity<Pedido> crearPedido(@Valid @RequestBody Pedido pedido) {
-        Pedido creado = pedidoService.guardarPedido(pedido);
-        return ResponseEntity.ok(creado);
+        // Validaciones
+        if (request.getRestauranteId() == null) {
+            return ResponseEntity.badRequest()
+                    .body("El ID del restaurante es requerido");
+        }
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body("Debe haber al menos un item en el pedido");
+        }
+
+        // Crear el pedido
+        Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
+        
+        System.out.println("✅ Pedido creado exitosamente!");
+        System.out.println("🆔 ID del pedido: " + pedidoCreado.getId());
+        System.out.println("💰 Total: " + pedidoCreado.getTotal());
+        System.out.println("═══════════════════════════════════════");
+        
+        return ResponseEntity.ok(pedidoCreado);
+        
+    } catch (IllegalArgumentException e) {
+        System.err.println("❌ Error de validación: " + e.getMessage());
+        return ResponseEntity.badRequest()
+                .body("Error de validación: " + e.getMessage());
+    } catch (RuntimeException e) {
+        System.err.println("❌ Error al crear pedido: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al crear el pedido: " + e.getMessage());
     }
+}
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Pedido> obtenerPedido(@PathVariable UUID id) {
@@ -55,14 +91,24 @@ public class PedidoController {
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<Pedido> cambiarEstado(@PathVariable UUID id, @RequestParam EstadoPedido estado) {
-        Pedido actualizado = pedidoService.actualizarEstadoPedido(id, estado);
-        return ResponseEntity.ok(actualizado);
+    public ResponseEntity<?> cambiarEstado(@PathVariable UUID id, @RequestParam EstadoPedido estado) {
+        try {
+            Pedido actualizado = pedidoService.actualizarEstadoPedido(id, estado);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al cambiar estado: " + e.getMessage());
+        }
     }
 
     @PatchMapping("/{id}/metodopago")
-    public ResponseEntity<Pedido> cambiarMetodoPago(@PathVariable UUID id, @RequestParam MetodoPago metodoPago) {
-        Pedido actualizado = pedidoService.actualizarMetodoPago(id, metodoPago);
-        return ResponseEntity.ok(actualizado);
+    public ResponseEntity<?> cambiarMetodoPago(@PathVariable UUID id, @RequestParam MetodoPago metodoPago) {
+        try {
+            Pedido actualizado = pedidoService.actualizarMetodoPago(id, metodoPago);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al cambiar método de pago: " + e.getMessage());
+        }
     }
 }

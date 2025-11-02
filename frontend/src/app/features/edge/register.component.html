@@ -65,6 +65,23 @@
         />
       </div>
 
+      <!-- ⭐ NUEVO: Selector de rol -->
+      <div>
+        <label for="rol" class="block text-sm font-medium text-gray-700 mb-1">Tipo de cuenta</label>
+        <select
+          id="rol"
+          formControlName="rol"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white"
+        >
+          <option value="CLIENTE">Cliente (Pedir comida)</option>
+          <option value="RESTAURANTE">Restaurante (Vender comida)</option>
+          <option value="REPARTIDOR">Repartidor (Entregar pedidos)</option>
+        </select>
+        <div *ngIf="registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched" class="text-red-500 text-sm mt-1">
+          Selecciona un tipo de cuenta
+        </div>
+      </div>
+
       <!-- Error Message -->
       <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
         {{ errorMessage }}

@@ -1,16 +1,17 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
-import com.ufps.Quick_Delivery.repository.ItemPedidoRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
+
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,60 +20,90 @@ import java.util.UUID;
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
-    private final ItemPedidoRepository itemPedidoRepository;
     private final ClienteRepository clienteRepository;
-    // Si tienes un servicio o Feign Client para obtener productos del microservicio de restaurantes:
-    // private final ProductoService productoService;
+    private final ProductoClient productoClient; // ⭐ INYECTAR ProductoClient
 
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
+        System.out.println("🔍 Iniciando creación de pedido...");
+        
         // 1. Buscar el cliente
-        Cliente cliente = clienteRepository.findById(request.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        Cliente cliente = clienteRepository.findByUsuarioId(request.getClienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + request.getClienteId()));
 
-        // 2. Crear el pedido (sin ID, será generado automáticamente)
+        System.out.println("✅ Cliente encontrado: " + cliente.getId());
+
+        // 2. Crear el pedido
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
         pedido.setRestauranteId(request.getRestauranteId());
         pedido.setDireccionEntregaId(request.getDireccionEntregaId());
         pedido.setPreferencias(request.getPreferencias());
-        pedido.setEstado(EstadoPedido.INICIADO); // Estado inicial
+        pedido.setEstado(EstadoPedido.INICIADO);
+        
+        // ⭐ ASIGNAR MÉTODO DE PAGO desde el request
+        if (request.getMetodoPago() != null && !request.getMetodoPago().isEmpty()) {
+            try {
+                MetodoPago metodoPago = MetodoPago.valueOf(request.getMetodoPago().toUpperCase());
+                pedido.setMetodoPago(metodoPago);
+                System.out.println("💳 Método de pago asignado: " + metodoPago);
+            } catch (IllegalArgumentException e) {
+                System.err.println("⚠️ Método de pago inválido: " + request.getMetodoPago());
+                throw new RuntimeException("Método de pago inválido: " + request.getMetodoPago());
+            }
+        }
 
         // 3. Calcular el total y crear los items
         int totalPedido = 0;
 
+        System.out.println("📦 Procesando " + request.getItems().size() + " items...");
+
         for (ItemPedidoDto itemDto : request.getItems()) {
-            // Aquí deberías obtener el precio del producto desde el microservicio de restaurantes
-            // Por ahora, asumimos que el precio viene en itemDto o lo calculas
-            // Ejemplo: ProductoDto producto = productoService.obtenerProducto(itemDto.getProductoId());
-            
-            // Por simplicidad, voy a asumir que tienes el precio disponible
-            // Si no, debes hacer una llamada HTTP/Feign al microservicio de productos
-            int precioUnidad = obtenerPrecioProducto(itemDto.getProductoId());
-            
-            ItemPedido item = new ItemPedido();
-            item.setProductoId(itemDto.getProductoId());
-            item.setCantidad(itemDto.getCantidad());
-            item.setPrecioUnidad(precioUnidad);
-            item.setSubtotal(precioUnidad * itemDto.getCantidad());
-            
-            pedido.addItem(item); // Esto agrega el item y establece la relación bidireccional
-            
-            totalPedido += item.getSubtotal();
+            try {
+                // ⭐ Consultar el producto desde el microservicio de restaurantes
+                System.out.println("🔍 Consultando producto: " + itemDto.getProductoId());
+                ProductoClient.ProductoResponse producto = productoClient.obtenerProducto(itemDto.getProductoId());
+                
+                if (producto == null || producto.getPrecio() == null) {
+                    throw new RuntimeException("Producto no encontrado o sin precio: " + itemDto.getProductoId());
+                }
+
+                System.out.println("✅ Producto encontrado: " + producto.getNombre() + " - Precio: $" + producto.getPrecio());
+
+                // Validar que el producto esté disponible
+                if (Boolean.FALSE.equals(producto.getDisponible())) {
+                    throw new RuntimeException("El producto no está disponible: " + producto.getNombre());
+                }
+
+                // Crear el item del pedido
+                ItemPedido item = new ItemPedido();
+                item.setProductoId(itemDto.getProductoId());
+                item.setCantidad(itemDto.getCantidad());
+                item.setPrecioUnidad(producto.getPrecio()); // ⭐ Precio real del producto
+                item.setSubtotal(producto.getPrecio() * itemDto.getCantidad()); // ⭐ Cálculo correcto
+
+                System.out.println("   📝 Item: " + producto.getNombre() + " x" + itemDto.getCantidad() + " = $" + item.getSubtotal());
+
+                pedido.addItem(item);
+                totalPedido += item.getSubtotal();
+
+            } catch (Exception e) {
+                System.err.println("❌ Error al procesar producto " + itemDto.getProductoId() + ": " + e.getMessage());
+                throw new RuntimeException("Error al procesar el producto: " + e.getMessage());
+            }
         }
 
+        // ⭐ Asignar el total calculado
         pedido.setTotal(totalPedido);
 
-        // 4. Guardar el pedido (esto guardará también los items por el cascade)
-        return pedidoRepository.save(pedido);
-    }
+        System.out.println("💰 Total calculado: $" + totalPedido);
 
-    // Método auxiliar para obtener el precio del producto
-    // Implementa esto según tu arquitectura (REST Template, Feign, etc.)
-    private int obtenerPrecioProducto(UUID productoId) {
-        // TODO: Llamar al microservicio de productos/restaurantes
-        // Por ahora retorna un valor de ejemplo
-        return 10000; // Precio en centavos o pesos
+        // 4. Guardar el pedido (esto guardará también los items por cascade)
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
+        System.out.println("✅ Pedido guardado con ID: " + pedidoGuardado.getId());
+
+        return pedidoGuardado;
     }
 
     public Optional<Pedido> buscarPorId(UUID id) {
@@ -83,30 +114,33 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
-    @Transactional
     public void eliminarPorId(UUID id) {
         pedidoRepository.deleteById(id);
     }
 
-    @Transactional
-    public Pedido actualizarEstadoPedido(UUID id, EstadoPedido nuevoEstado) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        pedido.setEstado(nuevoEstado);
-        return pedidoRepository.save(pedido);
-    }
-
-    @Transactional
-    public Pedido actualizarMetodoPago(UUID id, MetodoPago metodoPago) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        pedido.setMetodoPago(metodoPago);
-        return pedidoRepository.save(pedido);
-    }
-
-    // Si necesitas mantener el método antiguo para compatibilidad
-    @Deprecated
     public Pedido guardarPedido(Pedido pedido) {
+        return pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public Pedido actualizarEstadoPedido(UUID pedidoId, EstadoPedido nuevoEstado) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        
+        pedido.setEstado(nuevoEstado);
+        System.out.println("📊 Estado del pedido " + pedidoId + " actualizado a: " + nuevoEstado);
+        
+        return pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public Pedido actualizarMetodoPago(UUID pedidoId, MetodoPago metodoPago) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        
+        pedido.setMetodoPago(metodoPago);
+        System.out.println("💳 Método de pago del pedido " + pedidoId + " actualizado a: " + metodoPago);
+        
         return pedidoRepository.save(pedido);
     }
 }
