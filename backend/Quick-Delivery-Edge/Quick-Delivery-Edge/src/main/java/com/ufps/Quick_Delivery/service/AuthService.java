@@ -51,11 +51,14 @@ public class AuthService {
             case RESTAURANTE:
                 RestauranteClient.RestauranteRequest restauranteRequest = new RestauranteClient.RestauranteRequest();
                 restauranteRequest.setUsuarioId(guardado.getId());
+                restauranteRequest.setDescripcion((String) dto.getDetalles().get("descripcion"));
+                restauranteRequest.setCategoria((String) dto.getDetalles().get("categoria"));
                 restauranteClient.crearRestaurante(restauranteRequest);
                 break;
             case REPARTIDOR:
                 DeliveryClient.DeliveryRequest deliveryRequest = new DeliveryClient.DeliveryRequest();
                 deliveryRequest.setUsuarioId(guardado.getId());
+                deliveryRequest.setVehiculo((String) dto.getDetalles().get("vehiculo"));
                 deliveryClient.crearDelivery(deliveryRequest);
                 break;
             default:

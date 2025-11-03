@@ -13,7 +13,7 @@ dist/
 .angular/
 .cache/
 coverage/
-front/.angular/
+frontend/.angular/
 
 # === IDEs (VS Code, IntelliJ, etc.) ===
 .vscode/

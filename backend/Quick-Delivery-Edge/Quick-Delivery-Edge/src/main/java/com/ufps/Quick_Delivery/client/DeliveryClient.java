@@ -12,8 +12,11 @@ public interface DeliveryClient {
 
     @PostMapping
     ResponseEntity<Void> crearDelivery(@RequestBody DeliveryRequest request);
+
+    
     @Data
     public static class DeliveryRequest {
         private UUID usuarioId;
+        private String vehiculo;
     }
 }

@@ -15,6 +15,8 @@ public interface RestauranteClient {
     @Data
     public static class RestauranteRequest {
         private UUID usuarioId;
+        private String descripcion;
+        private String categoria;
         
     }
 }
