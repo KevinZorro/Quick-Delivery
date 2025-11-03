@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RestauranteService, Restaurante } from './restaurante.service';
 import { AuthService } from '../edge/auth.service';
+import { HeaderComponent } from './header.component';
 
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule],
+    imports: [CommonModule, HeaderComponent],
   templateUrl: './main.component.html'
 })
 export class MainComponent implements OnInit {
