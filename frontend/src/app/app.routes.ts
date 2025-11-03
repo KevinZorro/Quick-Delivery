@@ -4,7 +4,8 @@ import { RegisterComponent } from './features/edge/register.component';
 import { MainComponent } from './features/cliente/main.component';
 import { DireccionesListaComponent } from './features/cliente/direcciones-lista.component';
 import { DireccionFormComponent } from './features/cliente/direccion-form.component';
-import { RestauranteMainComponent } from './features/restaurante/restaurante-main.component';
+import { RestauranteMainComponent } from './features/restaurante/main.component';
+import { RestauranteDetalleComponent } from './features/cliente/restaurante-detalle.component';
 
 export const routes: Routes = [
   // Rutas públicas
@@ -13,10 +14,11 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   
   // Ruta principal del restaurante
-  { path: 'restaurante/main', component: RestauranteMainComponent },
+  {path: 'restaurante/main',component: RestauranteMainComponent},
   
   // Rutas de cliente
   { path: 'main', component: MainComponent },
+  { path: 'restaurante/:id', component: RestauranteDetalleComponent},
   { path: 'cliente/direcciones', component: DireccionesListaComponent },
   { path: 'cliente/direcciones/nueva', component: DireccionFormComponent },
   { path: 'cliente/direcciones/editar/:id', component: DireccionFormComponent },
