@@ -12,21 +12,15 @@ import java.util.UUID;
 @Repository
 public interface RestauranteRepository extends JpaRepository<Restaurante, UUID> {
     
-    // Buscar restaurantes por usuario
-    List<Restaurante> findByUsuarioId(UUID usuarioId);
-    
-    // Validar duplicados por usuario y descripción
-    Optional<Restaurante> findByUsuarioIdAndDescripcion(UUID usuarioId, String descripcion);
+    // Buscar restaurante por usuarioId (relación 1:1)
+    Optional<Restaurante> findByUsuarioId(UUID usuarioId);
     
     // Buscar por categoría
     List<Restaurante> findByCategoria(Categoria categoria);
     
-    // Buscar restaurantes con calificación mayor o igual a un valor
+    // Buscar por calificación mayor o igual
     List<Restaurante> findByCalificacionPromedioGreaterThanEqual(Double calificacion);
     
-    // Buscar por usuario y categoría
-    List<Restaurante> findByUsuarioIdAndCategoria(UUID usuarioId, Categoria categoria);
-    
-    // Verificar si existe por usuario y descripción
-    boolean existsByUsuarioIdAndDescripcion(UUID usuarioId, String descripcion);
+    // Verificar si existe por usuarioId
+    boolean existsByUsuarioId(UUID usuarioId);
 }

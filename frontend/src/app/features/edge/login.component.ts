@@ -42,9 +42,15 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         
+        // ⭐ Guardar información del usuario en localStorage PARA TODOS LOS ROLES
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('quick-delivery-userId', res.userId);
+        localStorage.setItem('quick-delivery-userName', res.nombre || 'Usuario');
+        localStorage.setItem('quick-delivery-userRole', res.rol);
+        
         // Redirigir según el rol del usuario
         if (res.rol === 'RESTAURANTE') {
-          this.router.navigate(['/inicio']);
+          this.router.navigate(['/restaurante/main']);
         } else if (res.rol === 'CLIENTE') {
           this.router.navigate(['/main']);
           console.log('Navegando a /main para CLIENTE');
@@ -62,7 +68,6 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTODO FALTANTE - AGREGADO AQUÍ
   navigateToRegister(): void {
     this.router.navigate(['/register']);
   }

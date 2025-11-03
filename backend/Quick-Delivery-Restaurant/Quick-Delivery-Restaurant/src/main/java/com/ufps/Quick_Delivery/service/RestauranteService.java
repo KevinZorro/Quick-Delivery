@@ -1,153 +1,120 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.dto.ReporteRequest;
-import com.ufps.Quick_Delivery.dto.RestauranteRequest;
+import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
+import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
+import com.ufps.Quick_Delivery.model.Categoria;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
-import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RestauranteService {
 
-    private final RestauranteRepository repo;
+    private final RestauranteRepository restauranteRepository;
 
-    public RestauranteService(RestauranteRepository repo) {
-        this.repo = repo;
+    @Transactional
+    public RestauranteResponseDto crear(RestauranteRequestDto requestDto) {
+        // Verificar si ya existe un restaurante para este usuario
+        if (restauranteRepository.existsByUsuarioId(requestDto.getUsuarioId())) {
+            throw new RuntimeException("Ya existe un restaurante para este usuario");
+        }
+
+        Restaurante restaurante = Restaurante.builder()
+                .usuarioId(requestDto.getUsuarioId())
+                .descripcion(requestDto.getDescripcion())
+                .categoria(requestDto.getCategoria())
+                .imagenUrl(requestDto.getImagenUrl())
+                .calificacionPromedio(0.0)
+                .build();
+
+        Restaurante savedRestaurante = restauranteRepository.save(restaurante);
+        return mapToResponseDto(savedRestaurante);
     }
 
     @Transactional(readOnly = true)
-    public Optional<Restaurante> buscarPorId(@NotNull UUID id) {
-        return repo.findById(id);
+    public RestauranteResponseDto obtenerPorId(UUID id) {
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado con id: " + id));
+        return mapToResponseDto(restaurante);
     }
 
     @Transactional(readOnly = true)
-    public List<Restaurante> listarTodos() {
-        return repo.findAll();
+    public RestauranteResponseDto obtenerPorUsuarioId(UUID usuarioId) {
+        Restaurante restaurante = restauranteRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("No se encontró un restaurante para este usuario"));
+        return mapToResponseDto(restaurante);
     }
 
     @Transactional(readOnly = true)
-    public List<Restaurante> listarPorUsuarioId(UUID usuarioId) {
-        return repo.findByUsuarioId(usuarioId);
+    public List<RestauranteResponseDto> listarTodos() {
+        return restauranteRepository.findAll().stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RestauranteResponseDto> listarPorCategoria(Categoria categoria) {
+        return restauranteRepository.findByCategoria(categoria).stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RestauranteResponseDto> listarPorCalificacionMinima(Double calificacion) {
+        return restauranteRepository.findByCalificacionPromedioGreaterThanEqual(calificacion).stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Restaurante crear(Restaurante restaurante) {
-        // Validar que el usuario no tenga ya un restaurante con el mismo nombre
-        Optional<Restaurante> existente = repo.findByUsuarioIdAndDescripcion(
-                restaurante.getUsuarioId(), 
-                restaurante.getDescripcion()
-        );
-        
-        if (existente.isPresent()) {
-            throw new IllegalArgumentException("Ya existe un restaurante con esta descripción para este usuario");
-        }
+    public RestauranteResponseDto actualizar(UUID id, RestauranteRequestDto requestDto) {
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado con id: " + id));
 
-        // Validar campos obligatorios
-        if (restaurante.getUsuarioId() == null) {
-            throw new IllegalArgumentException("Faltan campos obligatorios");
-        }
+        restaurante.setDescripcion(requestDto.getDescripcion());
+        restaurante.setCategoria(requestDto.getCategoria());
+        restaurante.setImagenUrl(requestDto.getImagenUrl());
 
-        // Si no tiene imagen, asignar una por defecto
-        if (restaurante.getImagenUrl() == null || restaurante.getImagenUrl().isEmpty()) {
-            restaurante.setImagenUrl("/assets/images/restaurante-default.jpg");
-        }
-
-        return repo.save(restaurante);
+        Restaurante updatedRestaurante = restauranteRepository.save(restaurante);
+        return mapToResponseDto(updatedRestaurante);
     }
 
     @Transactional
-    public Restaurante actualizar(UUID id, RestauranteRequest req) {
-        Optional<Restaurante> or = repo.findById(id);
-        if (or.isEmpty()) return null;
+    public void actualizarCalificacion(UUID id, Double nuevaCalificacion) {
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado con id: " + id));
 
-        Restaurante r = or.get();
-
-        if (req.getDescripcion() != null) {
-            r.setDescripcion(req.getDescripcion());
-        }
-        
-        if (req.getCategoria() != null) {
-            r.setCategoria(req.getCategoria());
-        }
-        
-        if (req.getCalificacionPromedio() != null) {
-            if (req.getCalificacionPromedio() < 0.0 || req.getCalificacionPromedio() > 5.0) {
-                throw new IllegalArgumentException("La calificación debe estar entre 0.0 y 5.0");
-            }
-            r.setCalificacionPromedio(req.getCalificacionPromedio());
-        }
-        
-        if (req.getImagenUrl() != null) {
-            r.setImagenUrl(req.getImagenUrl());
+        if (nuevaCalificacion < 0 || nuevaCalificacion > 5) {
+            throw new IllegalArgumentException("La calificación debe estar entre 0 y 5");
         }
 
-        return repo.save(r);
+        restaurante.setCalificacionPromedio(nuevaCalificacion);
+        restauranteRepository.save(restaurante);
     }
 
     @Transactional
-    public boolean eliminar(UUID id) {
-        if (!repo.existsById(id)) {
-            return false;
+    public void eliminar(UUID id) {
+        if (!restauranteRepository.existsById(id)) {
+            throw new RuntimeException("Restaurante no encontrado con id: " + id);
         }
-        repo.deleteById(id);
-        return true;
+        restauranteRepository.deleteById(id);
     }
 
-    @Transactional
-    public boolean actualizarCalificacion(UUID id, Double nuevaCalificacion) {
-        Optional<Restaurante> or = repo.findById(id);
-        if (or.isEmpty()) return false;
-
-        if (nuevaCalificacion < 0.0 || nuevaCalificacion > 5.0) {
-            throw new IllegalArgumentException("La calificación debe estar entre 0.0 y 5.0");
-        }
-
-        Restaurante r = or.get();
-        r.setCalificacionPromedio(nuevaCalificacion);
-        repo.save(r);
-        return true;
-    }
-
-    public byte[] generarReporte(UUID id, ReporteRequest req) {
-        if (req.getFechaInicio() == null || req.getFechaFin() == null || req.getTipoReporte() == null) {
-            throw new IllegalArgumentException("Debe especificar fechaInicio, fechaFin y tipoReporte");
-        }
-
-        Optional<Restaurante> or = repo.findById(id);
-        if (or.isEmpty()) {
-            throw new IllegalArgumentException("Restaurante no encontrado");
-        }
-
-        Restaurante r = or.get();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Reporte de Desempeño\n");
-        sb.append("Restaurante ID: ").append(id).append("\n");
-        sb.append("Descripción: ").append(r.getDescripcion()).append("\n");
-        sb.append("Categoría: ").append(r.getCategoria().getNombre()).append("\n");
-        sb.append("Calificación Promedio: ").append(r.getCalificacionPromedio()).append("\n");
-        sb.append("Tipo de Reporte: ").append(req.getTipoReporte()).append("\n");
-        sb.append("Rango de Fechas: ").append(req.getFechaInicio()).append(" a ").append(req.getFechaFin()).append("\n\n");
-        sb.append("Fecha,Descripción,Métrica,Valor\n");
-
-        for (int i = 1; i <= 5; i++) {
-            sb.append(req.getFechaInicio().plusDays(i))
-                    .append(",Ejemplo de registro ")
-                    .append(i)
-                    .append(",")
-                    .append(req.getTipoReporte())
-                    .append(",")
-                    .append((int) (Math.random() * 100))
-                    .append("\n");
-        }
-
-        return sb.toString().getBytes(StandardCharsets.UTF_8);
+    private RestauranteResponseDto mapToResponseDto(Restaurante restaurante) {
+        return RestauranteResponseDto.builder()
+                .id(restaurante.getId())
+                .usuarioId(restaurante.getUsuarioId())
+                .descripcion(restaurante.getDescripcion())
+                .categoria(restaurante.getCategoria())
+                .calificacionPromedio(restaurante.getCalificacionPromedio())
+                .imagenUrl(restaurante.getImagenUrl())
+                .build();
     }
 }

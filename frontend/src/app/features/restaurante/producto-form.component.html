@@ -1,0 +1,99 @@
+<div class="p-6">
+  <h3 class="text-2xl font-bold text-gray-800 mb-6">
+    {{ producto ? 'Editar Producto' : 'Nuevo Producto' }}
+  </h3>
+
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {{ errorMessage }}
+  </div>
+
+  <form [formGroup]="productoForm" (ngSubmit)="onSubmit()" class="space-y-4">
+    <!-- Nombre -->
+    <div>
+      <label class="block text-gray-700 font-semibold mb-2">Nombre del Producto *</label>
+      <input 
+        type="text" 
+        formControlName="nombre" 
+        placeholder="Ej: Hamburguesa Especial"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+      <p *ngIf="productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched" 
+         class="text-red-500 text-sm mt-1">
+        El nombre es obligatorio
+      </p>
+    </div>
+
+    <!-- Descripción -->
+    <div>
+      <label class="block text-gray-700 font-semibold mb-2">Descripción *</label>
+      <textarea 
+        formControlName="descripcion" 
+        rows="3"
+        placeholder="Describe tu producto..."
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"></textarea>
+      <p *ngIf="productoForm.get('descripcion')?.invalid && productoForm.get('descripcion')?.touched" 
+         class="text-red-500 text-sm mt-1">
+        La descripción es obligatoria
+      </p>
+    </div>
+
+    <!-- Precio -->
+    <div>
+      <label class="block text-gray-700 font-semibold mb-2">Precio *</label>
+      <input 
+        type="number" 
+        formControlName="precio" 
+        placeholder="0"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+      <p *ngIf="productoForm.get('precio')?.invalid && productoForm.get('precio')?.touched" 
+         class="text-red-500 text-sm mt-1">
+        El precio debe ser mayor o igual a 0
+      </p>
+    </div>
+
+    <!-- Categoría -->
+    <div>
+      <label class="block text-gray-700 font-semibold mb-2">Categoría (opcional)</label>
+      <input 
+        type="text" 
+        formControlName="categoria" 
+        placeholder="Ej: Comida rápida"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+    </div>
+
+    <!-- URL de imagen -->
+    <div>
+      <label class="block text-gray-700 font-semibold mb-2">URL de Imagen (opcional)</label>
+      <input 
+        type="text" 
+        formControlName="imagenUrl" 
+        placeholder="https://ejemplo.com/imagen.jpg"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+    </div>
+
+    <!-- Disponibilidad -->
+    <div class="flex items-center">
+      <input 
+        type="checkbox" 
+        formControlName="disponible" 
+        id="disponible"
+        class="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+      <label for="disponible" class="ml-2 text-gray-700 font-semibold">Producto disponible</label>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex gap-4 pt-4">
+      <button 
+        type="submit" 
+        [disabled]="productoForm.invalid || loading"
+        class="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ loading ? 'Guardando...' : (producto ? 'Actualizar' : 'Guardar') }}
+      </button>
+      <button 
+        type="button"
+        (click)="cancelar()"
+        class="flex-1 bg-gray-400 hover:bg-gray-500 text-white px-6 py-3 rounded-lg transition">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</div>
