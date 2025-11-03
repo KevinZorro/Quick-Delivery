@@ -1,14 +1,12 @@
 package com.ufps.Quick_Delivery.controller;
 
-import com.ufps.Quick_Delivery.dto.AuthResponse;
-import com.ufps.Quick_Delivery.dto.RestauranteRequest;
-import com.ufps.Quick_Delivery.model.Producto;
-import com.ufps.Quick_Delivery.model.Restaurante;
-import com.ufps.Quick_Delivery.service.ProductoService;
+import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
+import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
+import com.ufps.Quick_Delivery.model.Categoria;
 import com.ufps.Quick_Delivery.service.RestauranteService;
-
 import jakarta.validation.Valid;
-
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,97 +15,66 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/restaurante")
+@RequiredArgsConstructor
 public class RestauranteController {
 
-    private final RestauranteService service;
-    private final ProductoService productoService;
+    private final RestauranteService restauranteService;
 
-    public RestauranteController(RestauranteService restauranteService, ProductoService productoService) {
-        this.service = restauranteService;
-        this.productoService = productoService;
+    @PostMapping
+    public ResponseEntity<RestauranteResponseDto> crear(@Valid @RequestBody RestauranteRequestDto requestDto) {
+        RestauranteResponseDto responseDto = restauranteService.crear(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Restaurante> obtenerRestaurante(@PathVariable("id") UUID id) {
-        return service.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Restaurante>> listarRestaurantes() {
-        return ResponseEntity.ok(service.listarTodos());
+    public ResponseEntity<RestauranteResponseDto> obtenerPorId(@PathVariable("id") UUID id) {
+        RestauranteResponseDto responseDto = restauranteService.obtenerPorId(id);
+        return ResponseEntity.ok(responseDto);
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<Restaurante>> listarPorUsuario(@PathVariable UUID usuarioId) {
-        return ResponseEntity.ok(service.listarPorUsuarioId(usuarioId));
+    public ResponseEntity<RestauranteResponseDto> obtenerPorUsuarioId(@PathVariable("usuarioId") UUID usuarioId) {
+        RestauranteResponseDto responseDto = restauranteService.obtenerPorUsuarioId(usuarioId);
+        return ResponseEntity.ok(responseDto);
     }
 
-    @PostMapping
-    public ResponseEntity<Restaurante> crearRestaurante(@Valid @RequestBody Restaurante restaurante) {
-        Restaurante creado = service.crear(restaurante);
-        return ResponseEntity.ok(creado);
+    @GetMapping
+    public ResponseEntity<List<RestauranteResponseDto>> listarTodos() {
+        List<RestauranteResponseDto> restaurantes = restauranteService.listarTodos();
+        return ResponseEntity.ok(restaurantes);
+    }
+
+    @GetMapping("/categoria/{categoria}")
+    public ResponseEntity<List<RestauranteResponseDto>> listarPorCategoria(@PathVariable("categoria") Categoria categoria) {
+        List<RestauranteResponseDto> restaurantes = restauranteService.listarPorCategoria(categoria);
+        return ResponseEntity.ok(restaurantes);
+    }
+
+    @GetMapping("/calificacion/{minima}")
+    public ResponseEntity<List<RestauranteResponseDto>> listarPorCalificacionMinima(@PathVariable("minima") Double minima) {
+        List<RestauranteResponseDto> restaurantes = restauranteService.listarPorCalificacionMinima(minima);
+        return ResponseEntity.ok(restaurantes);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AuthResponse> actualizarRestaurante(
-            @PathVariable UUID id,
-            @RequestBody RestauranteRequest req) {
-        try {
-            Restaurante actualizado = service.actualizar(id, req);
-
-            if (actualizado != null) {
-                return ResponseEntity.ok(new AuthResponse("Restaurante actualizado correctamente"));
-            }
-
-            return ResponseEntity.notFound().build();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(new AuthResponse("Error al actualizar restaurante"));
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<AuthResponse> eliminarRestaurante(@PathVariable UUID id) {
-        boolean eliminado = service.eliminar(id);
-
-        if (eliminado) {
-            return ResponseEntity.ok(new AuthResponse("Restaurante eliminado correctamente"));
-        }
-
-        return ResponseEntity.status(404).body(new AuthResponse("Restaurante no encontrado"));
+    public ResponseEntity<RestauranteResponseDto> actualizar(
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody RestauranteRequestDto requestDto) {
+        RestauranteResponseDto responseDto = restauranteService.actualizar(id, requestDto);
+        return ResponseEntity.ok(responseDto);
     }
 
     @PutMapping("/{id}/calificacion")
-    public ResponseEntity<AuthResponse> actualizarCalificacion(
-            @PathVariable UUID id,
-            @RequestParam Double nuevaCalificacion) {
-        try {
-            boolean actualizado = service.actualizarCalificacion(id, nuevaCalificacion);
-
-            if (actualizado) {
-                return ResponseEntity.ok(new AuthResponse("Calificación actualizada"));
-            }
-
-            return ResponseEntity.notFound().build();
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(new AuthResponse("Error al actualizar calificación"));
-        }
+    public ResponseEntity<Void> actualizarCalificacion(
+            @PathVariable("id") UUID id,
+            @RequestParam("calificacion") Double calificacion) {
+        restauranteService.actualizarCalificacion(id, calificacion);
+        return ResponseEntity.noContent().build();
     }
 
-
-@GetMapping("/{id}/productos")
-public ResponseEntity<List<Producto>> listarProductos(@PathVariable("id") UUID id) {
-    if (service.buscarPorId(id).isEmpty()) {
-        return ResponseEntity.notFound().build();
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable("id") UUID id) {
+        restauranteService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
-    List<Producto> productos = productoService.findByRestaurante(id);
-    return ResponseEntity.ok(productos);
-}
-
 }
