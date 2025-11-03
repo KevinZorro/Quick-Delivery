@@ -85,24 +85,95 @@
   </div>
 </div>
 
+<!-- Modal de Pago con Dirección -->
 <div *ngIf="modalPagoAbierto" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-[1000]">
-  <div class="bg-white p-6 rounded shadow-lg w-96">
-    <h3 class="text-xl font-bold mb-4">Confirmar pago</h3>
+  <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+    <h3 class="text-2xl font-bold mb-4 text-gray-800">Confirmar pedido</h3>
 
-    <label class="block mb-2 font-semibold">Método de pago:</label>
-    <select title="Selecciona" [(ngModel)]="metodoPagoSeleccionado" class="w-full border rounded mb-4 p-1">
-      <option value="" disabled>Selecciona un método</option>
-      <option value="TARJETA">Tarjeta de crédito/débito</option>
-      <option value="TRANSFERENCIA">Transferencia</option>
-      <option value="EFECTIVO">Efectivo</option>
-    </select>
+    <!-- ⭐ SELECTOR DE DIRECCIÓN -->
+    <div class="mb-4">
+      <label class="block mb-2 font-semibold text-gray-700">
+        Dirección de entrega: <span class="text-red-500">*</span>
+      </label>
+      
+      <div *ngIf="cargandoDirecciones" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <p class="text-sm text-gray-600 mt-2">Cargando direcciones...</p>
+      </div>
 
-    <label class="block mb-2 font-semibold">Preferencias (opcional):</label>
-    <textarea [(ngModel)]="preferenciasPago" rows="3" class="w-full border rounded p-1 mb-4" placeholder="Escribe tus preferencias"></textarea>
+      <select 
+        *ngIf="!cargandoDirecciones"
+        title="Selecciona una dirección" 
+        [(ngModel)]="direccionSeleccionada" 
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+        [class.border-red-500]="!direccionSeleccionada"
+      >
+        <option value="" disabled>Selecciona una dirección</option>
+        <option *ngFor="let dir of direcciones" [value]="dir.id">
+          {{ dir.calle }}, {{ dir.barrio }}, {{ dir.ciudad }}
+          <span *ngIf="dir.tipoReferencia"> ({{ dir.tipoReferencia }})</span>
+        </option>
+      </select>
 
-    <div class="flex justify-end gap-3">
-      <button (click)="cerrarModalPago()" class="bg-gray-200 px-3 py-1 rounded">Cancelar</button>
-      <button (click)="confirmarPago()" class="bg-green-600 text-white px-3 py-1 rounded">Confirmar pago</button>
+      <p *ngIf="direcciones.length === 0 && !cargandoDirecciones" class="text-sm text-red-600 mt-1">
+        No tienes direcciones registradas. Por favor agrega una dirección primero.
+      </p>
+    </div>
+
+    <!-- Método de pago -->
+    <div class="mb-4">
+      <label class="block mb-2 font-semibold text-gray-700">
+        Método de pago: <span class="text-red-500">*</span>
+      </label>
+      <select 
+        title="Selecciona método de pago" 
+        [(ngModel)]="metodoPagoSeleccionado" 
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+        [class.border-red-500]="!metodoPagoSeleccionado"
+      >
+        <option value="" disabled>Selecciona un método</option>
+        <option value="TARJETA">Tarjeta de crédito/débito</option>
+        <option value="TRANSFERENCIA">Transferencia</option>
+        <option value="EFECTIVO">Efectivo</option>
+      </select>
+    </div>
+
+    <!-- Preferencias -->
+    <div class="mb-4">
+      <label class="block mb-2 font-semibold text-gray-700">
+        Preferencias (opcional):
+      </label>
+      <textarea 
+        [(ngModel)]="preferenciasPago" 
+        rows="3" 
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none" 
+        placeholder="Ej: Sin cebolla, extra picante, sin contacto, etc."
+      ></textarea>
+    </div>
+
+    <!-- Resumen del total -->
+    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+      <div class="flex justify-between text-lg font-bold">
+        <span class="text-gray-700">Total a pagar:</span>
+        <span class="text-indigo-600">${{ totalCarrito | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex gap-3">
+      <button 
+        (click)="cerrarModalPago()" 
+        class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
+      >
+        Cancelar
+      </button>
+      <button 
+        (click)="confirmarPago()" 
+        class="flex-1 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        [disabled]="!metodoPagoSeleccionado || !direccionSeleccionada || carritoItems.length === 0"
+      >
+        Confirmar pedido
+      </button>
     </div>
   </div>
 </div>
