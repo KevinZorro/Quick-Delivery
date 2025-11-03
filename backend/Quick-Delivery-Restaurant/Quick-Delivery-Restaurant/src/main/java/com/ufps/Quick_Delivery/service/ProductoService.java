@@ -36,7 +36,7 @@ public class ProductoService {
     }
 
     public Producto update(UUID id, Producto producto) {
-        producto.setId(id);
+        producto.setId(id); // Asegurar que usa el ID correcto
         return repo.save(producto);
     }
 
