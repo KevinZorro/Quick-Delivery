@@ -1,33 +1,27 @@
 package com.ufps.Quick_Delivery.dto;
 
-import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-/*
- * DTO para transferir datos de productos entre capas de la aplicación.
- * Incluye validaciones para asegurar la integridad de los datos.
- */
 @Data
-public class ProductoDTO {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductoResponseDTO {
     
-    @NotNull
+    private UUID id;
     private UUID restauranteId;
-
-    @NotBlank
+    private String restauranteNombre;
     private String nombre;
-
     private String descripcion;
-
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal precio;
-
     private String categoria;
-
     private Boolean disponible;
-
     private String imagenUrl;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 }
