@@ -7,12 +7,24 @@
           <h1 class="text-2xl font-semibold text-gray-900">Panel de Restaurante</h1>
           <p class="text-sm text-gray-600 mt-1">{{ restauranteNombre }}</p>
         </div>
-        <button
-          (click)="cerrarSesion()"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
-        >
-          Cerrar Sesión
-        </button>
+        
+        <!-- Botones de navegación y cerrar sesión -->
+        <div class="flex items-center gap-3">
+          <button
+            (click)="verDirecciones()"
+            class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+          >
+            <span>📍</span>
+            <span class="hidden sm:inline">Mis Direcciones</span>
+          </button>
+          
+          <button
+            (click)="cerrarSesion()"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -40,7 +52,7 @@
 
         <!-- Filtro por categoría -->
         <select
-        title="x"
+          title="Filtrar por categoría"
           (change)="onCategorialFiltroChange($event)"
           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none text-sm w-full sm:w-auto"
         >
@@ -71,7 +83,7 @@
         <!-- Imagen -->
         <div class="h-48 bg-gray-100 overflow-hidden">
           <img
-          alt="x"
+            alt="{{ producto.nombre }}"
             *ngIf="producto.imagenUrl"
             [src]="producto.imagenUrl"
             [alt]="producto.nombre"
@@ -128,7 +140,7 @@
               Editar
             </button>
             <button
-            title="x"
+              title="Eliminar producto"
               (click)="eliminarProducto(producto)"
               class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm font-medium"
             >
@@ -167,7 +179,7 @@
             {{ modoEdicion ? 'Editar Producto' : 'Nuevo Producto' }}
           </h2>
           <button
-          title="x"
+            title="Cerrar modal"
             (click)="cerrarModal()"
             class="text-gray-400 hover:text-gray-600 transition-colors"
           >
