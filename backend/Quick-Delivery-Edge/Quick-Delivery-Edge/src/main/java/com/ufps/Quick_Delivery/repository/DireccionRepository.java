@@ -11,9 +11,12 @@ import java.util.UUID;
 @Repository
 public interface DireccionRepository extends JpaRepository<Direccion, UUID> {
     
-    List<Direccion> findByUsuario(UUID usuarioId);
+    // ⭐ CORRECTO: Usar Usuario_Id cuando comparas con UUID
+    List<Direccion> findByUsuarioId(UUID usuarioId);
     
-    List<Direccion> findByCiudad(String ciudad);
+    // ⭐ CORRECTO: Usar Usuario_Id
+    long countByUsuarioId(UUID usuarioId);
     
-    List<Direccion> findByUsuarioAndTipoReferencia(UUID usuarioId, TipoReferencia tipoReferencia);
+    // ⭐ CORRECTO: Usar Usuario_Id si existe este método
+    List<Direccion> findByUsuarioIdAndTipoReferencia(UUID usuarioId, TipoReferencia tipoReferencia);
 }
