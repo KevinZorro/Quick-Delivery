@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/edge/login.component';
 import { RegisterComponent } from './features/edge/register.component';
-import { MainComponent } from './features/cliente/main.component';
-import { DireccionesListaComponent } from './features/cliente/direcciones-lista.component';
-import { DireccionFormComponent } from './features/cliente/direccion-form.component';
-import { RestauranteMainComponent } from './features/restaurante/restaurante-main.component';
+import { InicioComponent } from './features/restaurante/Inicio/inicio.component'; // ← VERIFICA ESTA RUTA
+import { MenuProductoComponent } from './features/restaurante/menu-producto/menu-producto.component'; // ← VERIFICA ESTA RUTA
+import { CerrarComponent } from './features/restaurante/cerrar/cerrar.component';
+import { RegistroRestauranteComponent } from './features/restaurante/features/restaurante/registro-restaurante/registro-restaurante.component';
+import { IndexComponent } from './features/restaurante/index/index.component';
 
 export const routes: Routes = [
   // Rutas públicas
