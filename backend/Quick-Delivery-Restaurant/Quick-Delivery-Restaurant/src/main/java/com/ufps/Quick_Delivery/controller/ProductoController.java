@@ -62,14 +62,24 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizar(@PathVariable UUID id,
             @Valid @RequestBody ProductoDTO request) {
-        Producto p = new Producto();
-        p.setNombre(request.getNombre());
-        p.setDescripcion(request.getDescripcion());
-        p.setPrecio(request.getPrecio());
-        p.setCategoria(request.getCategoria());
-        p.setDisponible(request.getDisponible() != null ? request.getDisponible() : Boolean.TRUE);
-        p.setImagenUrl(request.getImagenUrl());
-        return ResponseEntity.ok(service.update(id, p));
+
+        // 1. Obtener el producto existente de la BD
+        Producto productoExistente = service.findByUuidProducto(id);
+        if (productoExistente == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        // 2. Actualizar SOLO los campos permitidos
+        productoExistente.setNombre(request.getNombre());
+        productoExistente.setDescripcion(request.getDescripcion());
+        productoExistente.setPrecio(request.getPrecio());
+        productoExistente.setCategoria(request.getCategoria());
+        productoExistente.setDisponible(request.getDisponible() != null ? request.getDisponible() : Boolean.TRUE);
+        productoExistente.setImagenUrl(request.getImagenUrl());
+
+        // 3. Guardar (sin perder restaurante_id ni categoría)
+        Producto actualizado = service.update(id, productoExistente);
+        return ResponseEntity.ok(actualizado);
     }
 
     @DeleteMapping("/{id}")
