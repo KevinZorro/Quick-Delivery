@@ -15,6 +15,7 @@ export class RegisterComponent implements OnInit {
   loading = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  selectedRole: string = 'CLIENTE'; // ⭐ Track del rol seleccionado
 
   constructor(
     private fb: FormBuilder,
@@ -28,8 +29,44 @@ export class RegisterComponent implements OnInit {
       correo: ['', [Validators.required, Validators.email]],
       contraseña: ['', [Validators.required, Validators.minLength(6)]],
       telefono: [''],
-      rol: ['CLIENTE', [Validators.required]] // ⭐ AGREGAR campo rol con valor por defecto
+      rol: ['CLIENTE', [Validators.required]],
+      // ⭐ Campos dinámicos para Restaurante
+      descripcion: [''],
+      categoria: [''],
+      // ⭐ Campo dinámico para Delivery
+      vehiculo: ['']
     });
+
+    // ⭐ Escuchar cambios en el rol para actualizar validaciones
+    this.registerForm.get('rol')?.valueChanges.subscribe((rol) => {
+      this.selectedRole = rol;
+      this.updateValidators(rol);
+    });
+  }
+
+  // ⭐ Actualizar validadores según el rol
+  updateValidators(rol: string): void {
+    const descripcionControl = this.registerForm.get('descripcion');
+    const categoriaControl = this.registerForm.get('categoria');
+    const vehiculoControl = this.registerForm.get('vehiculo');
+
+    // Limpiar validadores previos
+    descripcionControl?.clearValidators();
+    categoriaControl?.clearValidators();
+    vehiculoControl?.clearValidators();
+
+    // Agregar validadores según el rol
+    if (rol === 'RESTAURANTE') {
+      descripcionControl?.setValidators([Validators.required]);
+      categoriaControl?.setValidators([Validators.required]);
+    } else if (rol === 'REPARTIDOR') {
+      vehiculoControl?.setValidators([Validators.required]);
+    }
+
+    // Actualizar el estado de validación
+    descripcionControl?.updateValueAndValidity();
+    categoriaControl?.updateValueAndValidity();
+    vehiculoControl?.updateValueAndValidity();
   }
 
   onSubmit(): void {
@@ -37,15 +74,40 @@ export class RegisterComponent implements OnInit {
     this.successMessage = null;
 
     if (this.registerForm.invalid) {
+      Object.keys(this.registerForm.controls).forEach(key => {
+        this.registerForm.get(key)?.markAsTouched();
+      });
       return;
     }
 
     this.loading = true;
     const formData = this.registerForm.value;
 
-    console.log('📝 Datos de registro:', formData); // ⭐ LOG para debugging
+    // ⭐ Construir el objeto con detalles según el rol
+    const payload: any = {
+      nombre: formData.nombre,
+      correo: formData.correo,
+      telefono: formData.telefono,
+      contraseña: formData.contraseña,
+      rol: formData.rol,
+      detalles: {}
+    };
 
-    this.authService.register(formData).subscribe({
+    // Agregar detalles específicos según el rol
+    if (formData.rol === 'RESTAURANTE') {
+      payload.detalles = {
+        descripcion: formData.descripcion,
+        categoria: formData.categoria
+      };
+    } else if (formData.rol === 'REPARTIDOR') {
+      payload.detalles = {
+        vehiculo: formData.vehiculo
+      };
+    }
+
+    console.log('📝 Datos de registro:', payload);
+
+    this.authService.register(payload).subscribe({
       next: (res) => {
         this.loading = false;
         this.successMessage = 'Cuenta creada exitosamente. Redirigiendo al login...';
@@ -56,7 +118,7 @@ export class RegisterComponent implements OnInit {
       error: (err) => {
         this.loading = false;
         console.error('Error en registro:', err);
-        this.errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
+        this.errorMessage = err.error?.message || 'Error al crear la cuenta. Intenta nuevamente.';
       },
     });
   }
