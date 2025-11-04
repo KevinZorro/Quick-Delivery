@@ -4,6 +4,7 @@ public enum TipoReferencia {
     CASA,
     TRABAJO,
     SUCURSAL,
+    SEDE_PRINCIPAL,
     REPARTIDOR,
     OTRO
 }

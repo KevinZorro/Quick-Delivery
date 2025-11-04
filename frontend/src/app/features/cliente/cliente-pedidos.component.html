@@ -1,0 +1,198 @@
+<app-header></app-header>
+<!-- cliente-pedidos.component.html -->
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="container mx-auto px-4 max-w-6xl">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Mis Pedidos</h1>
+      <p class="text-gray-600">Historial completo de tus pedidos</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex justify-center items-center py-20">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-teal-600"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="bg-red-50 border border-red-300 text-red-800 px-6 py-4 rounded-lg mb-6">
+      <div class="flex items-center">
+        <span class="text-2xl mr-3">⚠️</span>
+        <div>
+          <p class="font-semibold">Error al cargar pedidos</p>
+          <p class="text-sm">{{ error }}</p>
+        </div>
+      </div>
+      <button 
+        (click)="cargarPedidos()" 
+        class="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Filters and Content -->
+    <div *ngIf="!loading && !error">
+      <!-- Filters Bar -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Estado Filter -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Filtrar por estado
+            </label>
+            <select 
+              title="Filtrar por estado"
+              [(ngModel)]="filtroEstado"
+              (change)="aplicarFiltros()"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+              <option *ngFor="let estado of estados" [value]="estado.valor">
+                {{ estado.texto }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Ordenamiento -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Ordenar por
+            </label>
+            <select
+              title="Ordenar por" 
+              [(ngModel)]="ordenamiento"
+              (change)="aplicarFiltros()"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+              <option value="reciente">Más reciente</option>
+              <option value="antiguo">Más antiguo</option>
+              <option value="mayor">Mayor precio</option>
+              <option value="menor">Menor precio</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Results Count -->
+        <div class="mt-4 text-sm text-gray-600">
+          Mostrando {{ pedidosFiltrados.length }} de {{ pedidos.length }} pedidos
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="pedidosFiltrados.length === 0" class="bg-white rounded-lg shadow-md p-12 text-center">
+        <div class="text-6xl mb-4">📦</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay pedidos</h3>
+        <p class="text-gray-600 mb-6">
+          {{ filtroEstado === 'TODOS' ? 'Aún no has realizado ningún pedido.' : 'No hay pedidos con este estado.' }}
+        </p>
+        <button 
+          *ngIf="filtroEstado !== 'TODOS'"
+          (click)="cambiarFiltroEstado('TODOS')" 
+          class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
+          Ver todos los pedidos
+        </button>
+        <button 
+          *ngIf="filtroEstado === 'TODOS'"
+          (click)="router.navigate(['/main'])" 
+          class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
+          Ir a explorar restaurantes
+        </button>
+      </div>
+
+      <!-- Pedidos List -->
+      <div class="space-y-4">
+        <div 
+          *ngFor="let pedido of pedidosFiltrados" 
+          class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+          
+          <!-- Pedido Card -->
+          <div class="p-6">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+              
+              <!-- Left Section: Info -->
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-3">
+                  <span class="text-3xl">{{ obtenerIconoEstado(pedido.estado) }}</span>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-800">
+                      Pedido #{{ pedido.id.substring(0, 8) }}
+                    </h3>
+                    <p class="text-sm text-gray-600">{{ pedido.fechaFormateada }}</p>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2 text-sm">
+                    <span class="font-medium text-gray-700">Estado:</span>
+                    <span 
+                      class="px-3 py-1 rounded-full text-xs font-semibold border {{ pedido.estadoColor }}">
+                      {{ pedido.estadoTexto }}
+                    </span>
+                  </div>
+
+                  <div *ngIf="pedido.metodoPago" class="flex items-center gap-2 text-sm">
+                    <span class="font-medium text-gray-700">Método de pago:</span>
+                    <span class="text-gray-600">
+                      {{ pedido.metodoPago === 'EFECTIVO' ? '💵 Efectivo' : '💳 ' + pedido.metodoPago }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-2 text-sm">
+                    <span class="font-medium text-gray-700">Restaurante ID:</span>
+                    <span class="text-gray-600">{{ pedido.restauranteId.substring(0, 8) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Section: Total y Acciones -->
+              <div class="flex flex-col items-end gap-3">
+                <div class="text-right">
+                  <p class="text-sm text-gray-600 mb-1">Total</p>
+                  <p class="text-2xl font-bold text-teal-600">
+                    {{ formatearPrecio(pedido.total) }}
+                  </p>
+                </div>
+
+                <button 
+                  (click)="verDetallePedido(pedido.id)"
+                  class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition font-medium">
+                  Ver detalles
+                </button>
+              </div>
+            </div>
+          </div>
+
+<div 
+  *ngIf="pedido.estado !== 'ENTREGADO'"
+  class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+  <div class="flex justify-between items-center text-xs">
+    <!-- Estado 1: INICIADO -->
+    <span [class.text-teal-600]="pedido.estado === 'INICIADO'" 
+          [class.font-semibold]="pedido.estado === 'INICIADO'">
+      Iniciado
+    </span>
+    <!-- Estado 2: EN_COCINA -->
+    <span [class.text-teal-600]="pedido.estado === 'EN_COCINA'" 
+          [class.font-semibold]="pedido.estado === 'EN_COCINA'">
+      En cocina
+    </span>
+    <!-- Estado 3: CON_EL_REPARTIDOR -->
+    <span [class.text-teal-600]="pedido.estado === 'CON_EL_REPARTIDOR'" 
+          [class.font-semibold]="pedido.estado === 'CON_EL_REPARTIDOR'">
+      Con repartidor
+    </span>
+    <!-- Estado 4: ENTREGADO -->
+    <span [class.text-teal-600]="pedido.estado === 'ENTREGADO'" 
+          [class.font-semibold]="pedido.estado === 'ENTREGADO'">
+      Entregado
+    </span>
+  </div>
+
+  <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+    <div 
+      class="h-full bg-teal-600 transition-all duration-500"
+      [style.width]="
+        pedido.estado === 'INICIADO' ? '0%' :
+        pedido.estado === 'EN_COCINA' ? '33%' :
+        pedido.estado === 'CON_EL_REPARTIDOR' ? '66%' :
+        pedido.estado === 'ENTREGADO' ? '100%' : '0%'
+      ">
+    </div>
+  </div>
+</div>

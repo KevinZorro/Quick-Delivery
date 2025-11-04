@@ -2,12 +2,14 @@ package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.dto.DireccionRequestDto;
 import com.ufps.Quick_Delivery.dto.DireccionResponseDto;
+import com.ufps.Quick_Delivery.dto.GeocodingResponseDto;
 import com.ufps.Quick_Delivery.model.Direccion;
 import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.DireccionRepository;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +19,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DireccionService {
     
     private final DireccionRepository direccionRepository;
     private final UsuarioRepository usuarioRepository;
+    private final GoogleMapsService googleMapsService; // ⭐ NUEVO
     
     @Transactional
     public DireccionResponseDto crearDireccion(DireccionRequestDto requestDto, UUID usuarioId) {
@@ -36,13 +40,42 @@ public class DireccionService {
             }
         }
         
+        // ⭐ NUEVO: Auto-geocodificar si no vienen coordenadas
+        String coordenadas = requestDto.getCoordenadas();
+        
+        if (coordenadas == null || coordenadas.trim().isEmpty()) {
+            try {
+                log.info("Geocodificando dirección automáticamente para usuario: {}", usuarioId);
+                
+                // Construir dirección completa para geocodificación
+                String fullAddress = String.format("%s, %s, %s, Colombia", 
+                    requestDto.getCalle(), 
+                    requestDto.getBarrio(), 
+                    requestDto.getCiudad()
+                );
+                
+                // Llamar al servicio de Google Maps
+                GeocodingResponseDto geocoded = googleMapsService.geocodeAddress(fullAddress);
+                
+                // Guardar en formato "latitud,longitud"
+                coordenadas = geocoded.getLatitude() + "," + geocoded.getLongitude();
+                
+                log.info("Geocodificación exitosa: {} -> {}", fullAddress, coordenadas);
+                
+            } catch (Exception e) {
+                log.warn("No se pudo geocodificar la dirección: {}. Continuando sin coordenadas.", e.getMessage());
+                // Si falla la geocodificación, continuar sin coordenadas
+                coordenadas = null;
+            }
+        }
+        
         Direccion direccion = new Direccion();
         direccion.setUsuario(usuario);
         direccion.setCalle(requestDto.getCalle());
         direccion.setReferencia(requestDto.getReferencia());
         direccion.setCiudad(requestDto.getCiudad());
         direccion.setBarrio(requestDto.getBarrio());
-        direccion.setCoordenadas(requestDto.getCoordenadas());
+        direccion.setCoordenadas(coordenadas); // ⭐ Coordenadas auto-geocodificadas
         direccion.setTipoReferencia(requestDto.getTipoReferencia());
         
         Direccion direccionGuardada = direccionRepository.save(direccion);
@@ -73,11 +106,44 @@ public class DireccionService {
             throw new RuntimeException("No tienes permiso para actualizar esta dirección");
         }
         
+        // ⭐ NUEVO: Auto-geocodificar si cambió la dirección y no vienen coordenadas
+        String coordenadas = requestDto.getCoordenadas();
+        
+        // Verificar si la dirección cambió
+        boolean direccionCambio = !direccion.getCalle().equals(requestDto.getCalle()) ||
+                                  !direccion.getCiudad().equals(requestDto.getCiudad()) ||
+                                  !direccion.getBarrio().equals(requestDto.getBarrio());
+        
+        if (direccionCambio && (coordenadas == null || coordenadas.trim().isEmpty())) {
+            try {
+                log.info("Geocodificando dirección actualizada para direccion ID: {}", id);
+                
+                String fullAddress = String.format("%s, %s, %s, Colombia", 
+                    requestDto.getCalle(), 
+                    requestDto.getBarrio(), 
+                    requestDto.getCiudad()
+                );
+                
+                GeocodingResponseDto geocoded = googleMapsService.geocodeAddress(fullAddress);
+                coordenadas = geocoded.getLatitude() + "," + geocoded.getLongitude();
+                
+                log.info("Geocodificación exitosa en actualización: {}", coordenadas);
+                
+            } catch (Exception e) {
+                log.warn("No se pudo geocodificar la dirección actualizada: {}", e.getMessage());
+                // Mantener las coordenadas anteriores si falla
+                coordenadas = direccion.getCoordenadas();
+            }
+        } else if (coordenadas == null || coordenadas.trim().isEmpty()) {
+            // Si no hay coordenadas nuevas y no cambió la dirección, mantener las antiguas
+            coordenadas = direccion.getCoordenadas();
+        }
+        
         direccion.setCalle(requestDto.getCalle());
         direccion.setReferencia(requestDto.getReferencia());
         direccion.setCiudad(requestDto.getCiudad());
         direccion.setBarrio(requestDto.getBarrio());
-        direccion.setCoordenadas(requestDto.getCoordenadas());
+        direccion.setCoordenadas(coordenadas);
         direccion.setTipoReferencia(requestDto.getTipoReferencia());
         
         Direccion direccionActualizada = direccionRepository.save(direccion);
@@ -97,16 +163,58 @@ public class DireccionService {
         direccionRepository.deleteById(id);
     }
     
+    // ⭐ NUEVO: Método para re-geocodificar una dirección manualmente
+    @Transactional
+    public DireccionResponseDto regeocodeAddress(UUID direccionId, UUID usuarioId) {
+        Direccion direccion = direccionRepository.findById(direccionId)
+                .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
+        
+        if (!direccion.getUsuario().getId().equals(usuarioId)) {
+            throw new RuntimeException("No tienes permiso para modificar esta dirección");
+        }
+        
+        try {
+            String fullAddress = String.format("%s, %s, %s, Colombia", 
+                direccion.getCalle(), 
+                direccion.getBarrio(), 
+                direccion.getCiudad()
+            );
+            
+            GeocodingResponseDto geocoded = googleMapsService.geocodeAddress(fullAddress);
+            String coordenadas = geocoded.getLatitude() + "," + geocoded.getLongitude();
+            
+            direccion.setCoordenadas(coordenadas);
+            Direccion direccionActualizada = direccionRepository.save(direccion);
+            
+            log.info("Dirección re-geocodificada exitosamente: ID={}, Coords={}", direccionId, coordenadas);
+            
+            return convertirAResponseDto(direccionActualizada);
+            
+        } catch (Exception e) {
+            log.error("Error al re-geocodificar dirección ID {}: {}", direccionId, e.getMessage());
+            throw new RuntimeException("Error al geocodificar la dirección: " + e.getMessage());
+        }
+    }
+    
+    // ⭐ NUEVO: Obtener direcciones con coordenadas válidas solamente
+    @Transactional(readOnly = true)
+    public List<DireccionResponseDto> obtenerDireccionesConCoordenadas(UUID usuarioId) {
+        return direccionRepository.findByUsuarioId(usuarioId).stream()
+                .filter(d -> d.getCoordenadas() != null && !d.getCoordenadas().trim().isEmpty())
+                .map(this::convertirAResponseDto)
+                .collect(Collectors.toList());
+    }
+    
     private DireccionResponseDto convertirAResponseDto(Direccion direccion) {
-        DireccionResponseDto Dto = new DireccionResponseDto();
-        Dto.setId(direccion.getId());
-        Dto.setUsuarioId(direccion.getUsuario().getId());
-        Dto.setCalle(direccion.getCalle());
-        Dto.setReferencia(direccion.getReferencia());
-        Dto.setCiudad(direccion.getCiudad());
-        Dto.setBarrio(direccion.getBarrio());
-        Dto.setCoordenadas(direccion.getCoordenadas());
-        Dto.setTipoReferencia(direccion.getTipoReferencia());
-        return Dto;
+        DireccionResponseDto dto = new DireccionResponseDto();
+        dto.setId(direccion.getId());
+        dto.setUsuarioId(direccion.getUsuario().getId());
+        dto.setCalle(direccion.getCalle());
+        dto.setReferencia(direccion.getReferencia());
+        dto.setCiudad(direccion.getCiudad());
+        dto.setBarrio(direccion.getBarrio());
+        dto.setCoordenadas(direccion.getCoordenadas());
+        dto.setTipoReferencia(direccion.getTipoReferencia());
+        return dto;
     }
 }

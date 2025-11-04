@@ -1,4 +1,3 @@
-// pedido.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -9,9 +8,9 @@ export interface ItemPedidoRequest {
 }
 
 export interface CrearPedidoRequest {
-  clienteId: string;           // ⭐ AGREGAR
+  clienteId: string;
   restauranteId: string;
-  metodoPago: string;           // ⭐ AGREGAR
+  metodoPago: string;
   direccionEntregaId?: string | null;
   preferencias?: string;
   items: ItemPedidoRequest[];
@@ -64,7 +63,47 @@ export class PedidoService {
     return this.http.post<Pedido>(
       `${this.baseUrl}/pedidos/crear-desde-carrito`,
       request,
-      { headers } // ⭐ Enviar headers con token
+      { headers }
+    );
+  }
+
+  /**
+   * 🆕 Listar todos los pedidos de un usuario
+   * Usa el endpoint que busca por usuarioId a través de la relación con Cliente
+   */
+  listarPedidosUsuario(usuarioId: string): Observable<Pedido[]> {
+    const headers = this.getAuthHeaders();
+    console.log('📦 Obteniendo pedidos del usuario:', usuarioId);
+    
+    return this.http.get<Pedido[]>(
+      `${this.baseUrl}/pedidos/usuario/${usuarioId}`, 
+      { headers }
+    );
+  }
+
+  /**
+   * 🆕 Listar pedidos de un usuario filtrados por estado
+   */
+  listarPedidosUsuarioPorEstado(usuarioId: string, estado: string): Observable<Pedido[]> {
+    const headers = this.getAuthHeaders();
+    console.log('📦 Obteniendo pedidos del usuario:', usuarioId, 'con estado:', estado);
+    
+    return this.http.get<Pedido[]>(
+      `${this.baseUrl}/pedidos/usuario/${usuarioId}/estado/${estado}`, 
+      { headers }
+    );
+  }
+
+  /**
+   * 🆕 Contar pedidos de un usuario
+   */
+  contarPedidosUsuario(usuarioId: string): Observable<number> {
+    const headers = this.getAuthHeaders();
+    console.log('🔢 Contando pedidos del usuario:', usuarioId);
+    
+    return this.http.get<number>(
+      `${this.baseUrl}/pedidos/usuario/${usuarioId}/count`, 
+      { headers }
     );
   }
 
@@ -91,8 +130,18 @@ export class PedidoService {
     return this.http.get<Pedido>(`${this.baseUrl}/pedidos/${pedidoId}`, { headers });
   }
 
+  // ⚠️ DEPRECATED: Usa listarPedidosUsuario() en su lugar
   listarPedidos(): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<Pedido[]>(`${this.baseUrl}/pedidos`, { headers });
+  }
+
+  // ⚠️ DEPRECATED: Usa listarPedidosUsuario() en su lugar
+  listarPedidosCliente(clienteId: string): Observable<Pedido[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<Pedido[]>(
+      `${this.baseUrl}/pedidos/cliente/${clienteId}`, 
+      { headers }
+    );
   }
 }

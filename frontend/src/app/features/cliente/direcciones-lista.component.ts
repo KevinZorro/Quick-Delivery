@@ -4,6 +4,8 @@ import { Router, RouterModule } from '@angular/router';
 import { DireccionService, Direccion } from './direccion.service';
 import { HeaderComponent } from './header.component';
 
+declare var google: any; // Google Maps
+
 @Component({
   selector: 'app-direcciones-lista',
   standalone: true,
@@ -15,6 +17,12 @@ export class DireccionesListaComponent implements OnInit {
   loading = true;
   errorMessage: string | null = null;
   usuarioId: string = '';
+
+  // ⭐ Variables para el modal del mapa
+  modalMapaAbierto = false;
+  direccionSeleccionada: Direccion | null = null;
+  map: any;
+  marker: any;
 
   constructor(
     private direccionService: DireccionService,
@@ -77,5 +85,69 @@ export class DireccionesListaComponent implements OnInit {
       return;
     }
     this.router.navigate(['/cliente/direcciones/nueva']);
+  }
+
+  // ⭐ NUEVO: Abrir modal con mapa
+  abrirModalMapa(direccion: Direccion): void {
+    if (!direccion.coordenadas || direccion.coordenadas.trim() === '') {
+      alert('Esta dirección no tiene coordenadas');
+      return;
+    }
+
+    this.direccionSeleccionada = direccion;
+    this.modalMapaAbierto = true;
+
+// Dentro de abrirModalMapa(direccion: Direccion)
+setTimeout(() => {
+  const mapElement = document.getElementById('modalMapCliente');
+  if (mapElement) {
+    this.initMap();
+  } else {
+    alert('Error al cargar el mapa. Intenta de nuevo.');
+  }
+}, 200);
+  }
+
+  // ⭐ NUEVO: Cerrar modal
+  cerrarModalMapa(): void {
+    this.modalMapaAbierto = false;
+    this.direccionSeleccionada = null;
+    
+    // Limpiar mapa de Leaflet
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+    this.marker = null;
+  }
+
+initMap(): void {
+  if (!this.direccionSeleccionada || !this.direccionSeleccionada.coordenadas) return;
+  const coords = this.direccionSeleccionada.coordenadas.split(',');
+  const lat = parseFloat(coords[0].trim());
+  const lng = parseFloat(coords[1].trim());
+
+  this.map = new google.maps.Map(document.getElementById('modalMapCliente'), {
+    center: { lat, lng },
+    zoom: 16,
+    mapTypeId: 'roadmap',
+    zoomControl: true
+  });
+
+  this.marker = new google.maps.Marker({
+    position: { lat, lng },
+    map: this.map,
+    title: this.direccionSeleccionada.calle,
+    animation: google.maps.Animation.DROP
+  });
+}
+
+
+  // ⭐ NUEVO: Abrir en Google Maps externo
+  abrirEnGoogleMaps(): void {
+    if (this.direccionSeleccionada && this.direccionSeleccionada.coordenadas) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${this.direccionSeleccionada.coordenadas}`;
+      window.open(url, '_blank');
+    }
   }
 }
