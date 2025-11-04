@@ -9,7 +9,7 @@ import { RestauranteDetalleComponent } from './features/cliente/restaurante-deta
 import { DireccionesRestauranteListaComponent } from './features/restaurante/direcciones-restaurante-lista.component';
 import { DireccionRestauranteFormComponent } from './features/restaurante/direcciones-restaurante-form.component';
 import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
-
+import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -22,6 +22,8 @@ export const routes: Routes = [
   { path: 'restaurante/direcciones/nueva', component: DireccionRestauranteFormComponent },
   { path: 'restaurante/direcciones/editar/:id', component: DireccionRestauranteFormComponent },
   { path: 'restaurante/direcciones/mapa', component: DireccionFormComponent }, 
+  // Dashboard de reportes del restaurante
+  { path: 'dashboard-reportes', component: DashboardReportesComponent },
   
   // Rutas de cliente
   { path: 'main', component: MainComponent },
