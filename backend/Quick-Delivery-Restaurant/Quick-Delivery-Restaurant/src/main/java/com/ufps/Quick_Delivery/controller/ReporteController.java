@@ -14,7 +14,7 @@ public class ReporteController {
     private final ReporteService reporteService;
 
     @GetMapping("/ventas/{restauranteId}")
-    public Map<String, Object> obtenerReporteVentas(@PathVariable UUID restauranteId) {
+    public Map<String, Object> obtenerReporteVentas(@PathVariable("restauranteId") UUID restauranteId) {
         Map<String, Object> reporte = new HashMap<>();
 
         reporte.put("platosMasVendidos", reporteService.obtenerPlatosMasVendidos(restauranteId));

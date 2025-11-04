@@ -7,6 +7,7 @@ import com.ufps.Quick_Delivery.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -16,9 +17,12 @@ public class ReporteService {
 
     private final PedidoFeignClient pedidoFeignClient;
     private final ProductoRepository productoRepository;
+    private final RestauranteService restauranteService; 
+
 
     // Pedidos filtrados por restaurante
-    private List<PedidoDto> obtenerPedidosRestaurante(UUID restauranteId) {
+    private List<PedidoDto> obtenerPedidosRestaurante(UUID usuaroId) {
+        UUID restauranteId = restauranteService.obtenerPorUsuarioId(usuaroId).getId();
         return pedidoFeignClient.obtenerPedidos().stream()
                 .filter(p -> p.getRestauranteId().equals(restauranteId))
                 .toList();
