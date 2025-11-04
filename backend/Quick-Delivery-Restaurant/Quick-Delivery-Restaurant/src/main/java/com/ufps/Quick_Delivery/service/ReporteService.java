@@ -6,9 +6,13 @@ import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.ss.usermodel.Row;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -101,4 +105,71 @@ public class ReporteService {
                 .mapToDouble(PedidoDto::getTotal)
                 .sum();
     }
+    public void exportarExcel(UUID restauranteId, OutputStream outputStream) throws IOException {
+    XSSFWorkbook workbook = new XSSFWorkbook();
+    XSSFSheet sheet = workbook.createSheet("Reporte Ventas");
+
+    Map<String, Double> ingresosPorCategoria = obtenerIngresosPorCategoria(restauranteId);
+    Map<String, Long> estadoPedidos = obtenerEstadoPedidos(restauranteId);
+    List<Map<String, Object>> platosMasVendidos = obtenerPlatosMasVendidos(restauranteId);
+
+    int rowIdx = 0;
+
+    // Título
+    Row titleRow = sheet.createRow(rowIdx++);
+    titleRow.createCell(0).setCellValue("REPORTE DE VENTAS");
+
+    rowIdx++;
+
+    // Totales
+    Row totalRow = sheet.createRow(rowIdx++);
+    totalRow.createCell(0).setCellValue("Total Pedidos");
+    totalRow.createCell(1).setCellValue(obtenerTotalPedidos(restauranteId));
+
+    Row ingresoRow = sheet.createRow(rowIdx++);
+    ingresoRow.createCell(0).setCellValue("Ingresos Totales");
+    ingresoRow.createCell(1).setCellValue(obtenerIngresosTotales(restauranteId));
+
+    rowIdx++;
+
+    // Estado pedidos
+    Row estadoHeader = sheet.createRow(rowIdx++);
+    estadoHeader.createCell(0).setCellValue("Estado");
+    estadoHeader.createCell(1).setCellValue("Cantidad");
+
+    for (var e : estadoPedidos.entrySet()) {
+        Row row = sheet.createRow(rowIdx++);
+        row.createCell(0).setCellValue(e.getKey());
+        row.createCell(1).setCellValue(e.getValue());
+    }
+
+    rowIdx += 2;
+
+    // Ingresos por categoría
+    Row catHeader = sheet.createRow(rowIdx++);
+    catHeader.createCell(0).setCellValue("Categoría");
+    catHeader.createCell(1).setCellValue("Ingresos");
+
+    for (var cat : ingresosPorCategoria.entrySet()) {
+        Row row = sheet.createRow(rowIdx++);
+        row.createCell(0).setCellValue(cat.getKey());
+        row.createCell(1).setCellValue(cat.getValue());
+    }
+
+    rowIdx += 2;
+
+    // Platos más vendidos
+    Row platosHeader = sheet.createRow(rowIdx++);
+    platosHeader.createCell(0).setCellValue("Producto");
+    platosHeader.createCell(1).setCellValue("Cantidad Vendida");
+
+    for (var plato : platosMasVendidos) {
+        Row row = sheet.createRow(rowIdx++);
+        row.createCell(0).setCellValue(plato.get("nombre").toString());
+        row.createCell(1).setCellValue((int) plato.get("cantidadVendida"));
+    }
+
+    workbook.write(outputStream);
+    workbook.close();
+}
 }

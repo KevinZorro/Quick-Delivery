@@ -1,9 +1,12 @@
 package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.service.ReporteService;
+
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.*;
 
 @RestController
@@ -27,4 +30,13 @@ public class ReporteController {
 
         return reporte;
     }
+    
+    @GetMapping("/ventas/{restauranteId}/excel")
+public void exportarReporteExcel(@PathVariable("restauranteId") UUID restauranteId, HttpServletResponse response) throws IOException {
+
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader("Content-Disposition", "attachment; filename=reporte_ventas.xlsx");
+    reporteService.exportarExcel(restauranteId, response.getOutputStream());
+}
+
 }

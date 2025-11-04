@@ -7,12 +7,19 @@ import { ReporteVentas } from './reporte.model';
   providedIn: 'root'
 })
 export class ReporteService {
-  private baseUrl = 'http://localhost:8081/reportes/ventas'; // ajusta según tu API
+  private baseUrl = 'http://localhost:8081/reportes/ventas';
 
   constructor(private http: HttpClient) {}
 
   getReporteVentas(): Observable<ReporteVentas> {
-    const userId = localStorage.getItem('quick-delivery-userId'); // opcional según tu API
+    const userId = localStorage.getItem('quick-delivery-userId');
     return this.http.get<ReporteVentas>(`${this.baseUrl}/${userId}`);
+  }
+
+  downloadExcel(): Observable<Blob> {
+    const userId = localStorage.getItem('quick-delivery-userId');
+    return this.http.get(`${this.baseUrl}/${userId}/excel`, {
+      responseType: 'blob'
+    });
   }
 }

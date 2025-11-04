@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ReporteService } from './reporte.service';
 import { ReporteVentas } from './reporte.model';
-import { CommonModule } from '@angular/common';  
-
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router'; // ✅ IMPORTANTE
 
 @Component({
   selector: 'app-dashboard-reportes',
-  standalone: true,           
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, RouterModule], // ✅ AGREGA RouterModule AQUÍ
   templateUrl: './dashboard-reportes.component.html'
 })
 export class DashboardReportesComponent implements OnInit {
@@ -37,4 +37,21 @@ export class DashboardReportesComponent implements OnInit {
       }
     });
   }
+  exportarExcel() {
+    this.reporteService.downloadExcel().subscribe(
+      (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reporte_ventas.xlsx';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error => {
+        console.error('Error al descargar el archivo', error);
+      }
+    );
+  }
+  
+  
 }
