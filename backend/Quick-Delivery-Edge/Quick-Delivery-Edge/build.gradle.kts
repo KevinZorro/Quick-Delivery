@@ -40,6 +40,11 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+        // Google Maps Services
+    implementation("com.google.maps:google-maps-services:2.2.0")
+    
+    // Opcional: SLF4J (si no lo tienes ya)
+    implementation("org.slf4j:slf4j-api:2.0.9")
 
     // 👉 JWT
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")

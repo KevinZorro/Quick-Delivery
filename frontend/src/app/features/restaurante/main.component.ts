@@ -39,98 +39,97 @@ export class RestauranteMainComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-  // ⭐ Ya no necesitas restauranteId, solo el nombre
-  this.restauranteNombre = localStorage.getItem('quick-delivery-userName') || '';
+    // ⭐ Ya no necesitas restauranteId, solo el nombre
+    this.restauranteNombre = localStorage.getItem('quick-delivery-userName') || '';
 
-  if (!localStorage.getItem('token')) {
-    this.router.navigate(['/login']);
-    return;
+    if (!localStorage.getItem('token')) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.inicializarFormulario();
+    this.cargarProductos();
+    this.cargarCategorias();
   }
 
-  this.inicializarFormulario();
-  this.cargarProductos();
-  this.cargarCategorias();
-}
+  cargarProductos(): void {
+    this.loading = true;
+    this.errorMessage = null;
 
-cargarProductos(): void {
-  this.loading = true;
-  this.errorMessage = null;
-
-  // ⭐ Usar el nuevo endpoint que obtiene productos del usuario autenticado
-  this.productoService.obtenerMisProductos().subscribe({
-    next: (productos) => {
-      this.productos = productos;
-      this.aplicarFiltros();
-      this.loading = false;
-    },
-    error: (err) => {
-      this.errorMessage = 'Error al cargar los productos';
-      console.error(err);
-      this.loading = false;
-    }
-  });
-}
-
-cargarCategorias(): void {
-  // ⭐ Usar el nuevo endpoint
-  this.productoService.obtenerMisCategorias().subscribe({
-    next: (categorias) => {
-      this.categorias = categorias;
-    },
-    error: (err) => {
-      console.error('Error al cargar categorías:', err);
-    }
-  });
-}
-
-guardarProducto(): void {
-  if (this.productoForm.invalid) {
-    return;
-  }
-
-  this.loading = true;
-  this.errorMessage = null;
-  this.successMessage = null;
-
-  const formValue = this.productoForm.value;
-
-  if (this.modoEdicion && this.productoSeleccionado) {
-    // Actualizar producto existente
-    this.productoService.actualizarProducto(this.productoSeleccionado.id, formValue).subscribe({
-      next: () => {
-        this.successMessage = 'Producto actualizado exitosamente';
-        this.cerrarModal();
-        this.cargarProductos();
-        this.cargarCategorias();
+    // ⭐ Usar el nuevo endpoint que obtiene productos del usuario autenticado
+    this.productoService.obtenerMisProductos().subscribe({
+      next: (productos) => {
+        this.productos = productos;
+        this.aplicarFiltros();
         this.loading = false;
-        setTimeout(() => this.successMessage = null, 3000);
       },
       error: (err) => {
-        this.errorMessage = 'Error al actualizar el producto';
-        console.error(err);
-        this.loading = false;
-      }
-    });
-  } else {
-    // ⭐ Crear nuevo producto - Ya no necesitas enviar usuarioId
-    this.productoService.crearProducto(formValue).subscribe({
-      next: () => {
-        this.successMessage = 'Producto creado exitosamente';
-        this.cerrarModal();
-        this.cargarProductos();
-        this.cargarCategorias();
-        this.loading = false;
-        setTimeout(() => this.successMessage = null, 3000);
-      },
-      error: (err) => {
-        this.errorMessage = 'Error al crear el producto';
+        this.errorMessage = 'Error al cargar los productos';
         console.error(err);
         this.loading = false;
       }
     });
   }
-}
 
+  cargarCategorias(): void {
+    // ⭐ Usar el nuevo endpoint
+    this.productoService.obtenerMisCategorias().subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+      },
+      error: (err) => {
+        console.error('Error al cargar categorías:', err);
+      }
+    });
+  }
+
+  guardarProducto(): void {
+    if (this.productoForm.invalid) {
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    const formValue = this.productoForm.value;
+
+    if (this.modoEdicion && this.productoSeleccionado) {
+      // Actualizar producto existente
+      this.productoService.actualizarProducto(this.productoSeleccionado.id, formValue).subscribe({
+        next: () => {
+          this.successMessage = 'Producto actualizado exitosamente';
+          this.cerrarModal();
+          this.cargarProductos();
+          this.cargarCategorias();
+          this.loading = false;
+          setTimeout(() => this.successMessage = null, 3000);
+        },
+        error: (err) => {
+          this.errorMessage = 'Error al actualizar el producto';
+          console.error(err);
+          this.loading = false;
+        }
+      });
+    } else {
+      // ⭐ Crear nuevo producto - Ya no necesitas enviar usuarioId
+      this.productoService.crearProducto(formValue).subscribe({
+        next: () => {
+          this.successMessage = 'Producto creado exitosamente';
+          this.cerrarModal();
+          this.cargarProductos();
+          this.cargarCategorias();
+          this.loading = false;
+          setTimeout(() => this.successMessage = null, 3000);
+        },
+        error: (err) => {
+          this.errorMessage = 'Error al crear el producto';
+          console.error(err);
+          this.loading = false;
+        }
+      });
+    }
+  }
 
   inicializarFormulario(): void {
     this.productoForm = this.fb.group({
@@ -142,7 +141,6 @@ guardarProducto(): void {
       imagenUrl: ['', [Validators.maxLength(500)]]
     });
   }
-
 
   aplicarFiltros(): void {
     this.productosFiltrados = this.productos.filter(producto => {
@@ -190,7 +188,6 @@ guardarProducto(): void {
     this.productoSeleccionado = null;
   }
 
-
   eliminarProducto(producto: ProductoResponse): void {
     if (!confirm(`¿Estás seguro de eliminar "${producto.nombre}"?`)) {
       return;
@@ -225,6 +222,11 @@ guardarProducto(): void {
         console.error(err);
       }
     });
+  }
+
+  // ⭐ NUEVO: Método para navegar a las direcciones del restaurante
+  verDirecciones(): void {
+    this.router.navigate(['/restaurante/direcciones']);
   }
 
   cerrarSesion(): void {

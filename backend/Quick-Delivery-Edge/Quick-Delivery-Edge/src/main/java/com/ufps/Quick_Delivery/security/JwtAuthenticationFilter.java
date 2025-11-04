@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -55,16 +56,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Validar el token
             if (jwtService.isTokenValid(jwt)) {
+                // ⭐ CAMBIO IMPORTANTE: Extraer userId en vez de email
+                UUID userId = jwtService.getUserIdFromToken(jwt);
                 String userEmail = jwtService.extractUsername(jwt);
                 String rol = jwtService.getRolFromToken(jwt);
 
-                System.out.println("🔐 Token validado para: " + userEmail + " | Rol: " + rol);
+                System.out.println("🔐 Token validado");
+                System.out.println("   📧 Email: " + userEmail);
+                System.out.println("   🆔 UserId: " + userId);
+                System.out.println("   🎭 Rol: " + rol);
 
                 // Si no hay autenticación previa, crear una nueva
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // ⭐ IMPORTANTE: Usar userId.toString() como principal
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userEmail,
+                                    userId.toString(),  // ⭐ CAMBIAR AQUÍ
                                     null,
                                     List.of(new SimpleGrantedAuthority("ROLE_" + rol))
                             );
@@ -74,6 +81,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    
+                    System.out.println("✅ Autenticación establecida para userId: " + userId);
                 }
             } else {
                 System.err.println("❌ Token inválido o expirado para: " + path);

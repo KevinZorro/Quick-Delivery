@@ -8,7 +8,7 @@ target/
 *.log
 
 # === Node / Angular ===
-node_modules/
+frontend/node_modules/
 dist/
 .angular/
 .cache/

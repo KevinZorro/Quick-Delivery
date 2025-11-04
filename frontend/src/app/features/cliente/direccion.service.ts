@@ -29,6 +29,13 @@ export class DireccionService {
     });
   }
 
+  // ⭐ NUEVO: Obtener MIS direcciones (usuario autenticado)
+  obtenerMisDirecciones(): Observable<Direccion[]> {
+    return this.http.get<Direccion[]>(`${this.apiUrl}/mis-direcciones`, {
+      headers: this.getHeaders()
+    });
+  }
+
   getDireccionesByUsuario(usuarioId: string): Observable<Direccion[]> {
     return this.http.get<Direccion[]>(`${this.apiUrl}/usuario/${usuarioId}`, {
       headers: this.getHeaders()

@@ -33,9 +33,10 @@ public class Direccion {
     @Column(name = "coordenadas", length = 100)
     private String coordenadas;
 
-    @Column(name = "usuario_id", nullable = false)
-    private UUID usuario;
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_referencia", nullable = false)
     private TipoReferencia tipoReferencia;

@@ -73,7 +73,7 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pedido> obtenerPedido(@PathVariable UUID id) {
+    public ResponseEntity<Pedido> obtenerPedido(@PathVariable("id") UUID id) {
         return pedidoService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -85,13 +85,13 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarPedido(@PathVariable UUID id) {
+    public ResponseEntity<Void> eliminarPedido(@PathVariable("id") UUID id) {
         pedidoService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<?> cambiarEstado(@PathVariable UUID id, @RequestParam EstadoPedido estado) {
+    public ResponseEntity<?> cambiarEstado(@PathVariable("id") UUID id, @RequestParam EstadoPedido estado) {
         try {
             Pedido actualizado = pedidoService.actualizarEstadoPedido(id, estado);
             return ResponseEntity.ok(actualizado);
@@ -102,7 +102,7 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
     }
 
     @PatchMapping("/{id}/metodopago")
-    public ResponseEntity<?> cambiarMetodoPago(@PathVariable UUID id, @RequestParam MetodoPago metodoPago) {
+    public ResponseEntity<?> cambiarMetodoPago(@PathVariable("id") UUID id, @RequestParam MetodoPago metodoPago) {
         try {
             Pedido actualizado = pedidoService.actualizarMetodoPago(id, metodoPago);
             return ResponseEntity.ok(actualizado);
@@ -111,4 +111,41 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
                     .body("Error al cambiar método de pago: " + e.getMessage());
         }
     }
+
+ /**
+     * Listar pedidos de un usuario
+     * GET /api/pedidos/usuario/{usuarioId}
+     */
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<Pedido>> listarPedidosUsuario(@PathVariable("usuarioId") UUID usuarioId) {
+        System.out.println("🔍 Endpoint: Listar pedidos del usuario: " + usuarioId);
+        List<Pedido> pedidos = pedidoService.listarPorUsuario(usuarioId);
+        return ResponseEntity.ok(pedidos);
+    }
+
+    /**
+     * Listar pedidos de un usuario por estado
+     * GET /api/pedidos/usuario/{usuarioId}/estado/{estado}
+     */
+    @GetMapping("/usuario/{usuarioId}/estado/{estado}")
+    public ResponseEntity<List<Pedido>> listarPedidosUsuarioPorEstado(
+            @PathVariable("usuarioId") UUID usuarioId,
+            @PathVariable("estado") EstadoPedido estado) {
+        
+        System.out.println("🔍 Endpoint: Listar pedidos del usuario: " + usuarioId + " con estado: " + estado);
+        List<Pedido> pedidos = pedidoService.listarPorUsuarioYEstado(usuarioId, estado);
+        return ResponseEntity.ok(pedidos);
+    }
+
+    /**
+     * Contar pedidos de un usuario
+     * GET /api/pedidos/usuario/{usuarioId}/count
+     */
+    @GetMapping("/usuario/{usuarioId}/count")
+    public ResponseEntity<Long> contarPedidosUsuario(@PathVariable("usuarioId") UUID usuarioId) {
+        System.out.println("🔢 Endpoint: Contar pedidos del usuario: " + usuarioId);
+        long count = pedidoService.contarPedidosPorUsuario(usuarioId);
+        return ResponseEntity.ok(count);
+    }
+
 }

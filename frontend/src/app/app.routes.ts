@@ -6,6 +6,9 @@ import { DireccionesListaComponent } from './features/cliente/direcciones-lista.
 import { DireccionFormComponent } from './features/cliente/direccion-form.component';
 import { RestauranteMainComponent } from './features/restaurante/main.component';
 import { RestauranteDetalleComponent } from './features/cliente/restaurante-detalle.component';
+import { DireccionesRestauranteListaComponent } from './features/restaurante/direcciones-restaurante-lista.component';
+import { DireccionRestauranteFormComponent } from './features/restaurante/direcciones-restaurante-form.component';
+import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 export const routes: Routes = [
   // Rutas públicas
@@ -13,17 +16,23 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   
-  // Ruta principal del restaurante
-  {path: 'restaurante/main',component: RestauranteMainComponent},
+  // Rutas de restaurante
+  { path: 'restaurante/main', component: RestauranteMainComponent },
+  { path: 'restaurante/direcciones', component: DireccionesRestauranteListaComponent },
+  { path: 'restaurante/direcciones/nueva', component: DireccionRestauranteFormComponent },
+  { path: 'restaurante/direcciones/editar/:id', component: DireccionRestauranteFormComponent },
+  { path: 'restaurante/direcciones/mapa', component: DireccionFormComponent }, 
   // Dashboard de reportes del restaurante
   { path: 'dashboard-reportes', component: DashboardReportesComponent },
   
   // Rutas de cliente
   { path: 'main', component: MainComponent },
-  { path: 'restaurante/:id', component: RestauranteDetalleComponent},
+  { path: 'restaurante/:id', component: RestauranteDetalleComponent },
   { path: 'cliente/direcciones', component: DireccionesListaComponent },
   { path: 'cliente/direcciones/nueva', component: DireccionFormComponent },
   { path: 'cliente/direcciones/editar/:id', component: DireccionFormComponent },
+  { path: 'cliente/direcciones/mapa', component: DireccionFormComponent },
+  { path: 'cliente/pedidos', component: ClientePedidosComponent },
   
   // Wildcard al FINAL
   { path: '**', redirectTo: 'login' }
