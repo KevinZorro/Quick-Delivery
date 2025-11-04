@@ -143,4 +143,40 @@ public class PedidoService {
         
         return pedidoRepository.save(pedido);
     }
+
+ /**
+     * Listar todos los pedidos de un usuario
+     */
+    @Transactional(readOnly = true)
+    public List<Pedido> listarPorUsuario(UUID usuarioId) {
+        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId);
+        
+        List<Pedido> pedidos = pedidoRepository.findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
+        
+        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
+        return pedidos;
+    }
+
+    /**
+     * Listar pedidos de un usuario por estado
+     */
+    @Transactional(readOnly = true)
+    public List<Pedido> listarPorUsuarioYEstado(UUID usuarioId, EstadoPedido estado) {
+        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId + " con estado: " + estado);
+        
+        List<Pedido> pedidos = pedidoRepository.findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(usuarioId, estado);
+        
+        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
+        return pedidos;
+    }
+
+    /**
+     * Contar pedidos de un usuario
+     */
+    @Transactional(readOnly = true)
+    public long contarPedidosPorUsuario(UUID usuarioId) {
+        long count = pedidoRepository.countByCliente_UsuarioId(usuarioId);
+        System.out.println("🔢 Total de pedidos del usuario " + usuarioId + ": " + count);
+        return count;
+    }
 }

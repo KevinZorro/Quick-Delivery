@@ -8,6 +8,7 @@ import { RestauranteMainComponent } from './features/restaurante/main.component'
 import { RestauranteDetalleComponent } from './features/cliente/restaurante-detalle.component';
 import { DireccionesRestauranteListaComponent } from './features/restaurante/direcciones-restaurante-lista.component';
 import { DireccionRestauranteFormComponent } from './features/restaurante/direcciones-restaurante-form.component';
+import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 
 export const routes: Routes = [
   // Rutas públicas
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'restaurante/direcciones', component: DireccionesRestauranteListaComponent },
   { path: 'restaurante/direcciones/nueva', component: DireccionRestauranteFormComponent },
   { path: 'restaurante/direcciones/editar/:id', component: DireccionRestauranteFormComponent },
+  { path: 'restaurante/direcciones/mapa', component: DireccionFormComponent }, 
   
   // Rutas de cliente
   { path: 'main', component: MainComponent },
@@ -27,6 +29,8 @@ export const routes: Routes = [
   { path: 'cliente/direcciones', component: DireccionesListaComponent },
   { path: 'cliente/direcciones/nueva', component: DireccionFormComponent },
   { path: 'cliente/direcciones/editar/:id', component: DireccionFormComponent },
+  { path: 'cliente/direcciones/mapa', component: DireccionFormComponent },
+  { path: 'cliente/pedidos', component: ClientePedidosComponent },
   
   // Wildcard al FINAL
   { path: '**', redirectTo: 'login' }
