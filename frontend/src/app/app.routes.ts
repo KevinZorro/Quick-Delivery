@@ -6,7 +6,7 @@ import { DireccionesListaComponent } from './features/cliente/direcciones-lista.
 import { DireccionFormComponent } from './features/cliente/direccion-form.component';
 import { RestauranteMainComponent } from './features/restaurante/main.component';
 import { RestauranteDetalleComponent } from './features/cliente/restaurante-detalle.component';
-
+import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -15,6 +15,8 @@ export const routes: Routes = [
   
   // Ruta principal del restaurante
   {path: 'restaurante/main',component: RestauranteMainComponent},
+  // Dashboard de reportes del restaurante
+  { path: 'dashboard-reportes', component: DashboardReportesComponent },
   
   // Rutas de cliente
   { path: 'main', component: MainComponent },

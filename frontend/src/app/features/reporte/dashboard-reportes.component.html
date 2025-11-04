@@ -1,0 +1,68 @@
+<div class="p-4">
+    <h2 class="text-2xl font-bold mb-4">Dashboard de Reportes</h2>
+  
+    <div *ngIf="loading">Cargando...</div>
+    <div *ngIf="errorMessage" class="text-red-600">{{ errorMessage }}</div>
+  
+    <div *ngIf="reporte">
+      <!-- Cards resumen -->
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="p-4 bg-gray-100 rounded shadow">
+          <h3 class="font-semibold">Total Pedidos</h3>
+          <p class="text-xl">{{ reporte?.totalPedidos }}</p>
+        </div>
+        <div class="p-4 bg-gray-100 rounded shadow">
+          <h3 class="font-semibold">Ingresos Totales</h3>
+          <p class="text-xl">${{ reporte?.ingresosTotales }}</p>
+        </div>
+      </div>
+  
+      <!-- Estado Pedidos -->
+      <div class="mb-6">
+        <h3 class="font-semibold mb-2">Estado de Pedidos</h3>
+        <p>Completados: {{ reporte?.estadoPedidos?.completados }}</p>
+        <p>En curso: {{ reporte?.estadoPedidos?.enCurso }}</p>
+      </div>
+  
+      <!-- Ingresos por categoría -->
+      <div class="mb-6">
+        <h3 class="font-semibold mb-2">Ingresos por Categoría</h3>
+        <ul>
+          <li *ngFor="let cat of reporte?.ingresosPorCategoria | keyvalue">
+            {{ cat.key }}: ${{ cat.value }}
+          </li>
+        </ul>
+      </div>
+  
+      <!-- Platos más vendidos -->
+      <div class="mb-6">
+        <h3 class="font-semibold mb-2">Platos Más Vendidos</h3>
+        <ul>
+          <li *ngFor="let plato of reporte?.platosMasVendidos">
+            {{ plato.nombre }} ({{ plato.cantidadVendida }} vendidos)
+          </li>
+        </ul>
+      </div>
+  
+      <!-- Top 10 productos -->
+      <div class="mb-6">
+        <h3 class="font-semibold mb-2">Top 10 Productos</h3>
+        <ul>
+          <li *ngFor="let plato of reporte?.top10Productos">
+            {{ plato.nombre }} ({{ plato.cantidadVendida }} vendidos)
+          </li>
+        </ul>
+      </div>
+  
+      <!-- Productos bajas ventas -->
+      <div class="mb-6">
+        <h3 class="font-semibold mb-2">Productos con Bajas Ventas</h3>
+        <ul>
+          <li *ngFor="let plato of reporte?.productosBajasVentas">
+            {{ plato.nombre }} ({{ plato.cantidadVendida }} vendidos)
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
