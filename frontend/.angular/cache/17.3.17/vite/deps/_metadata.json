@@ -25,7 +25,7 @@
     "@angular/forms": {
       "src": "../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
       "file": "@angular_forms.js",
-      "fileHash": "f2e96dbe",
+      "fileHash": "bddf51c4",
       "needsInterop": false
     },
     "@angular/platform-browser": {
@@ -37,13 +37,13 @@
     "@angular/router": {
       "src": "../../../../../node_modules/@angular/router/fesm2022/router.mjs",
       "file": "@angular_router.js",
-      "fileHash": "1403f1c1",
+      "fileHash": "4df853c0",
       "needsInterop": false
     },
     "rxjs": {
       "src": "../../../../../node_modules/rxjs/dist/esm5/index.js",
       "file": "rxjs.js",
-      "fileHash": "f27cf701",
+      "fileHash": "176fcab5",
       "needsInterop": false
     }
   },

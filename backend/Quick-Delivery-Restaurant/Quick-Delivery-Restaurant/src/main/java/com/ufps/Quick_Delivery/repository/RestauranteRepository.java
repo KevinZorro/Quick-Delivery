@@ -23,4 +23,6 @@ public interface RestauranteRepository extends JpaRepository<Restaurante, UUID> 
     
     // Verificar si existe por usuarioId
     boolean existsByUsuarioId(UUID usuarioId);
+
+
 }
