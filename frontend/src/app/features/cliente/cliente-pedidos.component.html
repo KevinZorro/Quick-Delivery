@@ -1,4 +1,5 @@
 <app-header></app-header>
+
 <!-- cliente-pedidos.component.html -->
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="container mx-auto px-4 max-w-6xl">
@@ -158,41 +159,164 @@
             </div>
           </div>
 
-<div 
-  *ngIf="pedido.estado !== 'ENTREGADO'"
-  class="bg-gray-50 px-6 py-3 border-t border-gray-200">
-  <div class="flex justify-between items-center text-xs">
-    <!-- Estado 1: INICIADO -->
-    <span [class.text-teal-600]="pedido.estado === 'INICIADO'" 
-          [class.font-semibold]="pedido.estado === 'INICIADO'">
-      Iniciado
-    </span>
-    <!-- Estado 2: EN_COCINA -->
-    <span [class.text-teal-600]="pedido.estado === 'EN_COCINA'" 
-          [class.font-semibold]="pedido.estado === 'EN_COCINA'">
-      En cocina
-    </span>
-    <!-- Estado 3: CON_EL_REPARTIDOR -->
-    <span [class.text-teal-600]="pedido.estado === 'CON_EL_REPARTIDOR'" 
-          [class.font-semibold]="pedido.estado === 'CON_EL_REPARTIDOR'">
-      Con repartidor
-    </span>
-    <!-- Estado 4: ENTREGADO -->
-    <span [class.text-teal-600]="pedido.estado === 'ENTREGADO'" 
-          [class.font-semibold]="pedido.estado === 'ENTREGADO'">
-      Entregado
-    </span>
+          <!-- Progress Bar for Active Orders -->
+          <div 
+            *ngIf="pedido.estado !== 'ENTREGADO'"
+            class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+            <div class="flex justify-between items-center text-xs">
+              <!-- Estado 1: INICIADO -->
+              <span [class.text-teal-600]="pedido.estado === 'INICIADO'" 
+                    [class.font-semibold]="pedido.estado === 'INICIADO'">
+                Iniciado
+              </span>
+              <!-- Estado 2: EN_COCINA -->
+              <span [class.text-teal-600]="pedido.estado === 'EN_COCINA'" 
+                    [class.font-semibold]="pedido.estado === 'EN_COCINA'">
+                En cocina
+              </span>
+              <!-- Estado 3: CON_EL_REPARTIDOR -->
+              <span [class.text-teal-600]="pedido.estado === 'CON_EL_REPARTIDOR'" 
+                    [class.font-semibold]="pedido.estado === 'CON_EL_REPARTIDOR'">
+                Con repartidor
+              </span>
+              <!-- Estado 4: ENTREGADO -->
+              <span class="text-gray-400">
+                Entregado
+              </span>
+            </div>
+
+            <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                class="h-full bg-teal-600 transition-all duration-500"
+                [style.width]="
+                  pedido.estado === 'INICIADO' ? '25%' :
+                  pedido.estado === 'EN_COCINA' ? '50%' :
+                  pedido.estado === 'CON_EL_REPARTIDOR' ? '75%' : '0%'
+                ">
+              </div>
+            </div>
+          </div>
+
+          <!-- Mensaje para pedidos ENTREGADOS -->
+          <div 
+            *ngIf="pedido.estado === 'ENTREGADO'"
+            class="bg-green-50 px-6 py-3 border-t border-green-200">
+            <div class="flex items-center justify-center gap-2 text-sm text-green-800">
+              <span class="text-xl">✅</span>
+              <span class="font-semibold">Pedido entregado exitosamente</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+  <!-- MODAL DE DETALLES DEL PEDIDO -->
+  <div 
+    *ngIf="mostrarModal && pedidoSeleccionado"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    (click)="cerrarModal()">
+    
     <div 
-      class="h-full bg-teal-600 transition-all duration-500"
-      [style.width]="
-        pedido.estado === 'INICIADO' ? '0%' :
-        pedido.estado === 'EN_COCINA' ? '33%' :
-        pedido.estado === 'CON_EL_REPARTIDOR' ? '66%' :
-        pedido.estado === 'ENTREGADO' ? '100%' : '0%'
-      ">
+      class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      (click)="$event.stopPropagation()">
+      
+      <!-- Header del Modal -->
+      <div class="bg-teal-600 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">{{ obtenerIconoEstado(pedidoSeleccionado.estado) }}</span>
+          <div>
+            <h2 class="text-xl font-bold">Pedido #{{ pedidoSeleccionado.id.substring(0, 8) }}</h2>
+            <p class="text-sm text-teal-100">{{ pedidoSeleccionado.fechaFormateada }}</p>
+          </div>
+        </div>
+        <button 
+        title="x"
+          (click)="cerrarModal()"
+          class="text-white hover:bg-teal-700 rounded-full p-2 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="p-6 space-y-6">
+        
+        <!-- Estado del Pedido -->
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Estado del pedido</h3>
+          <div class="flex items-center gap-3">
+            <span 
+              class="px-4 py-2 rounded-full text-sm font-semibold border {{ pedidoSeleccionado.estadoColor }}">
+              {{ pedidoSeleccionado.estadoTexto }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Información General -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-gray-700">Información general</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-lg p-3">
+              <p class="text-xs text-gray-600 mb-1">Restaurante ID</p>
+              <p class="text-sm font-semibold text-gray-800">
+                {{ pedidoSeleccionado.restauranteId.substring(0, 8) }}...
+              </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-3">
+              <p class="text-xs text-gray-600 mb-1">Cliente ID</p>
+              <p class="text-sm font-semibold text-gray-800">
+                {{ pedidoSeleccionado.clienteId.substring(0, 8) }}...
+              </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-3" *ngIf="pedidoSeleccionado.metodoPago">
+              <p class="text-xs text-gray-600 mb-1">Método de pago</p>
+              <p class="text-sm font-semibold text-gray-800">
+                {{ pedidoSeleccionado.metodoPago === 'EFECTIVO' ? '💵 Efectivo' : '💳 ' + pedidoSeleccionado.metodoPago }}
+              </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-3">
+              <p class="text-xs text-gray-600 mb-1">Fecha de creación</p>
+              <p class="text-sm font-semibold text-gray-800">
+                {{ pedidoSeleccionado.fechaFormateada }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+          <div class="flex justify-between items-center">
+            <span class="text-lg font-semibold text-gray-800">Total del pedido</span>
+            <span class="text-2xl font-bold text-teal-600">
+              {{ formatearPrecio(pedidoSeleccionado.total) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- ID Completo (para copiar) -->
+        <div class="border-t pt-4">
+          <h3 class="text-xs font-semibold text-gray-600 mb-2">ID completo del pedido</h3>
+          <div class="bg-gray-100 rounded p-3 font-mono text-xs break-all text-gray-700">
+            {{ pedidoSeleccionado.id }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 sticky bottom-0">
+        <button 
+          (click)="cerrarModal()"
+          class="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-medium">
+          Cerrar
+        </button>
+      </div>
     </div>
   </div>
 </div>

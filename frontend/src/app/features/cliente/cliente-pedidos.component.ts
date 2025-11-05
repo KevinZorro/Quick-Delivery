@@ -25,7 +25,10 @@ export class ClientePedidosComponent implements OnInit {
   filtroEstado: string = 'TODOS';
   ordenamiento: string = 'reciente';
 
-  // ✅ Estados actualizados según el backend
+  // ✅ Variables para el modal
+  mostrarModal: boolean = false;
+  pedidoSeleccionado: PedidoDetallado | null = null;
+
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
     { valor: 'INICIADO', texto: 'Iniciados' },
@@ -47,7 +50,6 @@ export class ClientePedidosComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // ⭐ Obtener el ID del usuario desde localStorage
     const usuarioId = localStorage.getItem('quick-delivery-userId');
     
     if (!usuarioId) {
@@ -58,12 +60,10 @@ export class ClientePedidosComponent implements OnInit {
 
     console.log('📦 Cargando pedidos del usuario:', usuarioId);
 
-    // ⭐ Usar el método específico para el usuario
     this.pedidoService.listarPedidosUsuario(usuarioId).subscribe({
       next: (pedidos) => {
         console.log('✅ Pedidos recibidos:', pedidos);
         
-        // Procesar pedidos
         this.pedidos = pedidos.map(pedido => ({
           ...pedido,
           fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
@@ -83,7 +83,6 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   aplicarFiltros(): void {
-    // Filtrar por estado
     if (this.filtroEstado === 'TODOS') {
       this.pedidosFiltrados = [...this.pedidos];
     } else {
@@ -92,7 +91,6 @@ export class ClientePedidosComponent implements OnInit {
       );
     }
 
-    // Ordenar
     if (this.ordenamiento === 'reciente') {
       this.pedidosFiltrados.sort((a, b) => 
         new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
@@ -118,8 +116,32 @@ export class ClientePedidosComponent implements OnInit {
     this.aplicarFiltros();
   }
 
+  // ✅ NUEVO: Abrir modal con detalles del pedido
   verDetallePedido(pedidoId: string): void {
-    this.router.navigate(['/cliente/pedidos', pedidoId]);
+    console.log('🔍 Abriendo detalles del pedido:', pedidoId);
+    
+    // Buscar el pedido en la lista actual
+    const pedido = this.pedidos.find(p => p.id === pedidoId);
+    
+    if (pedido) {
+      this.pedidoSeleccionado = pedido;
+      this.mostrarModal = true;
+      
+      // Prevenir scroll del body cuando el modal está abierto
+      document.body.style.overflow = 'hidden';
+    } else {
+      console.error('❌ Pedido no encontrado');
+    }
+  }
+
+  // ✅ NUEVO: Cerrar modal
+  cerrarModal(): void {
+    console.log('❌ Cerrando modal');
+    this.mostrarModal = false;
+    this.pedidoSeleccionado = null;
+    
+    // Restaurar scroll del body
+    document.body.style.overflow = 'auto';
   }
 
   formatearFecha(fecha: string): string {
@@ -134,7 +156,6 @@ export class ClientePedidosComponent implements OnInit {
     return date.toLocaleDateString('es-ES', opciones);
   }
 
-  // ✅ Colores actualizados según estados del backend
   obtenerColorEstado(estado: string): string {
     const colores: { [key: string]: string } = {
       'INICIADO': 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -145,7 +166,6 @@ export class ClientePedidosComponent implements OnInit {
     return colores[estado] || 'bg-gray-100 text-gray-800 border-gray-300';
   }
 
-  // ✅ Textos actualizados según estados del backend
   obtenerTextoEstado(estado: string): string {
     const textos: { [key: string]: string } = {
       'INICIADO': 'Iniciado',
@@ -156,7 +176,6 @@ export class ClientePedidosComponent implements OnInit {
     return textos[estado] || estado;
   }
 
-  // ✅ Iconos actualizados según estados del backend
   obtenerIconoEstado(estado: string): string {
     const iconos: { [key: string]: string } = {
       'INICIADO': '⏳',
