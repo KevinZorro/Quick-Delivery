@@ -1,14 +1,24 @@
 package com.ufps.Quick_Delivery.model;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.UUID;
 import java.util.List;
+import java.util.UUID;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
@@ -24,6 +34,10 @@ public class Usuario {
     private String nombre;
 
     @NotBlank(message = "La contraseña no puede ser nula ni estar vacía")
+    @Pattern(
+        regexp = "^(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}$",
+        message = "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número"
+    )
     private String contraseña;
 
     @NotBlank(message = "El correo no puede ser nulo ni estar vacío")

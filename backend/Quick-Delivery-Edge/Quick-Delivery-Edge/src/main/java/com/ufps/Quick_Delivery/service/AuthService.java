@@ -68,6 +68,10 @@ public class AuthService {
         return guardado;
     }
 
+    public boolean verificarCorreo(String correo) {
+        return usuarioRepository.existsByCorreo(correo);
+    }
+
     // ⭐ Login actualizado para incluir userId en la respuesta
     public Optional<LoginResponseDto> login(LoginRequestDto dto) {
         try {

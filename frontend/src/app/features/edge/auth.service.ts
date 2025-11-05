@@ -57,6 +57,10 @@ export class AuthService {
       );
   }
 
+  verificarCorreo(correo: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/verificar-correo`, { correo });
+  }
+
   register(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/register`, data);
   }
