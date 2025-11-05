@@ -1,15 +1,24 @@
 package com.ufps.Quick_Delivery.controller;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.service.UsuarioService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -20,7 +29,8 @@ public class UsuarioController {
 
     // Crear usuario
     @PostMapping("/crear")
-    public ResponseEntity<Usuario> crearUsuario(@Valid @RequestBody UsuarioDto dto) {
+public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioDto dto) {
+    try {
         Usuario usuario = new Usuario();
         usuario.setNombre(dto.getNombre());
         usuario.setContraseña(dto.getContraseña());
@@ -29,9 +39,14 @@ public class UsuarioController {
         usuario.setRol(dto.getRol());
         usuario.setActivo(true);
         usuario.setFecharegistro(java.time.LocalDateTime.now());
+
         Usuario guardado = usuarioService.crearUsuario(usuario);
         return ResponseEntity.ok(guardado);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
+}
+
 
     // Listar todos
     @GetMapping

@@ -1,14 +1,16 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.model.Usuario;
-import com.ufps.Quick_Delivery.repository.UsuarioRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.ufps.Quick_Delivery.model.Usuario;
+import com.ufps.Quick_Delivery.repository.UsuarioRepository;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,9 @@ public class UsuarioService {
 
     // Crear usuario
     public Usuario crearUsuario(Usuario usuario) {
+        if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
         return usuarioRepository.save(usuario);
     }
 
@@ -40,7 +45,6 @@ public class UsuarioService {
             u.setCorreo(datos.getCorreo());
             u.setTelefono(datos.getTelefono());
             u.setRol(datos.getRol());
-            // activo y fecharegistro como consideres necesario
             return u;
         });
     }
