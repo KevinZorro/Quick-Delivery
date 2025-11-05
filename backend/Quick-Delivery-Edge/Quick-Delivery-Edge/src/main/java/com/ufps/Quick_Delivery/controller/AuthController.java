@@ -1,5 +1,14 @@
 package com.ufps.Quick_Delivery.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ufps.Quick_Delivery.dto.LoginRequestDto;
 import com.ufps.Quick_Delivery.dto.LoginResponseDto;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
@@ -8,14 +17,10 @@ import com.ufps.Quick_Delivery.service.AuthService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-// @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
     private final AuthService authService;
@@ -36,4 +41,9 @@ public class AuthController {
         return ResponseEntity.ok(nuevo);
     }
 
+    @GetMapping("/verificar-correo")
+    public ResponseEntity<Boolean> verificarCorreo(@RequestParam String correo) {
+        boolean existe = authService.verificarCorreo(correo);
+        return ResponseEntity.ok(existe);
+    }
 }
