@@ -1,21 +1,24 @@
 package com.ufps.Quick_Delivery.service;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.ufps.Quick_Delivery.client.ClienteClient;
+import com.ufps.Quick_Delivery.client.DeliveryClient;
+import com.ufps.Quick_Delivery.client.RestauranteClient;
 import com.ufps.Quick_Delivery.dto.LoginRequestDto;
 import com.ufps.Quick_Delivery.dto.LoginResponseDto;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
+import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import com.ufps.Quick_Delivery.security.JwtService;
-import com.ufps.Quick_Delivery.client.RestauranteClient;
-import com.ufps.Quick_Delivery.client.DeliveryClient;
-import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
 
-import java.util.Optional;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    // ============================================
+    // REGISTRO NORMAL
+    // ============================================
     @Transactional
     public Usuario registrar(UsuarioDto dto) {
         Usuario usuario = new Usuario();
@@ -68,7 +74,9 @@ public class AuthService {
         return guardado;
     }
 
-    // ⭐ Login actualizado para incluir userId en la respuesta
+    // ============================================
+    // LOGIN NORMAL
+    // ============================================
     public Optional<LoginResponseDto> login(LoginRequestDto dto) {
         try {
             return usuarioRepository.findByCorreo(dto.getCorreo())
@@ -77,7 +85,7 @@ public class AuthService {
                         String token = jwtService.generateToken(usuario);
                         LoginResponseDto res = new LoginResponseDto();
                         res.setToken(token);
-                        res.setUserId(usuario.getId());  // ⭐ AGREGAR UUID
+                        res.setUserId(usuario.getId());
                         res.setNombre(usuario.getNombre());
                         res.setCorreo(usuario.getCorreo());
                         res.setRol(usuario.getRol().name());
@@ -87,5 +95,43 @@ public class AuthService {
             e.printStackTrace();
             return Optional.empty();
         }
+    }
+
+    // ============================================
+    // LOGIN / REGISTRO AUTOMÁTICO CON GOOGLE
+    // ============================================
+    @Transactional
+    public LoginResponseDto loginOrRegisterGoogle(String email, String name) {
+        Usuario usuario = usuarioRepository.findByCorreo(email).orElse(null);
+
+        // Si no existe, crear automáticamente como CLIENTE
+        if (usuario == null) {
+            usuario = new Usuario();
+            usuario.setNombre(name);
+            usuario.setCorreo(email);
+            usuario.setContraseña(passwordEncoder.encode("google")); // clave dummy
+            usuario.setRol(Rol.CLIENTE); // ✅ Asignar rol CLIENTE
+            usuario.setActivo(true);
+            usuario.setFecharegistro(LocalDateTime.now());
+            usuario = usuarioRepository.save(usuario);
+
+            // Crear registro en microservicio de CLIENTE
+            ClienteClient.ClienteRequest clienteRequest = new ClienteClient.ClienteRequest();
+            clienteRequest.setUsuarioId(usuario.getId());
+            clienteClient.crearCliente(clienteRequest);
+        }
+
+        // Generar token JWT
+        String jwt = jwtService.generateToken(usuario);
+
+        // Crear respuesta
+        LoginResponseDto response = new LoginResponseDto();
+        response.setToken(jwt);
+        response.setUserId(usuario.getId());
+        response.setNombre(usuario.getNombre());
+        response.setCorreo(usuario.getCorreo());
+        response.setRol(usuario.getRol().name());
+
+        return response;
     }
 }

@@ -4,7 +4,7 @@ import { Observable, tap } from 'rxjs';
 
 export interface UserResponse {
   token: string;
-  userId: string;      // ⭐ AGREGAR
+  userId: string;
   nombre: string;
   correo: string;
   rol: string;
@@ -16,9 +16,9 @@ export interface UserResponse {
 export class AuthService {
   private baseUrl = 'http://localhost:8083/api/auth';
   private tokenKey = 'quick-delivery-token';
-  private userIdKey = 'quick-delivery-userId';        // ⭐ AGREGAR
-  private userNameKey = 'quick-delivery-userName';    // ⭐ AGREGAR
-  private userRoleKey = 'quick-delivery-userRole';    // ⭐ AGREGAR
+  private userIdKey = 'quick-delivery-userId';
+  private userNameKey = 'quick-delivery-userName';
+  private userRoleKey = 'quick-delivery-userRole';
 
   constructor(private http: HttpClient) {}
 
@@ -30,7 +30,7 @@ export class AuthService {
           console.log('✅ LOGIN EXITOSO');
           console.log('═══════════════════════════════════════');
           console.log('📦 Token:', res.token);
-          console.log('🆔 User ID:', res.userId);              // ⭐ LOG
+          console.log('🆔 User ID:', res.userId);
           console.log('👤 Nombre:', res.nombre);
           console.log('📧 Correo:', res.correo);
           console.log('🎭 Rol:', res.rol);
@@ -45,13 +45,13 @@ export class AuthService {
             localStorage.setItem(this.tokenKey, res.token);
           }
           if (res.userId) {
-            localStorage.setItem(this.userIdKey, res.userId);    // ⭐ GUARDAR
+            localStorage.setItem(this.userIdKey, res.userId);
           }
           if (res.nombre) {
-            localStorage.setItem(this.userNameKey, res.nombre);  // ⭐ GUARDAR
+            localStorage.setItem(this.userNameKey, res.nombre);
           }
           if (res.rol) {
-            localStorage.setItem(this.userRoleKey, res.rol);     // ⭐ GUARDAR
+            localStorage.setItem(this.userRoleKey, res.rol);
           }
         })
       );
@@ -60,8 +60,6 @@ export class AuthService {
   register(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/register`, data);
   }
-
-  // ⭐ MÉTODOS ACTUALIZADOS Y NUEVOS
 
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
@@ -81,16 +79,14 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userIdKey);     // ⭐ LIMPIAR
-    localStorage.removeItem(this.userNameKey);   // ⭐ LIMPIAR
-    localStorage.removeItem(this.userRoleKey);   // ⭐ LIMPIAR
+    localStorage.removeItem(this.userIdKey);
+    localStorage.removeItem(this.userNameKey);
+    localStorage.removeItem(this.userRoleKey);
   }
 
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
-
-  // ⭐ NUEVOS MÉTODOS DE UTILIDAD
 
   isCliente(): boolean {
     return this.getUserRole() === 'CLIENTE';
@@ -114,5 +110,19 @@ export class AuthService {
       nombre: this.getUserName(),
       rol: this.getUserRole()
     };
+  }
+
+  // ⭐ MÉTODO CORREGIDO - Usar baseUrl en lugar de apiUrl
+  loginWithGoogle(idToken: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/google`, { token: idToken })
+      .pipe(
+        tap(res => {
+          if (res.status === 'OK') {
+            console.log('✅ Login con Google exitoso:', res);
+            // Aquí puedes guardar la información del usuario si es necesario
+            // localStorage.setItem('google-user', JSON.stringify(res));
+          }
+        })
+      );
   }
 }

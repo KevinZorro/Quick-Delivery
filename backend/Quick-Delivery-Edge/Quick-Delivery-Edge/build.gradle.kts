@@ -25,6 +25,7 @@ repositories {
 }
 
 extra["springCloudVersion"] = "2025.0.0"
+
 dependencies {
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -53,6 +54,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    //google
+    implementation("com.google.api-client:google-api-client:2.5.0")
+    implementation("com.google.http-client:google-http-client-gson:1.43.3")
+
 }
 
 
