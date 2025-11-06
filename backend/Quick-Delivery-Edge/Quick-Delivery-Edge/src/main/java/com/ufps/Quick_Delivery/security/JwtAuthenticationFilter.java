@@ -35,20 +35,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         
         // ⭐ PASO 1: Excluir rutas públicas (login y register)
-        if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) {
+        if (path.startsWith("/api/auth/")) {
             System.out.println("🔓 Ruta pública detectada: " + path + " - saltando validación JWT");
             filterChain.doFilter(request, response);
-            return;
+         return;
         }
+
         
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         // Si no hay header o no empieza con "Bearer ", continuar sin autenticación
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("⚠️ No hay token Bearer para: " + path);
+        if (authHeader == null || !authHeader.startsWith("Bearer ") || authHeader.equals("Bearer null")) {
+        System.out.println("⚠️ No hay token Bearer válido para: " + path);
             filterChain.doFilter(request, response);
-            return;
+        return;
         }
+
 
         try {
             // Extraer el token

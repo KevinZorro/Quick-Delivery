@@ -3,6 +3,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AuthService } from '../edge/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { passwordValidator } from './validators/password.validator'; // 👈 Importa tu validador
 
 @Component({
   selector: 'app-register',
@@ -27,7 +28,7 @@ export class RegisterComponent implements OnInit {
     this.registerForm = this.fb.group({
       nombre: ['', [Validators.required]],
       correo: ['', [Validators.required, Validators.email]],
-      contraseña: ['', [Validators.required, Validators.minLength(6)]],
+      contraseña: ['', [Validators.required, passwordValidator()]], // 👈 Nuevo validador
       telefono: [''],
       rol: ['CLIENTE', [Validators.required]],
       // ⭐ Campos dinámicos para Restaurante
@@ -70,58 +71,64 @@ export class RegisterComponent implements OnInit {
   }
 
   onSubmit(): void {
-    this.errorMessage = null;
-    this.successMessage = null;
+  this.errorMessage = null;
+  this.successMessage = null;
 
-    if (this.registerForm.invalid) {
-      Object.keys(this.registerForm.controls).forEach(key => {
-        this.registerForm.get(key)?.markAsTouched();
-      });
-      return;
-    }
-
-    this.loading = true;
-    const formData = this.registerForm.value;
-
-    // ⭐ Construir el objeto con detalles según el rol
-    const payload: any = {
-      nombre: formData.nombre,
-      correo: formData.correo,
-      telefono: formData.telefono,
-      contraseña: formData.contraseña,
-      rol: formData.rol,
-      detalles: {}
-    };
-
-    // Agregar detalles específicos según el rol
-    if (formData.rol === 'RESTAURANTE') {
-      payload.detalles = {
-        descripcion: formData.descripcion,
-        categoria: formData.categoria
-      };
-    } else if (formData.rol === 'REPARTIDOR') {
-      payload.detalles = {
-        vehiculo: formData.vehiculo
-      };
-    }
-
-    console.log('📝 Datos de registro:', payload);
-
-    this.authService.register(payload).subscribe({
-      next: (res) => {
-        this.loading = false;
-        this.successMessage = 'Cuenta creada exitosamente. Redirigiendo al login...';
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
-      },
-      error: (err) => {
-        this.loading = false;
-        console.error('Error en registro:', err);
-        this.errorMessage = err.error?.message || 'Error al crear la cuenta. Intenta nuevamente.';
-      },
+  if (this.registerForm.invalid) {
+    Object.keys(this.registerForm.controls).forEach(key => {
+      this.registerForm.get(key)?.markAsTouched();
     });
+    return;
   }
+
+  this.loading = true;
+  const formData = this.registerForm.value;
+
+  // 🧩 Construir el objeto con detalles según el rol
+  const payload: any = {
+    nombre: formData.nombre,
+    correo: formData.correo,
+    telefono: formData.telefono,
+    contraseña: formData.contraseña,
+    rol: formData.rol,
+    detalles: {}
+  };
+
+  if (formData.rol === 'RESTAURANTE') {
+    payload.detalles = {
+      descripcion: formData.descripcion,
+      categoria: formData.categoria
+    };
+  } else if (formData.rol === 'REPARTIDOR') {
+    payload.detalles = {
+      vehiculo: formData.vehiculo
+    };
+  }
+
+  console.log('📝 Datos de registro:', payload);
+
+  this.authService.register(payload).subscribe({
+    next: (res) => {
+      this.loading = false;
+      this.successMessage = 'Cuenta creada exitosamente. Redirigiendo al login...';
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+      }, 2000);
+    },
+    error: (err) => {
+      this.loading = false;
+      console.error('Error en registro:', err);
+
+      // ⚠️ Aquí detectamos si el backend envió el error del correo duplicado
+      if (err.error === 'El correo ya está registrado' || err.error?.message === 'El correo ya está registrado') {
+        this.errorMessage = 'Este correo ya está en uso. Por favor usa otro.';
+      } else {
+        this.errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
+      }
+    },
+  });
+}
+
 
   navigateToLogin(): void {
     this.router.navigate(['/login']);
