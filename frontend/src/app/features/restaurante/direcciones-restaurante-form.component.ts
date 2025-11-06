@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DireccionRestauranteService, DireccionRestaurante } from './direcciones-restaurante.service';
 import { HeaderComponent } from '../cliente/header.component';
+
 
 @Component({
   selector: 'app-direccion-restaurante-form',
@@ -19,7 +20,10 @@ export class DireccionRestauranteFormComponent implements OnInit {
   direccionId: string | null = null;
   usuarioId: string = '';
 
+  private platformId = inject(PLATFORM_ID);
+
   tiposReferencia = ['SEDE_PRINCIPAL', 'SUCURSAL', 'COCINA_CENTRAL'];
+
 
   constructor(
     private fb: FormBuilder,
@@ -28,17 +32,20 @@ export class DireccionRestauranteFormComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
-  ngOnInit(): void {
-    // ⭐ Obtener el userId del localStorage (restaurante)
-    const restauranteId = localStorage.getItem('quick-delivery-userId');
-    
-    if (!restauranteId) {
-      alert('Error: No se pudo identificar el restaurante. Por favor inicia sesión nuevamente.');
-      this.router.navigate(['/login']);
-      return;
-    }
 
-    this.usuarioId = restauranteId;
+  ngOnInit(): void {
+    // ⭐ Obtener el userId del localStorage (restaurante) SOLO en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      const restauranteId = localStorage.getItem('quick-delivery-userId');
+      
+      if (!restauranteId) {
+        alert('Error: No se pudo identificar el restaurante. Por favor inicia sesión nuevamente.');
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.usuarioId = restauranteId;
+    }
 
     this.direccionForm = this.fb.group({
       calle: ['', Validators.required],
@@ -56,6 +63,7 @@ export class DireccionRestauranteFormComponent implements OnInit {
       this.loadDireccion();
     }
   }
+
 
   loadDireccion(): void {
     if (this.direccionId) {

@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DireccionService, Direccion } from './direccion.service';
 import { HeaderComponent } from './header.component';
+
 
 @Component({
   selector: 'app-direccion-form',
@@ -19,7 +20,10 @@ export class DireccionFormComponent implements OnInit {
   direccionId: string | null = null;
   usuarioId: string = '';
 
+  private platformId = inject(PLATFORM_ID);
+
   tiposReferencia = ['CASA', 'TRABAJO', 'OTRO'];
+
 
   constructor(
     private fb: FormBuilder,
@@ -28,17 +32,20 @@ export class DireccionFormComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
-  ngOnInit(): void {
-    // ⭐ Obtener el userId del localStorage
-    const clienteId = localStorage.getItem('quick-delivery-userId');
-    
-    if (!clienteId) {
-      alert('Error: No se pudo identificar el usuario. Por favor inicia sesión nuevamente.');
-      this.router.navigate(['/login']);
-      return;
-    }
 
-    this.usuarioId = clienteId;
+  ngOnInit(): void {
+    // ⭐ Obtener el userId del localStorage SOLO en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      const clienteId = localStorage.getItem('quick-delivery-userId');
+      
+      if (!clienteId) {
+        alert('Error: No se pudo identificar el usuario. Por favor inicia sesión nuevamente.');
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.usuarioId = clienteId;
+    }
 
     this.direccionForm = this.fb.group({
       calle: ['', Validators.required],
@@ -56,6 +63,7 @@ export class DireccionFormComponent implements OnInit {
       this.loadDireccion();
     }
   }
+
 
   loadDireccion(): void {
     if (this.direccionId) {

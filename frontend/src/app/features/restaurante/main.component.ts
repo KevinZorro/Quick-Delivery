@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductoService, ProductoResponse, ProductoRequest } from './producto.service';
 import { Router } from '@angular/router';
+
 
 @Component({
   selector: 'app-restaurante-main',
@@ -18,19 +19,24 @@ export class RestauranteMainComponent implements OnInit {
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
+  private platformId = inject(PLATFORM_ID);
+
   // Modal
   mostrarModal = false;
   modoEdicion = false;
   productoForm!: FormGroup;
   productoSeleccionado: ProductoResponse | null = null;
 
+
   // Filtros
   categoriaFiltro = '';
   busqueda = '';
 
+
   // Datos del restaurante
   restauranteId: string = '';
   restauranteNombre: string = '';
+
 
   constructor(
     private productoService: ProductoService,
@@ -38,19 +44,24 @@ export class RestauranteMainComponent implements OnInit {
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    // ⭐ Ya no necesitas restauranteId, solo el nombre
-    this.restauranteNombre = localStorage.getItem('quick-delivery-userName') || '';
 
-    if (!localStorage.getItem('token')) {
-      this.router.navigate(['/login']);
-      return;
+  ngOnInit(): void {
+    // ⭐ Ya no necesitas restauranteId, solo el nombre - SOLO en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      this.restauranteNombre = localStorage.getItem('quick-delivery-userName') || '';
+
+      if (!localStorage.getItem('token')) {
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.cargarProductos();
+      this.cargarCategorias();
     }
 
     this.inicializarFormulario();
-    this.cargarProductos();
-    this.cargarCategorias();
   }
+
 
   cargarProductos(): void {
     this.loading = true;
