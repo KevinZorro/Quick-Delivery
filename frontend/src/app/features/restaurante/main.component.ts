@@ -236,4 +236,10 @@ export class RestauranteMainComponent implements OnInit {
     localStorage.removeItem('quick-delivery-userRole');
     this.router.navigate(['/login']);
   }
+
+  // ✅ NUEVO: Navegar a reportes
+verReportes(): void {
+  this.router.navigate(['/dashboard-reportes']);
+}
+
 }

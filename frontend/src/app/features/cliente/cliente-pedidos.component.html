@@ -1,6 +1,5 @@
 <app-header></app-header>
 
-<!-- cliente-pedidos.component.html -->
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="container mx-auto px-4 max-w-6xl">
     <!-- Header -->
@@ -111,8 +110,9 @@
                 <div class="flex items-center gap-3 mb-3">
                   <span class="text-3xl">{{ obtenerIconoEstado(pedido.estado) }}</span>
                   <div>
+                    <!-- ✅ CORREGIDO: Usa formatearId() -->
                     <h3 class="text-lg font-semibold text-gray-800">
-                      Pedido #{{ pedido.id.substring(0, 8) }}
+                      Pedido #{{ formatearId(pedido.id) }}
                     </h3>
                     <p class="text-sm text-gray-600">{{ pedido.fechaFormateada }}</p>
                   </div>
@@ -134,9 +134,10 @@
                     </span>
                   </div>
 
+                  <!-- ✅ CORREGIDO: Usa formatearId() -->
                   <div class="flex items-center gap-2 text-sm">
                     <span class="font-medium text-gray-700">Restaurante ID:</span>
-                    <span class="text-gray-600">{{ pedido.restauranteId.substring(0, 8) }}</span>
+                    <span class="text-gray-600">{{ formatearId(pedido.restauranteId) }}</span>
                   </div>
                 </div>
               </div>
@@ -164,22 +165,18 @@
             *ngIf="pedido.estado !== 'ENTREGADO'"
             class="bg-gray-50 px-6 py-3 border-t border-gray-200">
             <div class="flex justify-between items-center text-xs">
-              <!-- Estado 1: INICIADO -->
               <span [class.text-teal-600]="pedido.estado === 'INICIADO'" 
                     [class.font-semibold]="pedido.estado === 'INICIADO'">
                 Iniciado
               </span>
-              <!-- Estado 2: EN_COCINA -->
               <span [class.text-teal-600]="pedido.estado === 'EN_COCINA'" 
                     [class.font-semibold]="pedido.estado === 'EN_COCINA'">
                 En cocina
               </span>
-              <!-- Estado 3: CON_EL_REPARTIDOR -->
               <span [class.text-teal-600]="pedido.estado === 'CON_EL_REPARTIDOR'" 
                     [class.font-semibold]="pedido.estado === 'CON_EL_REPARTIDOR'">
                 Con repartidor
               </span>
-              <!-- Estado 4: ENTREGADO -->
               <span class="text-gray-400">
                 Entregado
               </span>
@@ -211,7 +208,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE DETALLES DEL PEDIDO -->
+    <!-- MODAL DE DETALLES DEL PEDIDO -->
   <div 
     *ngIf="mostrarModal && pedidoSeleccionado"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -226,12 +223,13 @@
         <div class="flex items-center gap-3">
           <span class="text-3xl">{{ obtenerIconoEstado(pedidoSeleccionado.estado) }}</span>
           <div>
-            <h2 class="text-xl font-bold">Pedido #{{ pedidoSeleccionado.id.substring(0, 8) }}</h2>
+            <!-- ✅ CORREGIDO: Usa formatearId() -->
+            <h2 class="text-xl font-bold">Pedido #{{ formatearId(pedidoSeleccionado.id) }}</h2>
             <p class="text-sm text-teal-100">{{ pedidoSeleccionado.fechaFormateada }}</p>
           </div>
         </div>
         <button 
-        title="x"
+          title="Cerrar"
           (click)="cerrarModal()"
           class="text-white hover:bg-teal-700 rounded-full p-2 transition">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,17 +257,19 @@
           <h3 class="text-sm font-semibold text-gray-700">Información general</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- ✅ CORREGIDO: Usa formatearId() -->
             <div class="bg-gray-50 rounded-lg p-3">
               <p class="text-xs text-gray-600 mb-1">Restaurante ID</p>
               <p class="text-sm font-semibold text-gray-800">
-                {{ pedidoSeleccionado.restauranteId.substring(0, 8) }}...
+                {{ formatearId(pedidoSeleccionado.restauranteId) }}...
               </p>
             </div>
 
+            <!-- ✅ CORREGIDO: Usa formatearId() -->
             <div class="bg-gray-50 rounded-lg p-3">
               <p class="text-xs text-gray-600 mb-1">Cliente ID</p>
               <p class="text-sm font-semibold text-gray-800">
-                {{ pedidoSeleccionado.clienteId.substring(0, 8) }}...
+                {{ formatearId(pedidoSeleccionado.clienteId) }}...
               </p>
             </div>
 
@@ -286,6 +286,90 @@
                 {{ pedidoSeleccionado.fechaFormateada }}
               </p>
             </div>
+          </div>
+        </div>
+
+<!-- Items del Pedido -->
+<div class="space-y-3" *ngIf="pedidoSeleccionado.items && pedidoSeleccionado.items.length > 0">
+  <h3 class="text-sm font-semibold text-gray-700">Items del pedido</h3>
+  
+  <!-- Mostrar loading mientras cargan los productos -->
+  <div *ngIf="loadingDetalles" class="text-center py-4">
+    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-600 mx-auto"></div>
+    <p class="text-sm text-gray-600 mt-2">Cargando detalles de productos...</p>
+  </div>
+
+  <div class="space-y-2" *ngIf="!loadingDetalles">
+    <div 
+      *ngFor="let item of pedidoSeleccionado.items; let i = index"
+      class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      
+      <div class="flex justify-between items-start mb-2">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <!-- Mostrar imagen si está disponible -->
+            <img 
+              *ngIf="item.imagenProducto" 
+              [src]="item.imagenProducto" 
+              alt="{{ item.nombreProducto }}"
+              class="w-12 h-12 rounded object-cover">
+            <span *ngIf="!item.imagenProducto" class="text-lg">🍽️</span>
+            
+            <div>
+              <!-- ✅ Mostrar nombre del producto -->
+              <p class="font-semibold text-gray-800">
+                {{ item.nombreProducto || 'Item #' + (i + 1) }}
+              </p>
+              <!-- ✅ Mostrar descripción si existe -->
+              <p *ngIf="item.descripcionProducto" class="text-xs text-gray-500">
+                {{ item.descripcionProducto }}
+              </p>
+              <p class="text-xs text-gray-600">
+                ID: {{ formatearId(item.productoId) }}...
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-semibold text-gray-800">
+            {{ formatearPrecio(item.subtotal) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-sm pt-2 border-t border-gray-200">
+        <div class="flex gap-4">
+          <span class="text-gray-600">
+            Cantidad: <span class="font-semibold text-gray-800">{{ item.cantidad }}</span>
+          </span>
+          <span class="text-gray-600">
+            <!-- ✅ CORREGIDO: precioUnidad en vez de precioUnitario -->
+            Precio unit.: <span class="font-semibold text-gray-800">{{ formatearPrecio(item.precioUnidad || 0) }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen de items -->
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-3" *ngIf="!loadingDetalles">
+    <div class="flex justify-between items-center text-sm">
+      <span class="text-blue-800 font-medium">
+        Total de items: {{ pedidoSeleccionado.items.length }}
+      </span>
+      <span class="text-blue-800 font-medium">
+        Cantidad total: {{ calcularCantidadTotal() }}
+      </span>
+    </div>
+  </div>
+</div>
+
+
+        <!-- Mensaje si no hay items -->
+        <div class="space-y-3" *ngIf="!pedidoSeleccionado.items || pedidoSeleccionado.items.length === 0">
+          <h3 class="text-sm font-semibold text-gray-700">Items del pedido</h3>
+          <div class="bg-gray-50 rounded-lg p-4 text-center">
+            <p class="text-sm text-gray-600">No hay items disponibles para mostrar</p>
           </div>
         </div>
 

@@ -247,7 +247,8 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
       next: (pedidoCreado) => {
         console.log('✅ PEDIDO CREADO EXITOSAMENTE:', pedidoCreado);
         
-        alert('¡Pago realizado con éxito! Tu pedido está siendo preparado.');
+        alert(`¡Pago realizado con éxito! Tu pedido ${pedidoCreado.id}`);
+
         this.vaciarCarrito();
         this.modalPagoAbierto = false;
         this.panelCarritoAbierto = false;

@@ -16,6 +16,18 @@ export interface CrearPedidoRequest {
   items: ItemPedidoRequest[];
 }
 
+export interface ItemPedido {
+  id: string;
+  productoId: string;
+  cantidad: number;
+  precioUnidad: number;
+  subtotal: number;
+  // ✅ NUEVO: Agregar información del producto
+  nombreProducto?: string;
+  descripcionProducto?: string;
+  imagenProducto?: string;
+}
+
 export interface Pedido {
   id: string;
   clienteId: string;
@@ -24,6 +36,7 @@ export interface Pedido {
   estado: string;
   metodoPago?: string;
   fechaCreacion: string;
+  items?: ItemPedido[];
 }
 
 @Injectable({
@@ -34,7 +47,6 @@ export class PedidoService {
 
   constructor(private http: HttpClient) {}
 
-  // ⭐ Método helper para obtener headers con token
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('quick-delivery-token');
     console.log('🔑 Obteniendo token:', token ? 'SÍ existe' : 'NO existe');
@@ -53,7 +65,6 @@ export class PedidoService {
     });
   }
 
-  // ⭐ Crear pedido con token manual
   crearPedidoDesdeCarrito(request: CrearPedidoRequest): Observable<Pedido> {
     console.log('🚀 Servicio: Creando pedido desde carrito...');
     console.log('📦 Request completo:', request);
@@ -67,10 +78,6 @@ export class PedidoService {
     );
   }
 
-  /**
-   * 🆕 Listar todos los pedidos de un usuario
-   * Usa el endpoint que busca por usuarioId a través de la relación con Cliente
-   */
   listarPedidosUsuario(usuarioId: string): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     console.log('📦 Obteniendo pedidos del usuario:', usuarioId);
@@ -81,9 +88,6 @@ export class PedidoService {
     );
   }
 
-  /**
-   * 🆕 Listar pedidos de un usuario filtrados por estado
-   */
   listarPedidosUsuarioPorEstado(usuarioId: string, estado: string): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     console.log('📦 Obteniendo pedidos del usuario:', usuarioId, 'con estado:', estado);
@@ -94,9 +98,6 @@ export class PedidoService {
     );
   }
 
-  /**
-   * 🆕 Contar pedidos de un usuario
-   */
   contarPedidosUsuario(usuarioId: string): Observable<number> {
     const headers = this.getAuthHeaders();
     console.log('🔢 Contando pedidos del usuario:', usuarioId);
@@ -130,13 +131,11 @@ export class PedidoService {
     return this.http.get<Pedido>(`${this.baseUrl}/pedidos/${pedidoId}`, { headers });
   }
 
-  // ⚠️ DEPRECATED: Usa listarPedidosUsuario() en su lugar
   listarPedidos(): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<Pedido[]>(`${this.baseUrl}/pedidos`, { headers });
   }
 
-  // ⚠️ DEPRECATED: Usa listarPedidosUsuario() en su lugar
   listarPedidosCliente(clienteId: string): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<Pedido[]>(
