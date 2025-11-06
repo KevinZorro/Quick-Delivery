@@ -1,33 +1,43 @@
 <div class="min-h-screen bg-gray-50">
-  <!-- Header -->
-  <header class="bg-white shadow-sm border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-semibold text-gray-900">Panel de Restaurante</h1>
-          <p class="text-sm text-gray-600 mt-1">{{ restauranteNombre }}</p>
-        </div>
+<!-- Header -->
+<header class="bg-white shadow-sm border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Panel de Restaurante</h1>
+        <p class="text-sm text-gray-600 mt-1">{{ restauranteNombre }}</p>
+      </div>
+      
+      <!-- Botones de navegación y cerrar sesión -->
+      <div class="flex items-center gap-3">
+        <!-- ✅ NUEVO: Botón de Reportes -->
+        <button
+          (click)="verReportes()"
+          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+        >
+          <span>📊</span>
+          <span class="hidden sm:inline">Reportes</span>
+        </button>
+
+        <button
+          (click)="verDirecciones()"
+          class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+        >
+          <span>📍</span>
+          <span class="hidden sm:inline">Mis Direcciones</span>
+        </button>
         
-        <!-- Botones de navegación y cerrar sesión -->
-        <div class="flex items-center gap-3">
-          <button
-            (click)="verDirecciones()"
-            class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
-          >
-            <span>📍</span>
-            <span class="hidden sm:inline">Mis Direcciones</span>
-          </button>
-          
-          <button
-            (click)="cerrarSesion()"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
-          >
-            Cerrar Sesión
-          </button>
-        </div>
+        <button
+          (click)="cerrarSesion()"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
+        >
+          Cerrar Sesión
+        </button>
       </div>
     </div>
-  </header>
+  </div>
+</header>
+
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Mensajes de éxito/error -->

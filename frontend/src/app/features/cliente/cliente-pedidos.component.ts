@@ -1,9 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PedidoService, Pedido } from './pedido.service';
+import { PedidoService, Pedido, ItemPedido } from './pedido.service';
+import { RestauranteService, Producto } from './restaurante.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from './header.component';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 interface PedidoDetallado extends Pedido {
   fechaFormateada?: string;
@@ -25,9 +28,9 @@ export class ClientePedidosComponent implements OnInit {
   filtroEstado: string = 'TODOS';
   ordenamiento: string = 'reciente';
 
-  // ✅ Variables para el modal
   mostrarModal: boolean = false;
   pedidoSeleccionado: PedidoDetallado | null = null;
+  loadingDetalles: boolean = false;
 
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
@@ -39,6 +42,7 @@ export class ClientePedidosComponent implements OnInit {
 
   constructor(
     private pedidoService: PedidoService,
+    private restauranteService: RestauranteService,
     public router: Router
   ) {}
 
@@ -116,31 +120,104 @@ export class ClientePedidosComponent implements OnInit {
     this.aplicarFiltros();
   }
 
-  // ✅ NUEVO: Abrir modal con detalles del pedido
+  // ✅ NUEVO: Cargar detalles del pedido con información de productos
   verDetallePedido(pedidoId: string): void {
-    console.log('🔍 Abriendo detalles del pedido:', pedidoId);
+    console.log('🔍 Cargando detalles completos del pedido:', pedidoId);
+    this.loadingDetalles = true;
     
-    // Buscar el pedido en la lista actual
-    const pedido = this.pedidos.find(p => p.id === pedidoId);
-    
-    if (pedido) {
-      this.pedidoSeleccionado = pedido;
-      this.mostrarModal = true;
-      
-      // Prevenir scroll del body cuando el modal está abierto
-      document.body.style.overflow = 'hidden';
-    } else {
-      console.error('❌ Pedido no encontrado');
-    }
+    this.pedidoService.obtenerPedido(pedidoId).subscribe({
+      next: (pedidoCompleto) => {
+        console.log('✅ Pedido completo recibido:', pedidoCompleto);
+        
+        // Si el pedido tiene items, cargar información de productos
+        if (pedidoCompleto.items && pedidoCompleto.items.length > 0) {
+          this.cargarInformacionProductos(pedidoCompleto);
+        } else {
+          // Si no hay items, mostrar el pedido sin productos
+          this.mostrarPedidoEnModal(pedidoCompleto);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar detalles del pedido:', error);
+        this.loadingDetalles = false;
+        
+        // Fallback: usar el pedido de la lista actual
+        const pedido = this.pedidos.find(p => p.id === pedidoId);
+        if (pedido) {
+          this.mostrarPedidoEnModal(pedido);
+        }
+      }
+    });
   }
 
-  // ✅ NUEVO: Cerrar modal
+  // ✅ NUEVO: Cargar información de productos desde el microservicio
+  private cargarInformacionProductos(pedido: Pedido): void {
+    console.log('🛒 Cargando información de productos...');
+
+    // Crear array de observables para cada producto
+    const productosObservables = pedido.items!.map(item => 
+      this.restauranteService.getProductosByRestaurante(pedido.restauranteId).pipe(
+        map(productos => {
+          // Buscar el producto específico por ID
+          const producto = productos.find(p => p.id === item.productoId);
+          return { item, producto };
+        }),
+        catchError(error => {
+          console.error(`❌ Error al cargar producto ${item.productoId}:`, error);
+          return of({ item, producto: null });
+        })
+      )
+    );
+
+    // Esperar a que todas las peticiones terminen
+    forkJoin(productosObservables).subscribe({
+      next: (resultados) => {
+        console.log('✅ Información de productos cargada:', resultados);
+
+        // Actualizar items con información de productos
+        const itemsConProductos = resultados.map(({ item, producto }) => ({
+          ...item,
+          nombreProducto: producto?.nombre || 'Producto no disponible',
+          descripcionProducto: producto?.descripcion || '',
+          imagenProducto: producto?.imagenUrl || ''
+        }));
+
+        // Crear pedido actualizado con items completos
+        const pedidoActualizado = {
+          ...pedido,
+          items: itemsConProductos
+        };
+
+        this.mostrarPedidoEnModal(pedidoActualizado);
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar información de productos:', error);
+        this.mostrarPedidoEnModal(pedido);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Mostrar pedido en el modal
+  private mostrarPedidoEnModal(pedido: Pedido): void {
+    this.pedidoSeleccionado = {
+      ...pedido,
+      fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
+      estadoColor: this.obtenerColorEstado(pedido.estado),
+      estadoTexto: this.obtenerTextoEstado(pedido.estado)
+    };
+    
+    this.mostrarModal = true;
+    this.loadingDetalles = false;
+    document.body.style.overflow = 'hidden';
+    
+    console.log('✅ Modal abierto con pedido:', this.pedidoSeleccionado);
+  }
+
   cerrarModal(): void {
     console.log('❌ Cerrando modal');
     this.mostrarModal = false;
     this.pedidoSeleccionado = null;
-    
-    // Restaurar scroll del body
+    this.loadingDetalles = false;
     document.body.style.overflow = 'auto';
   }
 
@@ -154,6 +231,11 @@ export class ClientePedidosComponent implements OnInit {
       minute: '2-digit'
     };
     return date.toLocaleDateString('es-ES', opciones);
+  }
+
+  formatearId(id: string | undefined | null): string {
+    if (!id) return 'N/A';
+    return id.substring(0, 8);
   }
 
   obtenerColorEstado(estado: string): string {
@@ -187,10 +269,21 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   formatearPrecio(precio: number): string {
+    // ✅ Verificar si es NaN
+    if (isNaN(precio) || precio === null || precio === undefined) {
+      return 'Precio no disponible';
+    }
+    
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(precio);
+  }
+
+  calcularCantidadTotal(): number {
+    if (!this.pedidoSeleccionado?.items) return 0;
+    
+    return this.pedidoSeleccionado.items.reduce((total, item) => total + item.cantidad, 0);
   }
 }

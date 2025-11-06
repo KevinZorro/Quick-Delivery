@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .requestMatchers("/reportes/**").permitAll()      // Permitir reportes sin token
                 .requestMatchers("api/restaurante/**").permitAll()   // Permitir mock restaurante
                 .requestMatchers("/pedidos/**").permitAll()       // Permitir mock pedidos
+                .requestMatchers("api/productos/**").permitAll()
                 .anyRequest().authenticated()                     // El resto requiere token
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
