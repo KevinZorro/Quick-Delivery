@@ -4,6 +4,8 @@ import com.ufps.Quick_Delivery.config.PedidoFeignClient;
 import com.ufps.Quick_Delivery.dto.*;
 import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.repository.ProductoRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -12,8 +14,6 @@ import org.apache.poi.ss.usermodel.Row;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class ReporteService {
     }
 
     // Ingresos por categoría
-    public Map<String, Double> obtenerIngresosPorCategoria(UUID restauranteId) {
+    public Map<String, Double> obtenerIngresosPorCategoria(@NonNull UUID restauranteId) {
         Map<String, Double> ingresosPorCategoria = new HashMap<>();
 
         for (PedidoDto pedido : obtenerPedidosRestaurante(restauranteId)) {
@@ -58,7 +58,7 @@ public class ReporteService {
     }
 
     // Platos más vendidos
-    public List<Map<String, Object>> obtenerPlatosMasVendidos(UUID restauranteId) {
+    public List<Map<String, Object>> obtenerPlatosMasVendidos(@NonNull UUID restauranteId) {
         Map<UUID, Integer> ventasPorProducto = new HashMap<>();
 
         for (PedidoDto pedido : obtenerPedidosRestaurante(restauranteId)) {

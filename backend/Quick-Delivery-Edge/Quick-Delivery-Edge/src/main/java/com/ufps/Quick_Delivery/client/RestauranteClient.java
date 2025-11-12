@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.UUID;
 import lombok.Data;
 
-@FeignClient(name = "restaurante-service", url = "https://restaurantes-service-192433559355.southamerica-east1.run.app")
+@FeignClient(name = "restaurante-service", url = "${restaurante-service.url}/api/restaurante")
 public interface RestauranteClient {
 
     @PostMapping

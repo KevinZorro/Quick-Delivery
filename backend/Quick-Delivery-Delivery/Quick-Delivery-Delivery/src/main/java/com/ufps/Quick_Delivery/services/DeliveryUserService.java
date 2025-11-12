@@ -3,6 +3,8 @@ package com.ufps.Quick_Delivery.services;
 import com.ufps.Quick_Delivery.dto.DeliveryUserDto;
 import com.ufps.Quick_Delivery.models.DeliveryUser;
 import com.ufps.Quick_Delivery.repository.DeliveryUserRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +43,7 @@ public class DeliveryUserService {
         return repository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    public Optional<DeliveryUserDto> findById(UUID id) {
+    public Optional<DeliveryUserDto> findById(@NonNull UUID id) {
         return repository.findById(id).map(this::toDto);
     }
 
@@ -51,7 +53,7 @@ public class DeliveryUserService {
         return toDto(saved);
     }
 
-    public Optional<DeliveryUserDto> update(UUID id, DeliveryUserDto dto) {
+    public Optional<DeliveryUserDto> update(@NonNull UUID id, DeliveryUserDto dto) {
         return repository.findById(id).map(existing -> {
             existing.setUsuarioId(dto.getUsuarioId());
             existing.setVehiculo(dto.getVehiculo());
@@ -61,7 +63,7 @@ public class DeliveryUserService {
         });
     }
 
-    public void delete(UUID id) {
+    public void delete(@NonNull UUID id) {
         repository.deleteById(id);
     }
 }

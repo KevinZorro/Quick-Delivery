@@ -10,6 +10,7 @@ import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -32,13 +33,13 @@ public class UsuarioService {
     }
 
     // Buscar usuario por ID
-    public Optional<Usuario> obtenerPorId(UUID id) {
+    public Optional<Usuario> obtenerPorId(@NonNull UUID id) {
         return usuarioRepository.findById(id);
     }
 
     // Actualizar usuario
     @Transactional
-    public Optional<Usuario> actualizarUsuario(UUID id, Usuario datos) {
+    public Optional<Usuario> actualizarUsuario(@NonNull UUID id, Usuario datos) {
         return usuarioRepository.findById(id).map(u -> {
             u.setNombre(datos.getNombre());
             u.setContraseña(datos.getContraseña());
@@ -50,7 +51,7 @@ public class UsuarioService {
     }
 
     // Eliminar usuario
-    public void eliminarUsuario(UUID id) {
+    public void eliminarUsuario(@NonNull UUID id) {
         usuarioRepository.deleteById(id);
     }
 }

@@ -1,0 +1,15 @@
+2025-11-11 20:15:06.034453-05:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CLIENTE" not found (this database is empty); SQL statement:
+insert into cliente (usuario_id,id) values (?,?) [42104-232]
+2025-11-11 20:15:52.045638-05:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CLIENTE" not found (this database is empty); SQL statement:
+insert into cliente (usuario_id,id) values (?,?) [42104-232]
+2025-11-11 20:16:01.718557-05:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CLIENTE" not found (this database is empty); SQL statement:
+insert into cliente (usuario_id,id) values (?,?) [42104-232]
+2025-11-11 20:17:58.429144-05:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CLIENTE" not found (this database is empty); SQL statement:
+insert into cliente (usuario_id,id) values (?,?) [42104-232]
+2025-11-11 20:18:07.140071-05:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CLIENTE" not found (this database is empty); SQL statement:
+insert into cliente (usuario_id,id) values (?,?) [42104-232]

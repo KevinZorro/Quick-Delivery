@@ -6,6 +6,8 @@ import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,7 +108,7 @@ public class PedidoService {
         return pedidoGuardado;
     }
 
-    public Optional<Pedido> buscarPorId(UUID id) {
+    public Optional<Pedido> buscarPorId(@NonNull UUID id) {
         return pedidoRepository.findById(id);
     }
 
@@ -114,16 +116,16 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
-    public void eliminarPorId(UUID id) {
+    public void eliminarPorId(@NonNull UUID id) {
         pedidoRepository.deleteById(id);
     }
 
-    public Pedido guardarPedido(Pedido pedido) {
+    public Pedido guardarPedido(@NonNull Pedido pedido) {
         return pedidoRepository.save(pedido);
     }
 
     @Transactional
-    public Pedido actualizarEstadoPedido(UUID pedidoId, EstadoPedido nuevoEstado) {
+    public Pedido actualizarEstadoPedido(@NonNull UUID pedidoId, EstadoPedido nuevoEstado) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
         
@@ -134,7 +136,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido actualizarMetodoPago(UUID pedidoId, MetodoPago metodoPago) {
+    public Pedido actualizarMetodoPago(@NonNull UUID pedidoId, MetodoPago metodoPago) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
         

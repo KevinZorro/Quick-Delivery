@@ -40,7 +40,7 @@ public class AuthService {
         usuario.setFecharegistro(LocalDateTime.now());
 
         Usuario guardado = usuarioRepository.save(usuario);
-
+        System.out.println("${cliente-service.url}");
         // Llamada a microservicio según rol
         switch (guardado.getRol()) {
             case CLIENTE:

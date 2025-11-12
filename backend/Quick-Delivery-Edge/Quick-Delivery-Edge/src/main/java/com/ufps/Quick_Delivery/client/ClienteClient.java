@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.UUID;
 import lombok.Data;
 
-@FeignClient(name = "cliente-service", url = "https://clientes-service-192433559355.southamerica-east1.run.app")
+@FeignClient(name = "cliente-service", url = "${cliente-service.url}/clientes")
 public interface ClienteClient {
 
     @PostMapping

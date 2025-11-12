@@ -16,6 +16,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins(
                             "https://quick-delivery-84dfb.web.app",
+                            "https://quick-delivery-84dfb.firebaseapp.com",
                             "http://localhost:4200",
                             "http://127.0.0.1:4200",
                             "http://localhost:55000",

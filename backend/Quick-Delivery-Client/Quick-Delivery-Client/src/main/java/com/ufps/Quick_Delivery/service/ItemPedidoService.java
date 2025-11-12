@@ -4,6 +4,8 @@ import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.repository.ItemPedidoRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
+import lombok.NonNull;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +25,12 @@ public class ItemPedidoService {
         this.pedidoRepo = pedidoRepo;
     }
 
-    public ItemPedido guardarItem(ItemPedido item) {
+    public ItemPedido guardarItem(@NonNull ItemPedido item) {
         // Guarda un item pedido simple (ejemplo)
         return itemRepo.save(item);
     }
 
-    public Optional<ItemPedido> buscarPorId(UUID id) {
+    public Optional<ItemPedido> buscarPorId(@NonNull UUID id) {
         return itemRepo.findById(id);
     }
 
@@ -40,7 +42,7 @@ public class ItemPedidoService {
         return itemRepo.findAll();
     }
 
-    public void eliminarPorId(UUID id) {
+    public void eliminarPorId(@NonNull UUID id) {
         itemRepo.deleteById(id);
     }
 
