@@ -1,6 +1,7 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.client.ProductoClient;
+import com.ufps.Quick_Delivery.dto.ClienteContactoDto;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.model.*;
@@ -179,4 +180,37 @@ public class PedidoService {
         System.out.println("🔢 Total de pedidos del usuario " + usuarioId + ": " + count);
         return count;
     }
+
+    /**
+ * HU023: Obtener información de contacto del cliente
+ */
+@Transactional(readOnly = true)
+public ClienteContactoDto obtenerContactoClientePorPedido(UUID pedidoId) {
+    System.out.println("📞 Solicitando información de contacto para pedido: " + pedidoId);
+    
+    Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+    
+    // Validar que el pedido tenga repartidor asignado
+    if (pedido.getRepartidorId() == null) {
+        throw new RuntimeException("No se puede acceder al contacto: pedido no asignado");
+    }
+    
+    // Validar estado del pedido (solo si está CON_EL_REPARTIDOR o ENTREGADO)
+    if (pedido.getEstado() == EstadoPedido.INICIADO || pedido.getEstado() == EstadoPedido.EN_COCINA) {
+        throw new RuntimeException("No se puede acceder al contacto: pedido no listo para entrega");
+    }
+    
+    Cliente cliente = pedido.getCliente();
+    
+    return ClienteContactoDto.builder()
+            .clienteId(cliente.getId())
+            .nombreCompleto("Cliente") // TODO: Obtener de microservicio usuarios
+            .telefono("Pendiente") // TODO: Obtener de microservicio usuarios
+            .direccionEntrega("Dirección ID: " + pedido.getDireccionEntregaId())
+            .referenciaEntrega(pedido.getPreferencias())
+            .build();
+}
+
+    
 }

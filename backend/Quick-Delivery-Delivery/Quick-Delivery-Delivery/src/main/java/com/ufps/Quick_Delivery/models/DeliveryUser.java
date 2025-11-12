@@ -25,4 +25,9 @@ public class DeliveryUser {
     @Column(name = "calificacion_promedio")
     private Double calificacionPromedio = 0.0;
 
+    @Builder.Default
+    @Column(name = "ganancias")
+    private Double ganancias = 0.0;
+
+    //TODO listo: campo de ganancias agregado
 }

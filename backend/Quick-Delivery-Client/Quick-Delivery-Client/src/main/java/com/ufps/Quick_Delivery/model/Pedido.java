@@ -53,6 +53,8 @@ public class Pedido implements Serializable {
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 
+//TODO: crear fecha para los diferentes estados de la entrega y anexarlos a la db
+
     @Enumerated(EnumType.STRING)
     @Column(name = "metodo_pago")
     private MetodoPago metodoPago;

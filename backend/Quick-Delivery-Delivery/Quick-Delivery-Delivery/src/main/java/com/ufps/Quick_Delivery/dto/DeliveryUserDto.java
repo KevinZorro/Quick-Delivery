@@ -11,4 +11,6 @@ public class DeliveryUserDto {
     private UUID usuarioId;
     private TipoVehiculo vehiculo;
     private Double calificacionPromedio;
+    private Double ganancias;
+
 }
