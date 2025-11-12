@@ -3,6 +3,7 @@ package com.ufps.Quick_Delivery.service;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import jakarta.validation.Valid;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,13 +17,13 @@ import java.util.List;
 public class ClienteService {
     private final ClienteRepository clienteRepository;
 
-    public Cliente guardarCliente(@Valid Cliente cliente) {
+    public Cliente guardarCliente(@Valid @NonNull Cliente cliente) {
         return clienteRepository.save(cliente);
     }
 
     // Buscar cliente por Id
     @Transactional(readOnly = true)
-    public Optional<Cliente> buscarPorId(/*@NotNull */  UUID id) {
+    public Optional<Cliente> buscarPorId(@NonNull UUID id) {
         return clienteRepository.findById(id);
     }
 
@@ -38,7 +39,7 @@ public class ClienteService {
     }
 
     // Eliminar cliente por ID 
-    public void eliminarPorId(/* @NotNull*/  UUID id) {
+    public void eliminarPorId(@NonNull UUID id) {
         if (!clienteRepository.existsById(id)) {
             throw new IllegalArgumentException("No existe cliente con ID: " + id);
         }

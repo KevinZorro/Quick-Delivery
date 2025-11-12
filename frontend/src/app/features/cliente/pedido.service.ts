@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';  // Ajusta la ruta según tu proyecto
+import { PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface ItemPedidoRequest {
   productoId: string;
@@ -22,7 +25,6 @@ export interface ItemPedido {
   cantidad: number;
   precioUnidad: number;
   subtotal: number;
-  // ✅ NUEVO: Agregar información del producto
   nombreProducto?: string;
   descripcionProducto?: string;
   imagenProducto?: string;
@@ -43,14 +45,18 @@ export interface Pedido {
   providedIn: 'root'
 })
 export class PedidoService {
-  private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = environment.clientesApi + '/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+    console.log('Base URL para PedidoService:', this.baseUrl);
+  }
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('quick-delivery-token');
+    let token = '';
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('quick-delivery-token') || '';
+    }
     console.log('🔑 Obteniendo token:', token ? 'SÍ existe' : 'NO existe');
-    
     if (token) {
       console.log('📄 Token (primeros 50 chars):', token.substring(0, 50) + '...');
       return new HttpHeaders({
@@ -58,7 +64,6 @@ export class PedidoService {
         'Content-Type': 'application/json'
       });
     }
-    
     console.warn('⚠️ NO hay token - petición sin autenticación');
     return new HttpHeaders({
       'Content-Type': 'application/json'
@@ -68,9 +73,7 @@ export class PedidoService {
   crearPedidoDesdeCarrito(request: CrearPedidoRequest): Observable<Pedido> {
     console.log('🚀 Servicio: Creando pedido desde carrito...');
     console.log('📦 Request completo:', request);
-    
     const headers = this.getAuthHeaders();
-    
     return this.http.post<Pedido>(
       `${this.baseUrl}/pedidos/crear-desde-carrito`,
       request,
@@ -81,9 +84,8 @@ export class PedidoService {
   listarPedidosUsuario(usuarioId: string): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     console.log('📦 Obteniendo pedidos del usuario:', usuarioId);
-    
     return this.http.get<Pedido[]>(
-      `${this.baseUrl}/pedidos/usuario/${usuarioId}`, 
+      `${this.baseUrl}/pedidos/usuario/${usuarioId}`,
       { headers }
     );
   }
@@ -91,9 +93,8 @@ export class PedidoService {
   listarPedidosUsuarioPorEstado(usuarioId: string, estado: string): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     console.log('📦 Obteniendo pedidos del usuario:', usuarioId, 'con estado:', estado);
-    
     return this.http.get<Pedido[]>(
-      `${this.baseUrl}/pedidos/usuario/${usuarioId}/estado/${estado}`, 
+      `${this.baseUrl}/pedidos/usuario/${usuarioId}/estado/${estado}`,
       { headers }
     );
   }
@@ -101,9 +102,8 @@ export class PedidoService {
   contarPedidosUsuario(usuarioId: string): Observable<number> {
     const headers = this.getAuthHeaders();
     console.log('🔢 Contando pedidos del usuario:', usuarioId);
-    
     return this.http.get<number>(
-      `${this.baseUrl}/pedidos/usuario/${usuarioId}/count`, 
+      `${this.baseUrl}/pedidos/usuario/${usuarioId}/count`,
       { headers }
     );
   }
@@ -139,7 +139,7 @@ export class PedidoService {
   listarPedidosCliente(clienteId: string): Observable<Pedido[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<Pedido[]>(
-      `${this.baseUrl}/pedidos/cliente/${clienteId}`, 
+      `${this.baseUrl}/pedidos/cliente/${clienteId}`,
       { headers }
     );
   }

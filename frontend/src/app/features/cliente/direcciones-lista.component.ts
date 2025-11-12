@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { DireccionService, Direccion } from './direccion.service';
 import { HeaderComponent } from './header.component';
 
+
 declare var google: any;
+
 
 @Component({
   selector: 'app-direcciones-lista',
@@ -18,32 +20,39 @@ export class DireccionesListaComponent implements OnInit {
   errorMessage: string | null = null;
   usuarioId: string = '';
 
+  private platformId = inject(PLATFORM_ID);
+
   modalMapaAbierto = false;
   direccionSeleccionada: Direccion | null = null;
   map: any;
   marker: any;
   geocoder: any; // ✅ NUEVO: Para buscar direcciones
 
+
   constructor(
     private direccionService: DireccionService,
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    const clienteId = localStorage.getItem('quick-delivery-userId');
-    
-    if (!clienteId) {
-      this.errorMessage = 'Error: No se pudo identificar el usuario. Por favor inicia sesión nuevamente.';
-      this.loading = false;
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 2000);
-      return;
-    }
 
-    this.usuarioId = clienteId;
-    this.loadDirecciones();
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const clienteId = localStorage.getItem('quick-delivery-userId');
+      
+      if (!clienteId) {
+        this.errorMessage = 'Error: No se pudo identificar el usuario. Por favor inicia sesión nuevamente.';
+        this.loading = false;
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 2000);
+        return;
+      }
+
+      this.usuarioId = clienteId;
+      this.loadDirecciones();
+    }
   }
+
 
   loadDirecciones(): void {
     this.direccionService.getDireccionesByUsuario(this.usuarioId).subscribe({

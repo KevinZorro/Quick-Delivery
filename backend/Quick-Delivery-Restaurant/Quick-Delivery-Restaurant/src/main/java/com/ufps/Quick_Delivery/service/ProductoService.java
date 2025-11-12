@@ -7,6 +7,8 @@ import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.ProductoRepository;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +43,7 @@ public class ProductoService {
     }
     
     @Transactional(readOnly = true)
-    public ProductoResponseDTO obtenerProductoPorId(UUID id) {
+    public ProductoResponseDTO obtenerProductoPorId(@NonNull UUID id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         return convertirAResponseDTO(producto);
@@ -134,7 +136,7 @@ public class ProductoService {
     }
     
     @Transactional
-    public ProductoResponseDTO actualizarProducto(UUID id, ProductoUpdateDTO updateDTO, UUID usuarioId) {
+    public ProductoResponseDTO actualizarProducto(@NonNull UUID id, ProductoUpdateDTO updateDTO, UUID usuarioId) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         
@@ -154,7 +156,7 @@ public class ProductoService {
     }
     
     @Transactional
-    public void eliminarProducto(UUID id, UUID usuarioId) {
+    public void eliminarProducto(@NonNull UUID id, UUID usuarioId) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         
@@ -166,7 +168,7 @@ public class ProductoService {
     }
     
     @Transactional
-    public ProductoResponseDTO cambiarDisponibilidad(UUID id, Boolean disponible, UUID usuarioId) {
+    public ProductoResponseDTO cambiarDisponibilidad(@NonNull UUID id, Boolean disponible, UUID usuarioId) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         

@@ -8,6 +8,8 @@ import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.DireccionRepository;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,7 @@ public class DireccionService {
     private final GoogleMapsService googleMapsService; // ⭐ NUEVO
     
     @Transactional
-    public DireccionResponseDto crearDireccion(DireccionRequestDto requestDto, UUID usuarioId) {
+    public DireccionResponseDto crearDireccion(DireccionRequestDto requestDto,@NonNull UUID usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
@@ -90,14 +92,14 @@ public class DireccionService {
     }
     
     @Transactional(readOnly = true)
-    public DireccionResponseDto obtenerDireccionPorId(UUID id) {
+    public DireccionResponseDto obtenerDireccionPorId(@NonNull UUID id) {
         Direccion direccion = direccionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
         return convertirAResponseDto(direccion);
     }
     
     @Transactional
-    public DireccionResponseDto actualizarDireccion(UUID id, DireccionRequestDto requestDto, UUID usuarioId) {
+    public DireccionResponseDto actualizarDireccion(@NonNull UUID id, DireccionRequestDto requestDto,@NonNull UUID usuarioId) {
         Direccion direccion = direccionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
         
@@ -151,7 +153,7 @@ public class DireccionService {
     }
     
     @Transactional
-    public void eliminarDireccion(UUID id, UUID usuarioId) {
+    public void eliminarDireccion(@NonNull UUID id, UUID usuarioId) {
         Direccion direccion = direccionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
         
@@ -165,7 +167,7 @@ public class DireccionService {
     
     // ⭐ NUEVO: Método para re-geocodificar una dirección manualmente
     @Transactional
-    public DireccionResponseDto regeocodeAddress(UUID direccionId, UUID usuarioId) {
+    public DireccionResponseDto regeocodeAddress(@NonNull UUID direccionId, UUID usuarioId) {
         Direccion direccion = direccionRepository.findById(direccionId)
                 .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
         

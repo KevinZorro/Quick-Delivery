@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment'; // Ajusta la ruta según tu proyecto
 
 export interface Restaurante {
   id: string;
@@ -26,9 +27,11 @@ export interface Producto {
   providedIn: 'root'
 })
 export class RestauranteService {
-  private baseUrl = 'http://localhost:8081/api'; // Ajusta según tu backend
+  private baseUrl = environment.restaurantesApi + '/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    console.log('Base URL para RestauranteService:', this.baseUrl);
+  }
 
   getRestaurantes(): Observable<Restaurante[]> {
     return this.http.get<Restaurante[]>(`${this.baseUrl}/restaurante`);
