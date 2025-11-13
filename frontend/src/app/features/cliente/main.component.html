@@ -1,12 +1,13 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-white font-poppins">
   <!-- Header -->
-   <app-header></app-header>
+  <app-header></app-header>
 
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
     <!-- Loading State -->
     <div *ngIf="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
       <p class="mt-4 text-gray-600">Cargando restaurantes...</p>
     </div>
 
@@ -23,16 +24,15 @@
         class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden transform hover:-translate-y-1"
       >
         <!-- Image -->
-        <div class="h-48 bg-gradient-to-br from-indigo-400 to-purple-500 relative overflow-hidden">
+        <div class="h-48 bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 relative overflow-hidden">
           <img
-            alt="imagenUrl"
             *ngIf="restaurante.imagenUrl"
             [src]="restaurante.imagenUrl"
             [alt]="restaurante.nombre"
             class="w-full h-full object-cover"
           />
           <div *ngIf="!restaurante.imagenUrl" class="w-full h-full flex items-center justify-center">
-            <svg class="w-20 h-20 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-20 h-20 text-white opacity-60" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
             </svg>
           </div>
@@ -40,11 +40,11 @@
 
         <!-- Content -->
         <div class="p-5">
-          <h3 class="text-xl font-bold text-gray-800 mb-2">{{ restaurante.nombre }}</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ restaurante.nombre }}</h3>
           <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ restaurante.descripcion }}</p>
           
           <div class="flex items-center justify-between">
-            <span class="inline-block bg-indigo-100 text-indigo-800 text-xs px-3 py-1 rounded-full font-semibold">
+            <span class="inline-block bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-semibold">
               {{ restaurante.categoria }}
             </span>
             <div class="flex items-center">
@@ -59,12 +59,13 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!loading && !errorMessage && restaurantes.length === 0" class="text-center py-12">
-      <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div *ngIf="!loading && !errorMessage && restaurantes.length === 0" class="text-center py-12 bg-white rounded-lg">
+      <svg class="mx-auto h-24 w-24 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
       <h3 class="mt-4 text-lg font-medium text-gray-900">No hay restaurantes disponibles</h3>
       <p class="mt-2 text-gray-500">Intenta nuevamente más tarde</p>
     </div>
+
   </main>
 </div>
