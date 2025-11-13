@@ -1,9 +1,11 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.dto.ClienteContactoDto;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
+import com.ufps.Quick_Delivery.repository.PedidoRepository;
 import com.ufps.Quick_Delivery.service.PedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final PedidoRepository pedidoRepository; // temporal
 
 @PostMapping("/crear-desde-carrito")
 public ResponseEntity<?> crearPedidoDesdeCarrito(
@@ -147,5 +150,51 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
         long count = pedidoService.contarPedidosPorUsuario(usuarioId);
         return ResponseEntity.ok(count);
     }
+
+    /**
+ * HU023: Obtener información de contacto del cliente para el repartidor
+ */
+@GetMapping("/{pedidoId}/contacto-cliente")
+public ResponseEntity<ClienteContactoDto> obtenerContactoCliente(@PathVariable UUID pedidoId) {
+    try {
+        ClienteContactoDto contacto = pedidoService.obtenerContactoClientePorPedido(pedidoId);
+        return ResponseEntity.ok(contacto);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+}
+
+/**
+ * ⭐ ENDPOINT TEMPORAL PARA TESTING HU023
+ * Actualiza estado y asigna repartidor a un pedido
+ */
+@PatchMapping("/{id}/preparar-para-entrega")
+public ResponseEntity<?> prepararPedidoParaEntrega(@PathVariable UUID id) {
+    try {
+        Pedido pedido = pedidoService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        
+        // Asignar repartidor random
+        pedido.setRepartidorId(UUID.randomUUID());
+        
+        // Cambiar estado a CON_EL_REPARTIDOR
+        pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
+        
+        // Guardar cambios
+        Pedido actualizado = pedidoRepository.save(pedido);
+        
+        System.out.println("✅ Pedido preparado para entrega:");
+        System.out.println("   - Pedido ID: " + actualizado.getId());
+        System.out.println("   - Repartidor ID: " + actualizado.getRepartidorId());
+        System.out.println("   - Estado: " + actualizado.getEstado());
+        
+        return ResponseEntity.ok(actualizado);
+        
+    } catch (Exception e) {
+        return ResponseEntity.badRequest()
+                .body("Error: " + e.getMessage());
+    }
+}
+
 
 }

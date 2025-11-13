@@ -13,13 +13,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-          // Permitir acceso libre a la consola H2
+         // Permite el acceso libre a todas las rutas (ninguna requiere autenticación)
           .authorizeHttpRequests(authz -> authz
              .anyRequest().permitAll()
           )
+          // Deshabilita la protección CSRF para todas las rutas
           // Deshabilitar CSRF para la consola H2 (mejor que deshabilitar CSRF globalmente)
           .csrf(csrf -> csrf.ignoringRequestMatchers("/**"));
 
+          // Construye y aplica la configuración de seguridad
         return http.build();
     }
 }
+
+// Esta clase configura la seguridad de la aplicación con Spring Security, permitiendo 
+// acceso libre a todas las rutas y deshabilitando la protección CSRF. Es una configuración común durante el 
+// desarrollo o pruebas, ya que elimina las restricciones de seguridad.
