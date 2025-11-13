@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface EntregaRepository extends JpaRepository<Entrega, UUID> {
-    Optional<Entrega> findByPedidoId(UUID pedidoId);
+    List<Entrega> findByPedidoId(UUID pedidoId);
 }

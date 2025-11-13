@@ -18,9 +18,12 @@ public class RestauranteClient {
         try {
             String url = BASE_URL + "/" + pedidoId + "/estado?nuevoEstado=" + nuevoEstado;
             restTemplate.put(url, null);
-            log.info("✅Estado del pedido actualizado a '{}' en Restaurante", nuevoEstado);
+            log.info("Estado del pedido {} actualizado a '{}' en Restaurante", pedidoId, nuevoEstado);
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
+            log.warn("No se encontró el endpoint para actualizar el pedido {} en Restaurante", pedidoId);
         } catch (Exception e) {
-            log.error("Error al actualizar el estado del pedido en Restaurante", e);
+            log.error("Error al actualizar el estado del pedido en Restaurante: {}", e.getMessage());
         }
     }
+    
 }
