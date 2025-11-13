@@ -1,0 +1,201 @@
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Crear cuenta</h1>
+      <p class="text-gray-600">Únete a Quick Delivery hoy</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Nombre -->
+      <div>
+        <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+        <input
+          id="nombre"
+          type="text"
+          formControlName="nombre"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+          placeholder="Juan Pérez"
+        />
+        <div *ngIf="registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched" class="text-red-500 text-sm mt-1">
+          El nombre es requerido
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="correo" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+        <input
+          id="correo"
+          type="email"
+          formControlName="correo"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+          placeholder="tu@email.com"
+        />
+        <div *ngIf="registerForm.get('correo')?.invalid && registerForm.get('correo')?.touched" class="text-red-500 text-sm mt-1">
+          Por favor ingresa un correo válido
+        </div>
+      </div>
+
+      <!-- Password -->
+        <div>
+          <label for="contraseña" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+          <input
+            id="contraseña"
+            type="password"
+            formControlName="contraseña"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+            placeholder="••••••••"
+          />
+
+          <div
+            *ngIf="registerForm.get('contraseña')?.errors?.['passwordStrength'] && registerForm.get('contraseña')?.touched"
+            class="text-red-500 text-sm mt-1"
+          >
+            La contraseña debe tener al menos 8 caracteres, una mayúscula y un número. NO DEBE CONTENER CARACTERES ESPECIALES.
+          </div>
+        </div>
+
+
+      <!-- Teléfono -->
+      <div>
+        <label for="telefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+        <input
+          id="telefono"
+          type="tel"
+          formControlName="telefono"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+          placeholder="3001234567"
+        />
+      </div>
+
+      <!-- Selector de rol -->
+      <div>
+        <label for="rol" class="block text-sm font-medium text-gray-700 mb-1">Tipo de cuenta</label>
+        <select
+          id="rol"
+          formControlName="rol"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white"
+        >
+          <option value="CLIENTE">🛍️ Cliente (Pedir comida)</option>
+          <option value="RESTAURANTE">🍽️ Restaurante (Vender comida)</option>
+          <option value="REPARTIDOR">🚴 Repartidor (Entregar pedidos)</option>
+        </select>
+        <div *ngIf="registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched" class="text-red-500 text-sm mt-1">
+          Selecciona un tipo de cuenta
+        </div>
+      </div>
+
+      <!-- ⭐ Campos dinámicos para RESTAURANTE -->
+      <div *ngIf="selectedRole === 'RESTAURANTE'" class="space-y-4 border-t pt-4">
+        <div class="text-sm font-medium text-emerald-700 mb-2">
+          📋 Información del restaurante
+        </div>
+
+        <!-- Descripción -->
+        <div>
+          <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea
+            id="descripcion"
+            formControlName="descripcion"
+            rows="3"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+            placeholder="Describe tu restaurante..."
+          ></textarea>
+          <div *ngIf="registerForm.get('descripcion')?.invalid && registerForm.get('descripcion')?.touched" class="text-red-500 text-sm mt-1">
+            La descripción es requerida
+          </div>
+        </div>
+
+        <!-- Categoría -->
+        <div>
+          <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+          <select
+            id="categoria"
+            formControlName="categoria"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white"
+          >
+            <option value="">Selecciona una categoría</option>
+            <option value="COMIDA_ITALIANA">🍝 Italiana</option>
+            <option value="COMIDA_MEXICANA">🌮 Mexicana</option>
+            <option value="COMIDA_CHINA">🥡 China</option>
+            <option value="COMIDA_RAPIDA">🍔 Comida Rápida</option>
+            <option value="VEGETARIANA">🥗 Vegetariana</option>
+            <option value="MARISCOS">🦐 Mariscos</option>
+            <option value="PARRILLA">🥩 Parrilla</option>
+            <option value="BEBIDAS"> 🍹 Bebidas </option>
+            <option value="POSTRES">🍰 Postres</option>
+            <option value="OTROS"> ❓Otros</option>
+          </select>
+          <div *ngIf="registerForm.get('categoria')?.invalid && registerForm.get('categoria')?.touched" class="text-red-500 text-sm mt-1">
+            La categoría es requerida
+          </div>
+        </div>
+      </div>
+
+      <!-- ⭐ Campos dinámicos para REPARTIDOR -->
+      <div *ngIf="selectedRole === 'REPARTIDOR'" class="space-y-4 border-t pt-4">
+        <div class="text-sm font-medium text-emerald-700 mb-2">
+          🚴 Información del repartidor
+        </div>
+
+        <!-- Vehículo -->
+        <div>
+          <label for="vehiculo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de vehículo</label>
+          <select
+            id="vehiculo"
+            formControlName="vehiculo"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white"
+          >
+            <option value="">Selecciona tu vehículo</option>
+            <option value="BICICLETA">🚲 Bicicleta</option>
+            <option value="MOTO">🏍️ Moto</option>
+            <option value="CARRO">🚗 Carro</option>
+          </select>
+          <div *ngIf="registerForm.get('vehiculo')?.invalid && registerForm.get('vehiculo')?.touched" class="text-red-500 text-sm mt-1">
+            El tipo de vehículo es requerido
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Success Message -->
+      <div *ngIf="successMessage" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+        {{ successMessage }}
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        [disabled]="loading || registerForm.invalid"
+        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span *ngIf="!loading">Crear cuenta</span>
+        <span *ngIf="loading">Creando cuenta...</span>
+      </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="relative">
+      <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-gray-300"></div>
+      </div>
+      <div class="relative flex justify-center text-sm">
+        <span class="px-2 bg-white text-gray-500">¿Ya tienes cuenta?</span>
+      </div>
+    </div>
+
+    <!-- Login Link -->
+    <button
+      (click)="navigateToLogin()"
+      class="w-full bg-white hover:bg-gray-50 text-emerald-600 font-semibold py-3 rounded-lg border-2 border-emerald-600 transition duration-200"
+    >
+      Iniciar Sesión
+    </button>
+  </div>
+</div>

@@ -1,44 +1,85 @@
 package com.ufps.Quick_Delivery.security;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-@Configuration
-@EnableWebSecurity
-public class JwtAuthenticationFilter {
+    private final JwtService jwtService;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-          // Permitir acceso libre a la consola H2
-          .authorizeHttpRequests(authz -> authz
-             .anyRequest().permitAll()
-          )
-          // Deshabilitar CSRF para la consola H2 (mejor que deshabilitar CSRF globalmente)
-          .csrf(csrf -> csrf.ignoringRequestMatchers("/**"));
-
-        return http.build();
+    public JwtAuthenticationFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        // Usa allowedOriginPatterns en lugar de allowedOrigins para permitir cualquier origen
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+        
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        // Si no hay header o no empieza con "Bearer ", continuar
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            // Extraer el token
+            final String jwt = authHeader.substring(7);
+
+            // ⭐ Validar el token
+            if (jwtService.isTokenValid(jwt)) {
+                // ⭐ Extraer información del token
+                String userEmail = jwtService.extractUsername(jwt);
+                String rol = jwtService.getRolFromToken(jwt);
+                UUID userId = jwtService.getUserIdFromToken(jwt);
+
+                // Log para debugging
+                System.out.println("🔐 Token validado:");
+                System.out.println("   📧 Email: " + userEmail);
+                System.out.println("   🎭 Rol: " + rol);
+                System.out.println("   🆔 User ID: " + userId);
+
+                // Si no hay autenticación previa, crear una nueva
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userEmail,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_" + rol))
+                            );
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } else {
+                System.err.println("❌ Token inválido o expirado");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error al validar token: " + e.getMessage());
+            // Continuar sin autenticación
+        }
+
+        filterChain.doFilter(request, response);
     }
 }

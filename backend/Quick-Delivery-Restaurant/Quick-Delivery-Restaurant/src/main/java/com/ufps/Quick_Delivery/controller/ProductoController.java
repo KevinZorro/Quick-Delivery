@@ -1,102 +1,145 @@
 package com.ufps.Quick_Delivery.controller;
 
-import com.ufps.Quick_Delivery.model.Restaurante;  
-import com.ufps.Quick_Delivery.dto.ProductoDTO;
-import com.ufps.Quick_Delivery.model.Producto;
+import com.ufps.Quick_Delivery.dto.ProductoRequestDTO;
+import com.ufps.Quick_Delivery.dto.ProductoResponseDTO;
+import com.ufps.Quick_Delivery.dto.ProductoUpdateDTO;
 import com.ufps.Quick_Delivery.service.ProductoService;
-import com.ufps.Quick_Delivery.service.RestauranteService;  
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-
 @RestController
-@RequestMapping("/productos")
+@RequestMapping("/api/productos")
 @RequiredArgsConstructor
-@CrossOrigin
 public class ProductoController {
     
-    private final ProductoService service;
-    private final RestauranteService restauranteService;
-
-    @GetMapping
-    public List<Producto> getAllPedidos() {
-        return service.getAllPedidos();
+    private final ProductoService productoService;
+    
+    // ═══════════════════════════════════════════════════════════
+    // ENDPOINTS PARA RESTAURANTES (Requieren autenticación)
+    // ═══════════════════════════════════════════════════════════
+    
+    @PostMapping
+    public ResponseEntity<ProductoResponseDTO> crearProducto(
+            @Valid @RequestBody ProductoRequestDTO requestDTO,
+            Authentication authentication) {
+        
+        UUID usuarioId = UUID.fromString(authentication.getName());
+        requestDTO.setUsuarioId(usuarioId);
+        
+        ProductoResponseDTO productoCreado = productoService.crearProducto(requestDTO);
+        return new ResponseEntity<>(productoCreado, HttpStatus.CREATED);
     }
-
-    @GetMapping("/restaurante/{restauranteId}")
-    public ResponseEntity<List<Producto>> listarPorRestaurante(@PathVariable UUID restauranteId) {
-        return ResponseEntity.ok(service.findByRestaurante(restauranteId));
+    
+    @GetMapping("/mis-productos")
+    public ResponseEntity<List<ProductoResponseDTO>> obtenerMisProductos(Authentication authentication) {
+        UUID usuarioId = UUID.fromString(authentication.getName());
+        List<ProductoResponseDTO> productos = productoService.obtenerProductosPorUsuario(usuarioId);
+        return ResponseEntity.ok(productos);
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Producto> obtener(@PathVariable("id") UUID id) {
-        return ResponseEntity.ok(service.findByUuidProducto(id));
+    
+    @GetMapping("/mis-categorias")
+    public ResponseEntity<List<String>> obtenerMisCategorias(Authentication authentication) {
+        UUID usuarioId = UUID.fromString(authentication.getName());
+        List<String> categorias = productoService.obtenerCategoriasPorUsuario(usuarioId);
+        return ResponseEntity.ok(categorias);
     }
-
-@PostMapping
-public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoDTO req) {
-    Producto p = new Producto();
-    Restaurante restaurante = restauranteService.findById(req.getRestauranteId());
-    if (restaurante == null) {
-        System.err.println("Restaurante no encontrado");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-    p.setRestaurante(restaurante);
-    p.setNombre(req.getNombre());
-    p.setDescripcion(req.getDescripcion());
-    p.setPrecio(req.getPrecio());
-    p.setCategoria(req.getCategoria());
-    p.setDisponible(req.getDisponible() != null ? req.getDisponible() : Boolean.TRUE);
-    p.setImagenUrl(req.getImagenUrl());
-    Producto creado = service.create(p);
-    return new ResponseEntity<>(creado, HttpStatus.CREATED);
-}
-
-
-
+    
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> actualizar(@PathVariable UUID id,
-                                                          @Valid @RequestBody ProductoDTO request) {
-        Producto p = new Producto();
-        p.setNombre(request.getNombre());
-        p.setDescripcion(request.getDescripcion());
-        p.setPrecio(request.getPrecio());
-        p.setCategoria(request.getCategoria());
-        p.setDisponible(request.getDisponible() != null ? request.getDisponible() : Boolean.TRUE);
-        p.setImagenUrl(request.getImagenUrl());
-        return ResponseEntity.ok(service.update(id, p));
+    public ResponseEntity<ProductoResponseDTO> actualizarProducto(
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody ProductoUpdateDTO updateDTO,
+            Authentication authentication) {
+        
+        UUID usuarioId = UUID.fromString(authentication.getName());
+        ProductoResponseDTO productoActualizado = productoService.actualizarProducto(id, updateDTO, usuarioId);
+        return ResponseEntity.ok(productoActualizado);
     }
-
+    
+    @PatchMapping("/{id}/disponibilidad")
+    public ResponseEntity<ProductoResponseDTO> cambiarDisponibilidad(
+            @PathVariable("id") UUID id,
+            @RequestParam("disponible") Boolean disponible,
+            Authentication authentication) {
+        
+        UUID usuarioId = UUID.fromString(authentication.getName());
+        ProductoResponseDTO productoActualizado = productoService.cambiarDisponibilidad(id, disponible, usuarioId);
+        return ResponseEntity.ok(productoActualizado);
+    }
+    
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
-        service.delete(id);
+    public ResponseEntity<Void> eliminarProducto(
+            @PathVariable("id") UUID id,
+            Authentication authentication) {
+        
+        UUID usuarioId = UUID.fromString(authentication.getName());
+        productoService.eliminarProducto(id, usuarioId);
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/restaurante/{restauranteId}/buscar")
-    public ResponseEntity<List<Producto>> buscarNombre(@PathVariable UUID restauranteId,
-                                                                  @RequestParam String nombre) {
-        return ResponseEntity.ok(service.buscarPorNombre(restauranteId, nombre));
+    
+    // ═══════════════════════════════════════════════════════════
+    // ENDPOINTS PÚBLICOS PARA CLIENTES (Ver menús de restaurantes)
+    // ═══════════════════════════════════════════════════════════
+    
+    // ⭐ Ver todos los productos de un restaurante (por restauranteId)
+    @GetMapping("/restaurante/{restauranteId}")
+    public ResponseEntity<List<ProductoResponseDTO>> obtenerProductosPorRestaurante(
+            @PathVariable("restauranteId") UUID restauranteId) {
+        List<ProductoResponseDTO> productos = productoService.obtenerProductosPorRestaurante(restauranteId);
+        return ResponseEntity.ok(productos);
     }
-
-    @GetMapping("/restaurante/{restauranteId}/precio")
-    public ResponseEntity<List<Producto>> filtrarPrecio(@PathVariable UUID restauranteId,
-                                                                   @RequestParam BigDecimal min,
-                                                                   @RequestParam BigDecimal max) {
-        return ResponseEntity.ok(service.filtrarPorPrecio(restauranteId, min, max));
+    
+    // ⭐ Ver solo productos disponibles de un restaurante
+    @GetMapping("/restaurante/{restauranteId}/disponibles")
+    public ResponseEntity<List<ProductoResponseDTO>> obtenerProductosDisponibles(
+            @PathVariable("restauranteId") UUID restauranteId) {
+        List<ProductoResponseDTO> productos = productoService.obtenerProductosDisponiblesPorRestaurante(restauranteId);
+        return ResponseEntity.ok(productos);
     }
-
+    
+    // ⭐ Ver productos de un restaurante por categoría
     @GetMapping("/restaurante/{restauranteId}/categoria/{categoria}")
-    public ResponseEntity<List<Producto>> porCategoria(@PathVariable UUID restauranteId,
-                                                                  @PathVariable String categoria) {
-        return ResponseEntity.ok(service.porCategoria(restauranteId, categoria));
+    public ResponseEntity<List<ProductoResponseDTO>> obtenerProductosPorRestauranteYCategoria(
+            @PathVariable("restauranteId") UUID restauranteId,
+            @PathVariable String categoria) {
+        List<ProductoResponseDTO> productos = productoService.obtenerProductosPorRestauranteYCategoria(restauranteId, categoria);
+        return ResponseEntity.ok(productos);
     }
-
+    
+    // ⭐ Buscar productos por nombre en un restaurante
+    @GetMapping("/restaurante/{restauranteId}/buscar")
+    public ResponseEntity<List<ProductoResponseDTO>> buscarProductosPorNombre(
+            @PathVariable("restauranteId") UUID restauranteId,
+            @RequestParam String nombre) {
+        List<ProductoResponseDTO> productos = productoService.buscarProductosPorRestauranteYNombre(restauranteId, nombre);
+        return ResponseEntity.ok(productos);
+    }
+    
+    // ⭐ Ver categorías de un restaurante
+    @GetMapping("/restaurante/{restauranteId}/categorias")
+    public ResponseEntity<List<String>> obtenerCategoriasPorRestaurante(
+            @PathVariable("restauranteId") UUID restauranteId) {
+        List<String> categorias = productoService.obtenerCategoriasPorRestaurante(restauranteId);
+        return ResponseEntity.ok(categorias);
+    }
+    
+    // ⭐ Ver un producto específico por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductoResponseDTO> obtenerProductoPorId(@PathVariable("id") UUID id) {
+        ProductoResponseDTO producto = productoService.obtenerProductoPorId(id);
+        return ResponseEntity.ok(producto);
+    }
+    
+    // ⭐ Ver todos los productos (útil para admin o búsqueda global)
+    @GetMapping
+    public ResponseEntity<List<ProductoResponseDTO>> obtenerTodosLosProductos() {
+        List<ProductoResponseDTO> productos = productoService.obtenerTodosLosProductos();
+        return ResponseEntity.ok(productos);
+    }
 }

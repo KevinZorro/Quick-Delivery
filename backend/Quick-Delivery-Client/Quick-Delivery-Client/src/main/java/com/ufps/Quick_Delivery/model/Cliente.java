@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cliente", schema = "cliente")
+@Table(name = "cliente")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

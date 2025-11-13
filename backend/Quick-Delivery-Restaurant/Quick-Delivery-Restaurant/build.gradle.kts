@@ -1,6 +1,6 @@
 plugins {
 	java
-	id("org.springframework.boot") version "3.5.6"
+	id("org.springframework.boot") version "3.5.7"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -41,6 +41,15 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+    implementation ("org.springframework.boot:spring-boot-starter-web")
+    implementation ("org.apache.poi:poi-ooxml:5.2.3")
+    implementation ("org.apache.poi:poi:5.2.3")
+    implementation("com.itextpdf:kernel:7.2.5")
+    implementation("com.itextpdf:layout:7.2.5")
+
+	implementation ("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly ("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly ("io.jsonwebtoken:jjwt-jackson:0.11.5")
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
@@ -48,6 +57,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    
 }
 
 dependencyManagement {

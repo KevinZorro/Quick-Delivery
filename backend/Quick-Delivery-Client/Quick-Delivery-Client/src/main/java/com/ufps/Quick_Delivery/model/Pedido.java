@@ -9,80 +9,81 @@ import lombok.AllArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-/**
- * Entidad que representa un pedido realizado por un cliente.
- * Incluye detalles como el cliente, restaurante, fechas, método de pago, total, estado, etc.
- * También contiene campos de auditoría para seguimiento de creación y actualización.
- */
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
-@Table(name = "pedido", schema = "cliente")
+@Table(name = "pedido")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Pedido implements Serializable {
 
     @Id
-    @NotNull(message = "El UUID del pedido no puede ser nulo")
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     private UUID id;
 
-    // Relación con Cliente (Many pedidos pueden pertenecer al mismo cliente)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente"/*,nullable = false*/)
+    @JoinColumn(name = "cliente", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cliente cliente;
 
-    // Campo que referencia al restaurante (por ID, puede ser ajustado a ManyToOne si deseas)
     @NotNull
     @Column(name = "restaurante_id", nullable = false)
     private UUID restauranteId;
-    
 
-    // Campo que referencia al repartidor (puede ser null si aún no está asignado)
     @Column(name = "repartidor_id")
     private UUID repartidorId;
 
-    // Relación con dirección de entrega (opcional, si tu entidad Direccion está en otro microservicio, usa UUID)
-    //@NotNull(message = "La dirección de entrega no puede ser nula")
     @Column(name = "direccion_entrega_id")
     private UUID direccionEntregaId;
 
-    // Total del pedido
-    @NotNull(message = "El total no puede ser nulo")
     @Positive(message = "El total debe ser positivo")
     @Column(name = "total", precision = 10, scale = 2, nullable = false)
     private int total;
 
-    // Fechas de creación y actualización
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private LocalDateTime fechaCreacion;
 
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 
-    // Método de pago
     @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_pago", nullable = false)
+    @Column(name = "metodo_pago")
     private MetodoPago metodoPago;
 
-    // Estado del pedido
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
-    private EstadoPedido estado;
+    private EstadoPedido estado = EstadoPedido.INICIADO;
 
-    // preferencias especiales (opcional)
     @Column(name = "preferencias", columnDefinition = "TEXT")
     private String preferencias;
+
+    // ⭐ AGREGAR ESTA RELACIÓN
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ItemPedido> items = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
         this.fechaCreacion = LocalDateTime.now();
+        if (this.estado == null) {
+            this.estado = EstadoPedido.INICIADO;
+        }
     }
 
     @PreUpdate
     public void preUpdate() {
         this.fechaActualizacion = LocalDateTime.now();
+    }
+
+    // Método helper para agregar items
+    public void addItem(ItemPedido item) {
+        items.add(item);
+        item.setPedido(this);
     }
 }

@@ -1,0 +1,326 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header con botón volver -->
+  <header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+      <button
+        (click)="volver()"
+        class="flex items-center text-indigo-600 hover:text-indigo-800 font-semibold transition"
+      >
+        <svg
+          class="w-5 h-5 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        Volver al catálogo
+      </button>
+    </div>
+  </header>
+
+  <!-- Información del restaurante -->
+  <div *ngIf="restaurante" class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row gap-6">
+        <div class="w-full md:w-1/3">
+          <div
+            class="h-64 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl overflow-hidden"
+          >
+            <img
+              alt="imagenUrl"
+              *ngIf="restaurante.imagenUrl"
+              [src]="restaurante.imagenUrl"
+              [alt]="restaurante.nombre"
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        <div class="flex-1">
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">
+            {{ restaurante.nombre }}
+          </h1>
+          <p class="text-gray-600 mb-4">{{ restaurante.descripcion }}</p>
+
+          <div class="flex items-center gap-4">
+            <span
+              class="inline-block bg-indigo-100 text-indigo-800 px-4 py-2 rounded-full font-semibold"
+            >
+              {{ restaurante.categoria }}
+            </span>
+
+            <div class="flex items-center">
+              <svg
+                class="w-6 h-6 text-yellow-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
+              </svg>
+              <span class="ml-2 text-xl text-gray-700 font-bold">
+                {{ restaurante.calificacionPromedio || "N/A" }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- Modal Confirmación al cerrar -->
+<div *ngIf="modalConfirmarCerrar" style="z-index:9999; position:fixed; top:0; left:0; width:100vw; height:100vh;">
+  <div class="bg-white p-6 rounded shadow-lg">
+    <p class="mb-4">¿Deseas descartar los productos del carrito?</p>
+    <div class="flex justify-end gap-3">
+      <button (click)="confirmarCerrar(true)" class="bg-red-500 text-white px-3 py-1 rounded">Sí, descartar</button>
+      <button (click)="confirmarCerrar(false)" class="bg-gray-200 px-3 py-1 rounded">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Pago con Dirección -->
+<div *ngIf="modalPagoAbierto" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-[1000]">
+  <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+    <h3 class="text-2xl font-bold mb-4 text-gray-800">Confirmar pedido</h3>
+
+    <!-- ⭐ SELECTOR DE DIRECCIÓN -->
+    <div class="mb-4">
+      <label class="block mb-2 font-semibold text-gray-700">
+        Dirección de entrega: <span class="text-red-500">*</span>
+      </label>
+      
+      <div *ngIf="cargandoDirecciones" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <p class="text-sm text-gray-600 mt-2">Cargando direcciones...</p>
+      </div>
+
+      <select 
+        *ngIf="!cargandoDirecciones"
+        title="Selecciona una dirección" 
+        [(ngModel)]="direccionSeleccionada" 
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+        [class.border-red-500]="!direccionSeleccionada"
+      >
+        <option value="" disabled>Selecciona una dirección</option>
+        <option *ngFor="let dir of direcciones" [value]="dir.id">
+          {{ dir.calle }}, {{ dir.barrio }}, {{ dir.ciudad }}
+          <span *ngIf="dir.tipoReferencia"> ({{ dir.tipoReferencia }})</span>
+        </option>
+      </select>
+
+      <p *ngIf="direcciones.length === 0 && !cargandoDirecciones" class="text-sm text-red-600 mt-1">
+        No tienes direcciones registradas. Por favor agrega una dirección primero.
+      </p>
+    </div>
+
+    <!-- Método de pago -->
+    <div class="mb-4">
+      <label class="block mb-2 font-semibold text-gray-700">
+        Método de pago: <span class="text-red-500">*</span>
+      </label>
+      <select 
+        title="Selecciona método de pago" 
+        [(ngModel)]="metodoPagoSeleccionado" 
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+        [class.border-red-500]="!metodoPagoSeleccionado"
+      >
+        <option value="" disabled>Selecciona un método</option>
+        <option value="TARJETA">Tarjeta de crédito/débito</option>
+        <option value="TRANSFERENCIA">Transferencia</option>
+        <option value="EFECTIVO">Efectivo</option>
+      </select>
+    </div>
+
+    <!-- Preferencias -->
+    <div class="mb-4">
+      <label class="block mb-2 font-semibold text-gray-700">
+        Preferencias (opcional):
+      </label>
+      <textarea 
+        [(ngModel)]="preferenciasPago" 
+        rows="3" 
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none" 
+        placeholder="Ej: Sin cebolla, extra picante, sin contacto, etc."
+      ></textarea>
+    </div>
+
+    <!-- Resumen del total -->
+    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+      <div class="flex justify-between text-lg font-bold">
+        <span class="text-gray-700">Total a pagar:</span>
+        <span class="text-indigo-600">${{ totalCarrito | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex gap-3">
+      <button 
+        (click)="cerrarModalPago()" 
+        class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
+      >
+        Cancelar
+      </button>
+      <button 
+        (click)="confirmarPago()" 
+        class="flex-1 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        [disabled]="!metodoPagoSeleccionado || !direccionSeleccionada || carritoItems.length === 0"
+      >
+        Confirmar pedido
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Panel lateral carrito -->
+<div class="fixed top-0 right-0 w-80 h-full bg-white shadow-lg z-50 flex flex-col" *ngIf="panelCarritoAbierto">
+  <div class="p-4 border-b flex justify-between items-center">
+    <h2 class="text-xl font-bold text-gray-800">Carrito</h2>
+    <button (click)="intentarCerrarPanel()" class="text-gray-600">Cerrar</button>
+  </div>
+  <div class="flex-1 overflow-y-auto p-4">
+    <div *ngFor="let item of carritoItems" class="flex items-center justify-between border-b py-2">
+      <div>
+        <div class="font-semibold">{{ item.producto.nombre }}</div>
+        <div class="text-xs text-gray-500">${{ item.producto.precio }}</div>
+      </div>
+      <div class="flex items-center">
+        <button *ngIf="item.cantidad > 1"
+                (click)="cambiarCantidad(item.producto.id, -1)"
+                class="px-2 text-lg text-gray-500">–</button>
+        <button *ngIf="item.cantidad === 1"
+                (click)="eliminarItem(item.producto.id)"
+                class="px-2 text-lg text-red-600">
+          🗑️
+        </button>
+        <span class="px-2">{{ item.cantidad }}</span>
+        <button (click)="cambiarCantidad(item.producto.id, 1)"
+                class="px-2 text-lg text-gray-500">+</button>
+      </div>
+      <div class="ml-4 font-bold text-indigo-700">
+        ${{ item.producto.precio * item.cantidad }}
+      </div>
+    </div>
+  </div>
+  <div class="px-4 py-2 flex justify-between">
+    <button (click)="vaciarCarrito()" class="bg-red-100 text-red-600 px-3 py-1 rounded text-sm">Vaciar Carrito</button>
+    <button (click)="abrirModalPago()" class="bg-green-600 text-white px-4 py-1 rounded text-sm">Proceder al pago</button>
+  </div>
+  <div class="p-4 border-t font-bold flex justify-between">
+    <span>Total:</span>
+    <span>${{ totalCarrito }}</span>
+  </div>
+</div>
+
+<!-- Sección de productos -->
+<main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">Menú</h2>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="text-center py-12">
+    <div
+      class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"
+    ></div>
+    <p class="mt-4 text-gray-600">Cargando productos...</p>
+  </div>
+
+  <!-- Estado de error -->
+  <div
+    *ngIf="errorMessage && !loading"
+    class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+  >
+    {{ errorMessage }}
+  </div>
+
+  <!-- Grid de productos -->
+  <div
+    *ngIf="!loading && !errorMessage"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+  >
+    <div
+      *ngFor="let producto of productos"
+      class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
+      [class.opacity-50]="!producto.disponible"
+    >
+      <!-- Imagen del producto -->
+      <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-500 relative">
+        <img
+          alt="imagenUrl"
+          *ngIf="producto.imagenUrl"
+          [src]="producto.imagenUrl"
+          [alt]="producto.nombre"
+          class="w-full h-full object-cover"
+        />
+        <div
+          *ngIf="!producto.disponible"
+          class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+        >
+          <span class="text-white font-bold text-lg">No disponible</span>
+        </div>
+      </div>
+
+      <!-- Información del producto -->
+      <div class="p-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-1">
+          {{ producto.nombre }}
+        </h3>
+        <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+          {{ producto.descripcion }}
+        </p>
+
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl font-bold text-indigo-600">
+            ${{ producto.precio | number : "1.0-0" }}
+          </span>
+          <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+            {{ producto.categoria }}
+          </span>
+        </div>
+
+        <div class="mt-2 flex space-x-2 items-center">
+          <button
+            (click)="agregarAlCarrito(producto)"
+            [disabled]="!producto.disponible"
+            class="bg-indigo-600 text-white rounded px-3 py-2 hover:bg-indigo-700 transition"
+          >
+            Agregar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Estado vacío -->
+    <div
+      *ngIf="!loading && !errorMessage && productos.length === 0"
+      class="text-center py-12"
+    >
+      <svg
+        class="mx-auto h-24 w-24 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-gray-900">
+        No hay productos disponibles
+      </h3>
+      <p class="mt-2 text-gray-500">
+        Este restaurante aún no tiene productos en el menú.
+      </p>
+    </div>
+  </main>
+</div>

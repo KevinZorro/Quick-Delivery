@@ -18,7 +18,7 @@ import java.util.UUID;
  */
 
 @Entity
-@Table(name = "producto", schema = "restaurante")
+@Table(name = "producto")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
