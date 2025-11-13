@@ -1,98 +1,140 @@
 <app-header></app-header>
 
-<div class="container mx-auto px-4 py-8 max-w-2xl">
+<div class="container mx-auto px-4 py-8 max-w-2xl font-poppins">
+
+  <!-- Encabezado -->
   <h2 class="text-3xl font-bold text-gray-800 mb-6">
-    {{ isEditMode ? 'Editar Dirección' : 'Nueva Dirección' }}
+    {{ isEditMode ? '✏️ Editar Dirección' : '➕ Nueva Dirección' }}
   </h2>
 
   <!-- Error -->
-  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-    {{ errorMessage }}
+  <div
+    *ngIf="errorMessage"
+    class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg mb-5"
+  >
+    ⚠️ {{ errorMessage }}
   </div>
 
   <!-- Formulario -->
-  <form [formGroup]="direccionForm" (ngSubmit)="onSubmit()" class="bg-white rounded-lg shadow-md p-6 space-y-4">
-    
+  <form
+    [formGroup]="direccionForm"
+    (ngSubmit)="onSubmit()"
+    class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 space-y-6"
+  >
     <!-- Tipo de Referencia -->
     <div>
-      <label class="block text-gray-700 font-semibold mb-2">Tipo de Dirección *</label>
-      <select title="select" formControlName="tipoReferencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-        <option *ngFor="let tipo of tiposReferencia" [value]="tipo">{{ tipo }}</option>
+      <label class="block text-gray-700 font-semibold mb-2"
+        >Tipo de Dirección <span class="text-rose-500">*</span></label
+      >
+      <select
+        title="select"
+        formControlName="tipoReferencia"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+      >
+        <option *ngFor="let tipo of tiposReferencia" [value]="tipo">
+          {{ tipo }}
+        </option>
       </select>
     </div>
 
     <!-- Calle -->
     <div>
-      <label class="block text-gray-700 font-semibold mb-2">Calle / Dirección Principal *</label>
-      <input 
-        type="text" 
-        formControlName="calle" 
+      <label class="block text-gray-700 font-semibold mb-2"
+        >Calle / Dirección Principal <span class="text-rose-500">*</span></label
+      >
+      <input
+        type="text"
+        formControlName="calle"
         placeholder="Ej: Calle 45 # 23-12"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-      <p *ngIf="direccionForm.get('calle')?.invalid && direccionForm.get('calle')?.touched" class="text-red-500 text-sm mt-1">
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+      />
+      <p
+        *ngIf="direccionForm.get('calle')?.invalid && direccionForm.get('calle')?.touched"
+        class="text-rose-500 text-sm mt-1"
+      >
         La calle es obligatoria
       </p>
     </div>
 
     <!-- Ciudad -->
     <div>
-      <label class="block text-gray-700 font-semibold mb-2">Ciudad *</label>
-      <input 
-        type="text" 
-        formControlName="ciudad" 
+      <label class="block text-gray-700 font-semibold mb-2"
+        >Ciudad <span class="text-rose-500">*</span></label
+      >
+      <input
+        type="text"
+        formControlName="ciudad"
         placeholder="Ej: Bogotá"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-      <p *ngIf="direccionForm.get('ciudad')?.invalid && direccionForm.get('ciudad')?.touched" class="text-red-500 text-sm mt-1">
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+      />
+      <p
+        *ngIf="direccionForm.get('ciudad')?.invalid && direccionForm.get('ciudad')?.touched"
+        class="text-rose-500 text-sm mt-1"
+      >
         La ciudad es obligatoria
       </p>
     </div>
 
     <!-- Barrio -->
     <div>
-      <label class="block text-gray-700 font-semibold mb-2">Barrio *</label>
-      <input 
-        type="text" 
-        formControlName="barrio" 
+      <label class="block text-gray-700 font-semibold mb-2"
+        >Barrio <span class="text-rose-500">*</span></label
+      >
+      <input
+        type="text"
+        formControlName="barrio"
         placeholder="Ej: Chapinero"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-      <p *ngIf="direccionForm.get('barrio')?.invalid && direccionForm.get('barrio')?.touched" class="text-red-500 text-sm mt-1">
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+      />
+      <p
+        *ngIf="direccionForm.get('barrio')?.invalid && direccionForm.get('barrio')?.touched"
+        class="text-rose-500 text-sm mt-1"
+      >
         El barrio es obligatorio
       </p>
     </div>
 
     <!-- Referencia -->
     <div>
-      <label class="block text-gray-700 font-semibold mb-2">Referencia (opcional)</label>
-      <textarea 
-        formControlName="referencia" 
+      <label class="block text-gray-700 font-semibold mb-2"
+        >Referencia (opcional)</label
+      >
+      <textarea
+        formControlName="referencia"
         rows="3"
         placeholder="Ej: Casa de dos pisos, portón azul"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"></textarea>
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition resize-none"
+      ></textarea>
     </div>
 
-    <!-- Coordenadas (opcional) -->
+    <!-- Coordenadas -->
     <div>
-      <label class="block text-gray-700 font-semibold mb-2">Coordenadas (opcional)</label>
-      <input 
-        type="text" 
-        formControlName="coordenadas" 
+      <label class="block text-gray-700 font-semibold mb-2"
+        >Coordenadas (opcional)</label
+      >
+      <input
+        type="text"
+        formControlName="coordenadas"
         placeholder="Ej: 4.6097, -74.0817"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+      />
     </div>
 
     <!-- Botones -->
     <div class="flex space-x-4 pt-4">
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         [disabled]="direccionForm.invalid || loading"
-        class="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
-        {{ loading ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Guardar') }}
+        class="flex-1 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white px-6 py-3 rounded-lg shadow-md font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ loading ? 'Guardando...' : (isEditMode ? '✅ Actualizar' : '💾 Guardar') }}
       </button>
-      <button 
+      <button
         type="button"
         (click)="cancelar()"
-        class="flex-1 bg-gray-400 hover:bg-gray-500 text-white px-6 py-3 rounded-lg transition">
-        Cancelar
+        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg border border-gray-300 transition font-semibold"
+      >
+        ❌ Cancelar
       </button>
     </div>
   </form>
