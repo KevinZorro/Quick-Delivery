@@ -1,0 +1,111 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <app-delivery-header></app-delivery-header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Título -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Mis Pedidos Aceptados</h1>
+      <p class="text-gray-600">Historial de pedidos que has aceptado</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-red-800 text-sm font-medium">{{ errorMessage }}</p>
+      <button
+        (click)="cargarPedidos()"
+        class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium"
+      >
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <p class="mt-4 text-gray-600">Cargando tus pedidos...</p>
+    </div>
+
+    <!-- Pedidos List -->
+    <div *ngIf="!loading && !errorMessage && pedidos.length > 0" class="space-y-4">
+      <div
+        *ngFor="let pedido of pedidos"
+        class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+      >
+        <div class="p-6">
+          <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            <!-- Left Section: Info -->
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="text-3xl">📦</span>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Pedido #{{ formatearId(pedido.pedidoId) }}
+                  </h3>
+                  <p class="text-sm text-gray-600">
+                    Aceptado: {{ pedido.fechaAceptacion ? formatearFecha(pedido.fechaAceptacion) : formatearFecha(pedido.fechaCreacion) }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="font-medium text-gray-700">Estado:</span>
+                  <span
+                    class="px-3 py-1 rounded-full text-xs font-semibold border {{ obtenerColorEstado(pedido.estado) }}"
+                  >
+                    {{ obtenerTextoEstado(pedido.estado) }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="font-medium text-gray-700">Cliente ID:</span>
+                  <span class="text-gray-600">{{ formatearId(pedido.clienteId) }}...</span>
+                </div>
+
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="font-medium text-gray-700">Restaurante ID:</span>
+                  <span class="text-gray-600">{{ formatearId(pedido.restauranteId) }}...</span>
+                </div>
+
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="font-medium text-gray-700">Dirección de entrega:</span>
+                  <span class="text-gray-600">{{ formatearId(pedido.direccionEntregaId) }}...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Section: Fecha -->
+            <div class="flex flex-col items-end gap-3">
+              <div class="text-right">
+                <p class="text-sm text-gray-600 mb-1">Fecha de creación</p>
+                <p class="text-sm font-semibold text-gray-800">
+                  {{ formatearFecha(pedido.fechaCreacion) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !errorMessage && pedidos.length === 0" class="text-center py-12 bg-white rounded-lg shadow-md">
+      <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-gray-900">No has aceptado ningún pedido aún</h3>
+      <p class="mt-2 text-gray-500">
+        Ve a "Pedidos Disponibles" para ver y aceptar pedidos cerca de ti.
+      </p>
+      <a
+        routerLink="/delivery/main"
+        class="mt-6 inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+      >
+        Ver Pedidos Disponibles
+      </a>
+    </div>
+  </main>
+</div>
+

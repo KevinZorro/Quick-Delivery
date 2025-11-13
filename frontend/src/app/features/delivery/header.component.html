@@ -1,0 +1,47 @@
+<header class="bg-indigo-600 text-white shadow-md">
+  <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <!-- Logo / Nombre de la aplicación -->
+    <div class="flex items-center space-x-4">
+      <h1 class="text-2xl font-bold cursor-pointer" routerLink="/delivery/main">
+        QuickDelivery - Repartidor
+      </h1>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="hidden md:flex space-x-6">
+      <a routerLink="/delivery/main" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
+        Pedidos Disponibles
+      </a>
+      <a routerLink="/delivery/mis-pedidos" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
+        Mis Pedidos
+      </a>
+      <a routerLink="/delivery/ubicacion" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
+        Mi Ubicación
+      </a>
+    </nav>
+
+    <!-- Usuario y logout -->
+    <div class="flex items-center space-x-4">
+      <span class="hidden md:block">{{ userName }}</span>
+      <button 
+        (click)="logout()" 
+        class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded transition">
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <!-- Navegación móvil -->
+  <nav class="md:hidden bg-indigo-700 px-4 py-2 space-y-2">
+    <a routerLink="/delivery/main" routerLinkActive="bg-indigo-800" class="block py-2 px-3 rounded hover:bg-indigo-800 transition">
+      Pedidos Disponibles
+    </a>
+    <a routerLink="/delivery/mis-pedidos" routerLinkActive="bg-indigo-800" class="block py-2 px-3 rounded hover:bg-indigo-800 transition">
+      Mis Pedidos
+    </a>
+    <a routerLink="/delivery/ubicacion" routerLinkActive="bg-indigo-800" class="block py-2 px-3 rounded hover:bg-indigo-800 transition">
+      Mi Ubicación
+    </a>
+  </nav>
+</header>
+

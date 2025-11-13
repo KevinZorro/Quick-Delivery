@@ -26,6 +26,8 @@ public class DeliveryUserService {
         dto.setUsuarioId(entity.getUsuarioId());
         dto.setVehiculo(entity.getVehiculo());
         dto.setCalificacionPromedio(entity.getCalificacionPromedio());
+        dto.setLatitud(entity.getLatitud());
+        dto.setLongitud(entity.getLongitud());
         return dto;
     }
 
@@ -36,6 +38,8 @@ public class DeliveryUserService {
                 .usuarioId(dto.getUsuarioId())
                 .vehiculo(dto.getVehiculo())
                 .calificacionPromedio(dto.getCalificacionPromedio())
+                .latitud(dto.getLatitud())
+                .longitud(dto.getLongitud())
                 .build();
     }
 
@@ -58,6 +62,8 @@ public class DeliveryUserService {
             existing.setUsuarioId(dto.getUsuarioId());
             existing.setVehiculo(dto.getVehiculo());
             existing.setCalificacionPromedio(dto.getCalificacionPromedio());
+            existing.setLatitud(dto.getLatitud());
+            existing.setLongitud(dto.getLongitud());
             DeliveryUser updated = repository.save(existing);
             return toDto(updated);
         });

@@ -25,4 +25,10 @@ public class DeliveryUser {
     @Column(name = "calificacion_promedio")
     private Double calificacionPromedio = 0.0;
 
+    @Column(name = "latitud")
+    private Double latitud;
+
+    @Column(name = "longitud")
+    private Double longitud;
+
 }

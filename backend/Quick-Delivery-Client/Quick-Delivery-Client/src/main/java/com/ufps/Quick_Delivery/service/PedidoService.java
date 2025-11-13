@@ -1,6 +1,7 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.client.ProductoClient;
+import com.ufps.Quick_Delivery.client.DeliveryClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.model.*;
@@ -9,21 +10,22 @@ import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-
-
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoClient productoClient; // ⭐ INYECTAR ProductoClient
+    private final DeliveryClient deliveryClient; // ⭐ INYECTAR DeliveryClient
 
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
@@ -104,6 +106,26 @@ public class PedidoService {
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
         System.out.println("✅ Pedido guardado con ID: " + pedidoGuardado.getId());
+
+        // 5. ⭐ Enviar notificación al servicio Delivery para que los repartidores puedan verlo
+        try {
+            System.out.println("📨 Enviando notificación al servicio Delivery...");
+            DeliveryClient.NotificacionRequest notificacionRequest = new DeliveryClient.NotificacionRequest();
+            notificacionRequest.setPedidoId(pedidoGuardado.getId());
+            notificacionRequest.setClienteId(request.getClienteId());
+            notificacionRequest.setRestauranteId(request.getRestauranteId());
+            notificacionRequest.setDireccionEntregaId(request.getDireccionEntregaId());
+
+            DeliveryClient.NotificacionResponse notificacionResponse = deliveryClient.crearNotificacionPedido(notificacionRequest);
+            System.out.println("✅ Notificación enviada exitosamente al servicio Delivery. ID: " + notificacionResponse.getId());
+            log.info("Notificación de pedido {} enviada al servicio Delivery", pedidoGuardado.getId());
+        } catch (Exception e) {
+            // No fallar la creación del pedido si falla la notificación
+            System.err.println("⚠️ Error al enviar notificación al servicio Delivery: " + e.getMessage());
+            log.error("Error al enviar notificación de pedido {} al servicio Delivery: {}", 
+                    pedidoGuardado.getId(), e.getMessage(), e);
+            // El pedido ya está guardado, así que continuamos
+        }
 
         return pedidoGuardado;
     }
