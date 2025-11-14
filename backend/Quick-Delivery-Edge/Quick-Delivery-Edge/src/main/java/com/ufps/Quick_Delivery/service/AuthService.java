@@ -4,6 +4,7 @@ import com.ufps.Quick_Delivery.client.ClienteClient;
 import com.ufps.Quick_Delivery.dto.LoginRequestDto;
 import com.ufps.Quick_Delivery.dto.LoginResponseDto;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
+import com.ufps.Quick_Delivery.model.PasswordResetToken;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,12 @@ import com.ufps.Quick_Delivery.client.RestauranteClient;
 import com.ufps.Quick_Delivery.client.DeliveryClient;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import com.ufps.Quick_Delivery.repository.PasswordResetTokenRepository;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,11 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
+
+    @Value("${edge-service.url}")
+    private String edgeServiceUrl;
 
     @Transactional
     public Usuario registrar(UsuarioDto dto) {
@@ -92,4 +102,53 @@ public class AuthService {
             return Optional.empty();
         }
     }
+
+
+    @Transactional
+public void enviarTokenRecuperacion(String correo) {
+    Usuario usuario = usuarioRepository.findByCorreo(correo)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+    passwordResetTokenRepository.deleteByUsuario(usuario); // solo uno activo
+
+    String token = UUID.randomUUID().toString();
+    LocalDateTime expiration = LocalDateTime.now().plusMinutes(30); // 30 min de vigencia
+
+    PasswordResetToken resetToken = new PasswordResetToken();
+    resetToken.setUsuario(usuario);
+    resetToken.setToken(token);
+    resetToken.setExpiration(expiration);
+    passwordResetTokenRepository.save(resetToken);
+
+    // ENVÍO DE CORREO
+    String link = edgeServiceUrl + "/reset-password?token=" + token;
+    emailService.send(
+        correo,
+        "Recupera tu contraseña",
+        "Haz clic aquí para restablecer tu contraseña: " + link
+    );
+}
+
+public boolean validarToken(String token) {
+    Optional<PasswordResetToken> opt = passwordResetTokenRepository.findByToken(token);
+    if (opt.isEmpty()) return false;
+    PasswordResetToken resetToken = opt.get();
+    if (resetToken.getExpiration().isBefore(LocalDateTime.now())) return false;
+    return true;
+}
+
+@Transactional
+public boolean actualizarContrasena(String token, String nuevaContrasena) {
+    Optional<PasswordResetToken> opt = passwordResetTokenRepository.findByToken(token);
+    if (opt.isEmpty()) return false;
+    PasswordResetToken resetToken = opt.get();
+    if (resetToken.getExpiration().isBefore(LocalDateTime.now())) return false;
+
+    Usuario usuario = resetToken.getUsuario();
+    usuario.setContraseña(passwordEncoder.encode(nuevaContrasena));
+    usuarioRepository.save(usuario);
+    passwordResetTokenRepository.delete(resetToken);
+    return true;
+}
+
 }
