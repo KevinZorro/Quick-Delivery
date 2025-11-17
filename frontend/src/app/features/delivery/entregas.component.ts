@@ -1,0 +1,116 @@
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+import { DeliveryService, Entrega } from './delivery.service';
+import { AuthService } from '../edge/auth.service';
+
+@Component({
+  selector: 'app-delivery-entregas',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './entregas.component.html'
+})
+export class DeliveryEntregasComponent implements OnInit {
+  entregas: Entrega[] = [];
+  loading = false;
+  errorMessage: string | null = null;
+  successMessage: string | null = null;
+  userName: string = '';
+  usuarioId: string = '';
+
+  private platformId = inject(PLATFORM_ID);
+
+  constructor(
+    private deliveryService: DeliveryService,
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.usuarioId = this.authService.getUserId() || '';
+      this.userName = this.authService.getUserName() || '';
+
+      if (!this.authService.isRepartidor()) {
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      if (!localStorage.getItem('token')) {
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.cargarEntregas();
+    }
+  }
+
+  cargarEntregas(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.deliveryService.listarEntregas(this.usuarioId).subscribe({
+      next: (entregas) => {
+        this.entregas = entregas;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorMessage = 'Error al cargar entregas';
+        console.error(err);
+        this.loading = false;
+      }
+    });
+  }
+
+  actualizarEstado(entrega: Entrega, nuevoEstado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO'): void {
+    if (!confirm(`¿Cambiar estado a ${this.getEstadoTexto(nuevoEstado)}?`)) {
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    this.deliveryService.actualizarEstadoEntrega(entrega.id, nuevoEstado).subscribe({
+      next: () => {
+        this.successMessage = 'Estado actualizado exitosamente';
+        this.cargarEntregas();
+        setTimeout(() => this.successMessage = null, 3000);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorMessage = 'Error al actualizar estado';
+        console.error(err);
+        this.loading = false;
+      }
+    });
+  }
+
+  getEstadoTexto(estado: string): string {
+    const estados: { [key: string]: string } = {
+      'EN_CAMINO_RECOGIDO': 'En Camino a Recoger',
+      'EN_CAMINO_HACIA_CLIENTE': 'En Camino al Cliente',
+      'ENTREGADO': 'Entregado'
+    };
+    return estados[estado] || estado;
+  }
+
+  getEstadoColor(estado: string): string {
+    const colores: { [key: string]: string } = {
+      'EN_CAMINO_RECOGIDO': 'bg-blue-100 text-blue-800',
+      'EN_CAMINO_HACIA_CLIENTE': 'bg-yellow-100 text-yellow-800',
+      'ENTREGADO': 'bg-green-100 text-green-800'
+    };
+    return colores[estado] || 'bg-gray-100 text-gray-800';
+  }
+
+  volver(): void {
+    this.router.navigate(['/delivery/main']);
+  }
+
+  cerrarSesion(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+}
+

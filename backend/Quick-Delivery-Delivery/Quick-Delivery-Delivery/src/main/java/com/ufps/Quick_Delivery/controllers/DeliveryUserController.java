@@ -13,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/delivery")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class DeliveryUserController {
 
     private final DeliveryUserService service;
@@ -46,5 +47,41 @@ public class DeliveryUserController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Actualizar ubicación del repartidor
+     * PATCH /api/delivery/{usuarioId}/ubicacion
+     */
+    @PatchMapping("/{usuarioId}/ubicacion")
+    public ResponseEntity<DeliveryUserDto> actualizarUbicacion(
+            @PathVariable UUID usuarioId,
+            @RequestParam(required = false) Double latitud,
+            @RequestParam(required = false) Double longitud,
+            @RequestParam(required = false) Double rangoKm) {
+        
+        // Buscar el delivery user por usuarioId
+        java.util.Optional<DeliveryUserDto> deliveryUserOpt = service.findByUsuarioId(usuarioId);
+        
+        if (deliveryUserOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        DeliveryUserDto deliveryUser = deliveryUserOpt.get();
+        
+        if (latitud != null) {
+            deliveryUser.setLatitud(latitud);
+        }
+        if (longitud != null) {
+            deliveryUser.setLongitud(longitud);
+        }
+        if (rangoKm != null) {
+            deliveryUser.setRangoKm(rangoKm);
+        }
+        
+        DeliveryUserDto updated = service.update(deliveryUser.getId(), deliveryUser)
+                .orElseThrow(() -> new RuntimeException("Error al actualizar ubicación"));
+        
+        return ResponseEntity.ok(updated);
     }
 }

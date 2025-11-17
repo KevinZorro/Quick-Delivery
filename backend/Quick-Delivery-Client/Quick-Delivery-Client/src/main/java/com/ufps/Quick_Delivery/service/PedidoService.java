@@ -181,4 +181,27 @@ public class PedidoService {
         System.out.println("🔢 Total de pedidos del usuario " + usuarioId + ": " + count);
         return count;
     }
+
+    /**
+     * Asignar repartidor a un pedido
+     */
+    @Transactional
+    public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        
+        if (pedido.getRepartidorId() != null) {
+            throw new RuntimeException("El pedido ya está asignado a otro repartidor");
+        }
+        
+        if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
+            throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
+        }
+        
+        pedido.setRepartidorId(repartidorId);
+        pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
+        System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
+        
+        return pedidoRepository.save(pedido);
+    }
 }

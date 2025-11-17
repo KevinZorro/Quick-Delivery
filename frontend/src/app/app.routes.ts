@@ -10,21 +10,32 @@ import { DireccionesRestauranteListaComponent } from './features/restaurante/dir
 import { DireccionRestauranteFormComponent } from './features/restaurante/direcciones-restaurante-form.component';
 import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
+import { DeliveryMainComponent } from './features/delivery/main.component';
+import { DeliveryEntregasComponent } from './features/delivery/entregas.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  
+
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
-  { path: 'restaurante/direcciones', component: DireccionesRestauranteListaComponent },
-  { path: 'restaurante/direcciones/nueva', component: DireccionRestauranteFormComponent },
-  { path: 'restaurante/direcciones/editar/:id', component: DireccionRestauranteFormComponent },
-  { path: 'restaurante/direcciones/mapa', component: DireccionFormComponent }, 
+  {
+    path: 'restaurante/direcciones',
+    component: DireccionesRestauranteListaComponent,
+  },
+  {
+    path: 'restaurante/direcciones/nueva',
+    component: DireccionRestauranteFormComponent,
+  },
+  {
+    path: 'restaurante/direcciones/editar/:id',
+    component: DireccionRestauranteFormComponent,
+  },
+  { path: 'restaurante/direcciones/mapa', component: DireccionFormComponent },
   // Dashboard de reportes del restaurante
   { path: 'dashboard-reportes', component: DashboardReportesComponent },
-  
+
   // Rutas de cliente
   { path: 'main', component: MainComponent },
   { path: 'restaurante/:id', component: RestauranteDetalleComponent },
@@ -33,7 +44,11 @@ export const routes: Routes = [
   { path: 'cliente/direcciones/editar/:id', component: DireccionFormComponent },
   { path: 'cliente/direcciones/mapa', component: DireccionFormComponent },
   { path: 'cliente/pedidos', component: ClientePedidosComponent },
-  
+
+  // Rutas de delivery
+  { path: 'delivery/main', component: DeliveryMainComponent },
+  { path: 'delivery/entregas', component: DeliveryEntregasComponent },
+
   // Wildcard al FINAL
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: 'login' },
 ];

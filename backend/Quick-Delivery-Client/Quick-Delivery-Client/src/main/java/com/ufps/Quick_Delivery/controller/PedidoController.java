@@ -148,4 +148,21 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
         return ResponseEntity.ok(count);
     }
 
+    /**
+     * Asignar repartidor a un pedido
+     * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
+     */
+    @PatchMapping("/{id}/repartidor")
+    public ResponseEntity<?> asignarRepartidor(
+            @PathVariable("id") UUID id,
+            @RequestParam("repartidorId") UUID repartidorId) {
+        try {
+            Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al asignar repartidor: " + e.getMessage());
+        }
+    }
+
 }
