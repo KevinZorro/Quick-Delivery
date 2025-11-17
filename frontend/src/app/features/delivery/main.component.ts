@@ -108,7 +108,6 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Error al cargar notificaciones';
         console.error(err);
         this.loading = false;
-        this.exportarErrorATxt(err);
       }
     });
   }
@@ -168,56 +167,4 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
   actualizarUbicacion(): void {
     this.obtenerUbicacion();
   }
-
-  exportarErrorATxt(error: any): void {
-    try {
-      const errorString = JSON.stringify(error, null, 2);
-      const errorDetails = `
-========================================
-ERROR DETALLADO - ${new Date().toISOString()}
-========================================
-
-ERROR COMPLETO:
-${errorString}
-
-STACK TRACE:
-${error?.error?.stack || error?.stack || 'No disponible'}
-
-MESSAGE:
-${error?.message || 'No disponible'}
-
-STATUS:
-${error?.status || 'No disponible'}
-
-STATUS TEXT:
-${error?.statusText || 'No disponible'}
-
-URL:
-${error?.url || 'No disponible'}
-
-ERROR BODY:
-${JSON.stringify(error?.error, null, 2) || 'No disponible'}
-
-HEADERS:
-${JSON.stringify(error?.headers, null, 2) || 'No disponible'}
-========================================
-      `.trim();
-
-      // Crear blob y descargar
-      const blob = new Blob([errorDetails], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `error-delivery-${new Date().getTime()}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      console.log('✅ Error exportado a archivo de texto');
-    } catch (exportError) {
-      console.error('Error al exportar el error:', exportError);
-    }
-  }
 }
-
