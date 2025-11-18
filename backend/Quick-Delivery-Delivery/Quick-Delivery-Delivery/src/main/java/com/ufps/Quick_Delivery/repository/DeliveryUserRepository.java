@@ -7,4 +7,5 @@ import java.util.UUID;
 
 @Repository
 public interface DeliveryUserRepository extends JpaRepository<DeliveryUser, UUID> {
+    java.util.Optional<DeliveryUser> findByUsuarioId(UUID usuarioId);
 }

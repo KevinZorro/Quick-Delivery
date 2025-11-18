@@ -57,8 +57,9 @@ export class LoginComponent implements OnInit {
           this.router.navigate(['/restaurante/main']);
         } else if (res.rol === 'CLIENTE') {
           this.router.navigate(['/main']);
-        } else if (res.rol === 'DOMICILIARIO') {
-          this.router.navigate(['/dashboard-domiciliario']);
+          console.log('Navegando a /main para CLIENTE');
+        } else if (res.rol === 'REPARTIDOR' || res.rol === 'DOMICILIARIO') {
+          this.router.navigate(['/delivery/main']);
         } else {
           this.router.navigate(['/']);
         }
