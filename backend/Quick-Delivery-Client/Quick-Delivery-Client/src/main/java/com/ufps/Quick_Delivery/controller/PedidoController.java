@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.controller;
 
-import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;

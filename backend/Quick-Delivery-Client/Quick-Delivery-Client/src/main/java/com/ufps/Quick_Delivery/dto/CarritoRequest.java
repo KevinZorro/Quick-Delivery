@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.dto;
+package com.ufps.Quick_Delivery.DTO;
 
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.model.ItemPedido;

@@ -102,4 +102,17 @@ export class AuthService {
       rol: this.getUserRole()
     };
   }
+
+recuperarContrasena(correo: string): Observable<any> {
+  return this.http.post(`${this.baseUrl}/recuperar-contrasena`, { correo });
+}
+
+validarToken(token: string): Observable<any> {
+  return this.http.get(`${this.baseUrl}/reset-password`, { params: { token } });
+}
+
+cambiarContrasena(token: string, nuevaContrasena: string): Observable<any> {
+  return this.http.post(`${this.baseUrl}/reset-password`, { token, nuevaContrasena });
+}
+
 }

@@ -12,12 +12,17 @@ import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.comp
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 import { DeliveryMainComponent } from './features/delivery/main.component';
 import { DeliveryEntregasComponent } from './features/delivery/entregas.component';
+import { RecuperarContrasenaComponent } from './features/edge/recuperar-contrasena.component';
+import { ResetPasswordComponent } from './features/edge/reset-password.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'recuperar-contrasena', component: RecuperarContrasenaComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
 
+  
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
   {

@@ -3,11 +3,16 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AuthService } from '../edge/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';  // Importar RouterModule
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule  // Agrega RouterModule en imports
+  ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -43,13 +48,11 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         
-        // ⭐ Guardar información del usuario en localStorage PARA TODOS LOS ROLES
         localStorage.setItem('token', res.token);
         localStorage.setItem('quick-delivery-userId', res.userId);
         localStorage.setItem('quick-delivery-userName', res.nombre || 'Usuario');
         localStorage.setItem('quick-delivery-userRole', res.rol);
         
-        // Redirigir según el rol del usuario
         if (res.rol === 'RESTAURANTE') {
           this.router.navigate(['/restaurante/main']);
         } else if (res.rol === 'CLIENTE') {
@@ -72,4 +75,4 @@ export class LoginComponent implements OnInit {
   navigateToRegister(): void {
     this.router.navigate(['/register']);
   }
-  }
+}
