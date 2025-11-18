@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.client;
 
-import com.ufps.Quick_Delivery.dto.RestauranteDto;
+import com.ufps.Quick_Delivery.DTO.RestauranteDto;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

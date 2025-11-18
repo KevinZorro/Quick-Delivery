@@ -26,6 +26,7 @@ repositories {
 
 extra["springCloudVersion"] = "2025.0.0"
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

@@ -10,11 +10,16 @@ import { DireccionesRestauranteListaComponent } from './features/restaurante/dir
 import { DireccionRestauranteFormComponent } from './features/restaurante/direcciones-restaurante-form.component';
 import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
+import { RecuperarContrasenaComponent } from './features/edge/recuperar-contrasena.component';
+import { ResetPasswordComponent } from './features/edge/reset-password.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'recuperar-contrasena', component: RecuperarContrasenaComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
+
   
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
