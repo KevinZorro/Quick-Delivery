@@ -18,8 +18,9 @@ import com.ufps.Quick_Delivery.dto.CambiarContrasenaRequest;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import java.util.Map;
 
+import java.util.HashMap;
+import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -50,32 +51,40 @@ public class AuthController {
     }
 
     @PostMapping("/recuperar-contrasena")
-    public ResponseEntity<?> recuperarContrasena(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> recuperarContrasena(@RequestBody Map<String, String> body) {
         String correo = body.get("correo");
+        Map<String, Object> response = new HashMap<>();
         if (!authService.verificarCorreo(correo)) {
-            return ResponseEntity.badRequest().body("Correo no encontrado");
+            response.put("mensaje", "Correo no encontrado");
+            return ResponseEntity.badRequest().body(response);
         }
         authService.enviarTokenRecuperacion(correo);
-        return ResponseEntity.ok("Se ha enviado el enlace de recuperación");
+        response.put("mensaje", "Se ha enviado el enlace de recuperación");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/reset-password")
-public ResponseEntity<?> validarToken(@RequestParam("token") String token) {
-    boolean valido = authService.validarToken(token);
-    if (!valido) {
-        return ResponseEntity.badRequest().body("Token inválido o expirado");
+    public ResponseEntity<Map<String, Object>> validarToken(@RequestParam("token") String token) {
+        boolean valido = authService.validarToken(token);
+        Map<String, Object> response = new HashMap<>();
+        response.put("valido", valido);
+        if (!valido) {
+            response.put("mensaje", "Token inválido o expirado");
+            return ResponseEntity.badRequest().body(response);
+        }
+        response.put("mensaje", "Token válido, puede cambiar su contraseña");
+        return ResponseEntity.ok(response);
     }
-    return ResponseEntity.ok("Token válido, puede cambiar su contraseña");
-}
 
-@PostMapping("/reset-password")
-public ResponseEntity<?> cambiarContrasena(@RequestBody CambiarContrasenaRequest request) {
-    boolean actualizado = authService.actualizarContrasena(request.getToken(), request.getNuevaContrasena());
-    if (!actualizado) {
-        return ResponseEntity.badRequest().body("Error al actualizar la contraseña. Token inválido o expirado.");
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> cambiarContrasena(@RequestBody CambiarContrasenaRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        boolean actualizado = authService.actualizarContrasena(request.getToken(), request.getNuevaContrasena());
+        if (!actualizado) {
+            response.put("mensaje", "Error al actualizar la contraseña. Token inválido o expirado.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        response.put("mensaje", "Contraseña actualizada correctamente");
+        return ResponseEntity.ok(response);
     }
-    return ResponseEntity.ok("Contraseña actualizada correctamente");
-}
-
-
 }

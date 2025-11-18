@@ -35,8 +35,8 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
 
-    @Value("${edge-service.url}")
-    private String edgeServiceUrl;
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Transactional
     public Usuario registrar(UsuarioDto dto) {
@@ -112,16 +112,17 @@ public void enviarTokenRecuperacion(String correo) {
     passwordResetTokenRepository.deleteByUsuario(usuario); // solo uno activo
 
     String token = UUID.randomUUID().toString();
-    LocalDateTime expiration = LocalDateTime.now().plusMinutes(30); // 30 min de vigencia
+    LocalDateTime expiration = LocalDateTime.now().plusDays(30); // 30 min de vigencia
 
     PasswordResetToken resetToken = new PasswordResetToken();
     resetToken.setUsuario(usuario);
     resetToken.setToken(token);
     resetToken.setExpiration(expiration);
+    System.out.println("Generando token: " + token + " para usuario: " + correo + " con expiración: " + expiration);
     passwordResetTokenRepository.save(resetToken);
 
     // ENVÍO DE CORREO
-    String link = edgeServiceUrl + "/reset-password?token=" + token;
+    String link = frontendUrl + "/reset-password?token=" + token;
     emailService.send(
         correo,
         "Recupera tu contraseña",
@@ -131,11 +132,20 @@ public void enviarTokenRecuperacion(String correo) {
 
 public boolean validarToken(String token) {
     Optional<PasswordResetToken> opt = passwordResetTokenRepository.findByToken(token);
-    if (opt.isEmpty()) return false;
+    if (opt.isEmpty()) {
+        System.out.println("Token no encontrado: " + token);
+        return false;
+    }
     PasswordResetToken resetToken = opt.get();
-    if (resetToken.getExpiration().isBefore(LocalDateTime.now())) return false;
+    System.out.println("Token recibido: " + token + ", expiración: " + resetToken.getExpiration());
+    if (resetToken.getExpiration().isBefore(LocalDateTime.now())) {
+        System.out.println("Token expirado");
+        return false;
+    }
+    System.out.println("Token válido");
     return true;
 }
+
 
 @Transactional
 public boolean actualizarContrasena(String token, String nuevaContrasena) {
