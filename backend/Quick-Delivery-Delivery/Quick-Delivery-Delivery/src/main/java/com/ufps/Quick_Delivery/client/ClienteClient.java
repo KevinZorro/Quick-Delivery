@@ -9,15 +9,13 @@ import java.util.UUID;
 @FeignClient(name = "cliente-service", url = "http://localhost:8080")
 public interface ClienteClient {
 
-    @GetMapping("/api/pedidos/{pedidoId}/contacto-cliente")
-    ClienteContactoResponse obtenerContactoClientePorPedido(@PathVariable("pedidoId") UUID pedidoId);
+    @GetMapping("/clientes/{clienteId}/contacto")
+    ClienteContactoResponse obtenerContactoCliente(@PathVariable("clienteId") UUID clienteId);
 
     @Data
     class ClienteContactoResponse {
-        private UUID clienteId;
-        private String nombreCompleto;
-        private String telefono;
-        private String direccionEntrega;
-        private String referenciaEntrega;
+        private UUID id;
+        private String nombre;
+        private String telefono;  
     }
 }

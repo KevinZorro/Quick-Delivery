@@ -12,6 +12,8 @@ import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.comp
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 import { DeliveryMainComponent } from './features/delivery/main.component';
 
+
+
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },

@@ -1,5 +1,7 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.client.UsuarioClient;
+import com.ufps.Quick_Delivery.dto.UsuarioResponse;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.service.ClienteService;
 import lombok.RequiredArgsConstructor;
@@ -43,11 +45,18 @@ public class ClienteController {
         return ResponseEntity.noContent().build();
     }
 
-        // ⭐ NUEVO ENDPOINT: Buscar cliente por usuarioId
     @GetMapping("/por-usuario/{usuarioId}")
     public ResponseEntity<Cliente> obtenerClientePorUsuarioId(@PathVariable UUID usuarioId) {
         return clienteService.buscarPorUsuarioId(usuarioId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{clienteId}/contacto")
+    public ResponseEntity<UsuarioResponse> obtenerContactoCliente(@PathVariable UUID clienteId) {
+    UsuarioResponse contacto = clienteService.obtenerContactoCliente(clienteId);
+    return ResponseEntity.ok(contacto);
+}
+
+
 }

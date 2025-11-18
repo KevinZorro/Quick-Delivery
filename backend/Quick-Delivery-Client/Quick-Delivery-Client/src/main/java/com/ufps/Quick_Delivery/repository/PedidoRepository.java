@@ -40,4 +40,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
      */
     List<Pedido> findByClienteOrderByFechaCreacionDesc(Cliente cliente);
 
+    //hu21
+    List<Pedido> findByRepartidorIdOrderByFechaCreacionDesc(UUID repartidorId);
+
+
 }

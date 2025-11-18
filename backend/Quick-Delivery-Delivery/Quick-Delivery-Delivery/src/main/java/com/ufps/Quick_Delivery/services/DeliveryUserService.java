@@ -68,18 +68,22 @@ public class DeliveryUserService {
 
     // NUEVO: registrar ganancia
     public void registrarGanancia(UUID deliveryUserId, double valorVenta) {
-    DeliveryUser du = repository.findById(deliveryUserId)
-        .orElseThrow(() -> new RuntimeException("DeliveryUser no encontrado"));
-    
-    double gananciaNueva = valorVenta * 0.05;
-    
-    // Verificar si ganancias es null
-    Double gananciaActual = du.getGanancias();
-    if (gananciaActual == null) {
-        gananciaActual = 0.0;
+        DeliveryUser du = repository.findById(deliveryUserId)
+                .orElseThrow(() -> new RuntimeException("DeliveryUser no encontrado"));
+
+        double gananciaNueva = valorVenta * 0.05;
+
+        // Verificar si ganancias es null
+        Double gananciaActual = du.getGanancias();
+        if (gananciaActual == null) {
+            gananciaActual = 0.0;
+        }
+
+        du.setGanancias(gananciaActual + gananciaNueva);
+        repository.save(du);
     }
+
+    //hu 21
+
     
-    du.setGanancias(gananciaActual + gananciaNueva);
-    repository.save(du);
-}
 }
