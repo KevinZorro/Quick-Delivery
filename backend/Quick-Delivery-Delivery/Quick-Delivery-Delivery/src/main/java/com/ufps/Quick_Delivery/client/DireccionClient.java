@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "direccion-service", url = "${edge-service.url}/api/direcciones")
+@FeignClient(name = "direccion-service-2", url = "${edge-service.url}/api/direcciones")
 public interface DireccionClient {
 
     @GetMapping("/{id}")

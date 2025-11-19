@@ -19,14 +19,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-          // Configurar CORS
-          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-          // Permitir acceso libre a todos los endpoints
-          .authorizeHttpRequests(authz -> authz
-             .anyRequest().permitAll()
-          )
-          // Deshabilitar CSRF
-          .csrf(csrf -> csrf.disable());
+            // ✅ IMPORTANTE: Aplicar la configuración CORS
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // Permitir acceso libre a todas las rutas
+            .authorizeHttpRequests(authz -> authz
+                .anyRequest().permitAll()
+            )
+            // Deshabilitar CSRF
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
@@ -34,7 +34,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
+        
+        // ✅ Usar allowedOriginPatterns en lugar de allowedOrigins
+        configuration.setAllowedOriginPatterns(Arrays.asList(
             "https://quick-delivery-84dfb.web.app",
             "https://quick-delivery-84dfb.firebaseapp.com",
             "http://localhost:4200",
@@ -44,6 +46,7 @@ public class SecurityConfig {
             "http://localhost:4300",
             "http://127.0.0.1:4300"
         ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

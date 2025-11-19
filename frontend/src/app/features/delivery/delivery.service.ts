@@ -51,6 +51,73 @@ export interface Entrega {
   repartidorId: string;
   fechaCreacion: string;
   fechaActualizacion?: string;
+  cliente?: {
+    id: string;
+    usuarioId: string;
+  };
+  restauranteId?: string;
+  direccionEntregaId?: string;
+  total?: number;
+  metodoPago?: string;
+  preferencias?: string;
+  items?: ItemPedido[];
+}
+
+export interface ItemPedido {
+  id: string;
+  productoId: string;
+  cantidad: number;
+  precioUnidad: number;
+  subtotal: number;
+}
+
+export interface PedidoCompleto {
+  pedido: {
+    id: string;
+    cliente: {
+      id: string;
+      usuarioId: string;
+    };
+    restauranteId: string;
+    repartidorId: string;
+    direccionEntregaId: string;
+    total: number;
+    metodoPago: string;
+    estado: string;
+    preferencias: string;
+    fechaCreacion: string;
+    fechaActualizacion: string;
+    items: ItemPedido[];
+  };
+  cliente: {
+    id: string;
+    nombre: string;
+    telefono: string;
+  };
+  direccionEntrega: {
+    id: string;
+    usuarioId: string;
+    calle: string;
+    referencia: string;
+    ciudad: string;
+    barrio: string;
+    coordenadas: string;
+    tipoReferencia: string;
+  };
+  productos: Producto[];
+}
+
+export interface Producto {
+  id: string;
+  restauranteId: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: string;
+  disponible: boolean;
+  imagenUrl: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
 }
 
 @Injectable({
@@ -125,13 +192,13 @@ export class DeliveryService {
   }
 
   // Entregas
-  listarEntregas(usuarioId: string): Observable<Entrega[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<Entrega[]>(
-      `${this.baseUrl}/entregas?usuarioId=${usuarioId}`,
-      { headers }
-    );
-  }
+ listarEntregas(usuarioId: string): Observable<Entrega[]> {
+  const headers = this.getAuthHeaders();
+  return this.http.get<Entrega[]>(
+    `${this.baseUrl}/historial?usuarioId=${usuarioId}`,
+    { headers }
+  );
+}
 
   actualizarEstadoEntrega(entregaId: string, estado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO'): Observable<Entrega> {
     const headers = this.getAuthHeaders();
@@ -141,5 +208,12 @@ export class DeliveryService {
       { headers }
     );
   }
-}
 
+  obtenerPedidoCompleto(pedidoId: string): Observable<PedidoCompleto> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<PedidoCompleto>(
+      `${this.baseUrl}/pedido/completo/${pedidoId}`,
+      { headers }
+    );
+  }
+}

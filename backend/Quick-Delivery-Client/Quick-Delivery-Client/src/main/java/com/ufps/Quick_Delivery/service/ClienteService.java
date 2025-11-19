@@ -1,5 +1,7 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.client.UsuarioClient;
+import com.ufps.Quick_Delivery.DTO.UsuarioResponse;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import jakarta.validation.Valid;
@@ -16,24 +18,22 @@ import java.util.List;
 @Transactional
 public class ClienteService {
     private final ClienteRepository clienteRepository;
+    private final UsuarioClient usuarioClient;
 
     public Cliente guardarCliente(@Valid @NonNull Cliente cliente) {
         return clienteRepository.save(cliente);
     }
 
-    // Buscar cliente por Id
     @Transactional(readOnly = true)
     public Optional<Cliente> buscarPorId(@NonNull UUID id) {
         return clienteRepository.findById(id);
     }
 
-    // Obtener todos los clientes
     @Transactional(readOnly = true)
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();
     }
 
-    // ⭐ NUEVO MÉTODO
     public Optional<Cliente> buscarPorUsuarioId(UUID usuarioId) {
         return clienteRepository.findByUsuarioId(usuarioId);
     }
@@ -45,4 +45,16 @@ public class ClienteService {
         }
         clienteRepository.deleteById(id);
     }
+
+    // ⭐ NUEVO MÉTODO: Obtener contacto del cliente con datos del usuario
+    public UsuarioResponse obtenerContactoCliente(UUID clienteId) {
+
+    Cliente cliente = clienteRepository.findById(clienteId)
+            .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+    // Devuelve directamente el DTO del Feign Client
+    return usuarioClient.obtenerUsuario(cliente.getUsuarioId());
+}
+
+
 }

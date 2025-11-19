@@ -63,9 +63,9 @@
           <div class="flex justify-between items-start">
             <div>
               <p class="text-xs opacity-90">Código: {{ entrega.codigoEntrega }}</p>
-              <p class="text-lg font-bold mt-1">Pedido #{{ entrega.pedidoId.substring(0, 8) }}</p>
+              <p class="text-lg font-bold mt-1">Pedido #{{ entrega.pedidoId ? entrega.pedidoId.substring(0, 8) : entrega.id.substring(0, 8) }}</p>
             </div>
-            <span [class]="'bg-white bg-opacity-20 px-3 py-1 rounded text-xs font-semibold ' + getEstadoColor(entrega.estado)">
+            <span [class]="'px-3 py-1 rounded text-xs font-semibold ' + getEstadoColor(entrega.estado)">
               {{ getEstadoTexto(entrega.estado) }}
             </span>
           </div>
@@ -73,11 +73,23 @@
 
         <!-- Contenido -->
         <div class="p-4">
-          <!-- Información -->
+          <!-- Información del pedido -->
           <div class="mb-4 space-y-2">
             <div class="flex items-center gap-2 text-sm text-gray-600">
               <span class="font-medium">Cliente ID:</span>
-              <span>{{ entrega.clienteId.substring(0, 8) }}...</span>
+              <span>{{ entrega.clienteId ? entrega.clienteId.substring(0, 8) : entrega.cliente?.id?.substring(0, 8) }}...</span>
+            </div>
+            <div *ngIf="entrega.restauranteId" class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="font-medium">Restaurante ID:</span>
+              <span>{{ entrega.restauranteId.substring(0, 8) }}...</span>
+            </div>
+            <div *ngIf="entrega.metodoPago" class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="font-medium">Método de pago:</span>
+              <span class="uppercase">{{ entrega.metodoPago }}</span>
+            </div>
+            <div *ngIf="entrega.preferencias" class="text-sm text-gray-600">
+              <span class="font-medium">Preferencias:</span>
+              <p class="mt-1 text-gray-800">{{ entrega.preferencias }}</p>
             </div>
             <div *ngIf="entrega.comentario" class="text-sm text-gray-600">
               <span class="font-medium">Comentario:</span>
@@ -91,30 +103,47 @@
             </div>
           </div>
 
-          <!-- Botones de estado -->
-          <div class="flex gap-2 flex-wrap">
-            <button
-              *ngIf="entrega.estado === 'EN_CAMINO_RECOGIDO'"
-              (click)="actualizarEstado(entrega, 'EN_CAMINO_HACIA_CLIENTE')"
-              class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-sm font-medium"
-            >
-              Marcar: En Camino al Cliente
-            </button>
-            <button
-              *ngIf="entrega.estado === 'EN_CAMINO_HACIA_CLIENTE'"
-              (click)="actualizarEstado(entrega, 'ENTREGADO')"
-              class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 text-sm font-medium"
-            >
-              Marcar: Entregado
-            </button>
-            <button
-              *ngIf="entrega.estado === 'ENTREGADO'"
-              disabled
-              class="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm font-medium"
-            >
-              Entregado ✓
-            </button>
+          <!-- Total del pedido -->
+          <div *ngIf="entrega.total" class="mb-4 pb-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+              <span class="text-base font-bold text-gray-900">Total:</span>
+              <span class="text-lg font-bold text-green-600">${{ entrega.total.toLocaleString() }}</span>
+            </div>
           </div>
+
+<!-- Botones de acción -->
+<div class="flex gap-2 flex-wrap">
+  <!-- Botón Ver Detalles - SIEMPRE visible -->
+  <button
+    (click)="verDetallesPedido(entrega.pedidoId || entrega.id)"
+    class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 text-sm font-medium"
+  >
+    📋 Ver Detalles
+  </button>
+
+  <!-- Botones de cambio de estado -->
+  <button
+    *ngIf="entrega.estado === ESTADO_EN_CAMINO_RECOGIDO"
+    (click)="actualizarEstado(entrega, 'EN_CAMINO_HACIA_CLIENTE')"
+    class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-sm font-medium"
+  >
+    🚗 En Camino al Cliente
+  </button>
+  <button
+    *ngIf="entrega.estado === ESTADO_EN_CAMINO_HACIA_CLIENTE"
+    (click)="actualizarEstado(entrega, 'ENTREGADO')"
+    class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 text-sm font-medium"
+  >
+    ✅ Marcar Entregado
+  </button>
+  <button
+    *ngIf="entrega.estado === ESTADO_ENTREGADO"
+    disabled
+    class="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm font-medium"
+  >
+    ✓ Entregado
+  </button>
+</div>
         </div>
       </div>
     </div>
@@ -134,5 +163,111 @@
       </button>
     </div>
   </div>
-</div>
 
+  <!-- MODAL DE DETALLES DEL PEDIDO -->
+  <div *ngIf="mostrarDetalles && pedidoSeleccionado" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <!-- Header del Modal -->
+      <div class="bg-gradient-to-r from-purple-600 to-purple-400 p-6 text-white sticky top-0 z-10">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold">Detalles del Pedido</h2>
+            <p class="text-sm opacity-90 mt-1">#{{ pedidoSeleccionado.pedido.id.substring(0, 8) }}</p>
+          </div>
+          <button
+            (click)="cerrarDetalles()"
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors duration-200"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="p-6 space-y-6">
+        <!-- Información del Cliente -->
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Información del Cliente
+          </h3>
+          <div class="space-y-2 text-sm">
+            <div><span class="font-medium">Nombre:</span> {{ pedidoSeleccionado.cliente.nombre }}</div>
+            <div><span class="font-medium">Teléfono:</span> {{ pedidoSeleccionado.cliente.telefono }}</div>
+          </div>
+        </div>
+
+        <!-- Dirección de Entrega -->
+        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+          <h3 class="font-bold text-green-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Dirección de Entrega
+          </h3>
+          <div class="space-y-2 text-sm">
+            <div><span class="font-medium">Calle:</span> {{ pedidoSeleccionado.direccionEntrega.calle }}</div>
+            <div><span class="font-medium">Barrio:</span> {{ pedidoSeleccionado.direccionEntrega.barrio }}</div>
+            <div><span class="font-medium">Ciudad:</span> {{ pedidoSeleccionado.direccionEntrega.ciudad }}</div>
+            <div><span class="font-medium">Referencia:</span> {{ pedidoSeleccionado.direccionEntrega.referencia }} ({{ pedidoSeleccionado.direccionEntrega.tipoReferencia }})</div>
+            <div><span class="font-medium">Coordenadas:</span> {{ pedidoSeleccionado.direccionEntrega.coordenadas }}</div>
+          </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+          <h3 class="font-bold text-orange-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            Productos del Pedido
+          </h3>
+          <div class="space-y-3">
+            <div *ngFor="let producto of pedidoSeleccionado.productos" class="bg-white p-3 rounded border border-orange-200 flex gap-3">
+              <img 
+                [src]="producto.imagenUrl" 
+                [alt]="producto.nombre"
+                class="w-20 h-20 object-cover rounded"
+                onerror="this.src='https://via.placeholder.com/80'"
+              />
+              <div class="flex-1">
+                <h4 class="font-bold text-gray-900">{{ producto.nombre }}</h4>
+                <p class="text-sm text-gray-600">{{ producto.descripcion }}</p>
+                <p class="text-sm text-gray-500">Categoría: {{ producto.categoria }}</p>
+                <p class="font-semibold text-green-600 mt-1">${{ producto.precio.toLocaleString() }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Pedido -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h3 class="font-bold text-gray-900 mb-3">Información del Pedido</h3>
+          <div class="space-y-2 text-sm">
+            <div><span class="font-medium">Método de pago:</span> {{ pedidoSeleccionado.pedido.metodoPago }}</div>
+            <div *ngIf="pedidoSeleccionado.pedido.preferencias"><span class="font-medium">Preferencias:</span> {{ pedidoSeleccionado.pedido.preferencias }}</div>
+            <div><span class="font-medium">Estado:</span> <span [class]="getEstadoColor(pedidoSeleccionado.pedido.estado) + ' px-2 py-1 rounded text-xs'">{{ getEstadoTexto(pedidoSeleccionado.pedido.estado) }}</span></div>
+            <div class="pt-2 border-t mt-2">
+              <span class="font-bold text-lg">Total: <span class="text-green-600">${{ pedidoSeleccionado.pedido.total.toLocaleString() }}</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="p-6 border-t bg-gray-50">
+        <button
+          (click)="cerrarDetalles()"
+          class="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 font-medium"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

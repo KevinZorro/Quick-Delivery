@@ -1,7 +1,7 @@
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { DeliveryService, Entrega } from './delivery.service';
+import { DeliveryService, Entrega, PedidoCompleto } from './delivery.service';
 import { AuthService } from '../edge/auth.service';
 
 @Component({
@@ -17,6 +17,16 @@ export class DeliveryEntregasComponent implements OnInit {
   successMessage: string | null = null;
   userName: string = '';
   usuarioId: string = '';
+  
+  pedidoSeleccionado: PedidoCompleto | null = null;
+  mostrarDetalles = false;
+  cargandoDetalles = false;
+
+  // ✅ AGREGAR ESTAS CONSTANTES para usar en el template HTML
+  readonly ESTADO_EN_CAMINO_RECOGIDO = 'EN_CAMINO_RECOGIDO';
+  readonly ESTADO_EN_CAMINO_HACIA_CLIENTE = 'EN_CAMINO_HACIA_CLIENTE';
+  readonly ESTADO_ENTREGADO = 'ENTREGADO';
+  readonly ESTADO_CON_EL_REPARTIDOR = 'CON_EL_REPARTIDOR';
 
   private platformId = inject(PLATFORM_ID);
 
@@ -62,6 +72,29 @@ export class DeliveryEntregasComponent implements OnInit {
     });
   }
 
+  verDetallesPedido(pedidoId: string): void {
+    this.cargandoDetalles = true;
+    this.errorMessage = null;
+
+    this.deliveryService.obtenerPedidoCompleto(pedidoId).subscribe({
+      next: (pedido) => {
+        this.pedidoSeleccionado = pedido;
+        this.mostrarDetalles = true;
+        this.cargandoDetalles = false;
+      },
+      error: (err) => {
+        this.errorMessage = 'Error al cargar detalles del pedido';
+        console.error(err);
+        this.cargandoDetalles = false;
+      }
+    });
+  }
+
+  cerrarDetalles(): void {
+    this.mostrarDetalles = false;
+    this.pedidoSeleccionado = null;
+  }
+
   actualizarEstado(entrega: Entrega, nuevoEstado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO'): void {
     if (!confirm(`¿Cambiar estado a ${this.getEstadoTexto(nuevoEstado)}?`)) {
       return;
@@ -90,7 +123,8 @@ export class DeliveryEntregasComponent implements OnInit {
     const estados: { [key: string]: string } = {
       'EN_CAMINO_RECOGIDO': 'En Camino a Recoger',
       'EN_CAMINO_HACIA_CLIENTE': 'En Camino al Cliente',
-      'ENTREGADO': 'Entregado'
+      'ENTREGADO': 'Entregado',
+      'CON_EL_REPARTIDOR': 'Con el Repartidor'
     };
     return estados[estado] || estado;
   }
@@ -99,7 +133,8 @@ export class DeliveryEntregasComponent implements OnInit {
     const colores: { [key: string]: string } = {
       'EN_CAMINO_RECOGIDO': 'bg-blue-100 text-blue-800',
       'EN_CAMINO_HACIA_CLIENTE': 'bg-yellow-100 text-yellow-800',
-      'ENTREGADO': 'bg-green-100 text-green-800'
+      'ENTREGADO': 'bg-green-100 text-green-800',
+      'CON_EL_REPARTIDOR': 'bg-purple-100 text-purple-800'
     };
     return colores[estado] || 'bg-gray-100 text-gray-800';
   }
@@ -113,4 +148,3 @@ export class DeliveryEntregasComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 }
-

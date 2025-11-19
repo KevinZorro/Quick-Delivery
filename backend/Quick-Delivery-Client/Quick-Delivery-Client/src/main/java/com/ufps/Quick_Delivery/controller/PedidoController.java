@@ -23,54 +23,53 @@ public class PedidoController {
 
     private final PedidoService pedidoService;
 
-@PostMapping("/crear-desde-carrito")
-public ResponseEntity<?> crearPedidoDesdeCarrito(
-        @Valid @RequestBody CrearPedidoRequestDto request) {
-    
-    try {
-        // Log detallado
-        System.out.println("═══════════════════════════════════════");
-        System.out.println("📦 CREANDO PEDIDO");
-        System.out.println("═══════════════════════════════════════");
-        System.out.println("🆔 Cliente ID: " + request.getClienteId());
-        System.out.println("🍽️ Restaurante ID: " + request.getRestauranteId());
-        System.out.println("💳 Método de pago: " + request.getMetodoPago());
-        System.out.println("📝 Cantidad de items: " + request.getItems().size());
-        System.out.println("═══════════════════════════════════════");
+    @PostMapping("/crear-desde-carrito")
+    public ResponseEntity<?> crearPedidoDesdeCarrito(
+            @Valid @RequestBody CrearPedidoRequestDto request) {
 
-        // Validaciones
-        if (request.getRestauranteId() == null) {
+        try {
+            // Log detallado
+            System.out.println("═══════════════════════════════════════");
+            System.out.println("📦 CREANDO PEDIDO");
+            System.out.println("═══════════════════════════════════════");
+            System.out.println("🆔 Cliente ID: " + request.getClienteId());
+            System.out.println("🍽️ Restaurante ID: " + request.getRestauranteId());
+            System.out.println("💳 Método de pago: " + request.getMetodoPago());
+            System.out.println("📝 Cantidad de items: " + request.getItems().size());
+            System.out.println("═══════════════════════════════════════");
+
+            // Validaciones
+            if (request.getRestauranteId() == null) {
+                return ResponseEntity.badRequest()
+                        .body("El ID del restaurante es requerido");
+            }
+
+            if (request.getItems() == null || request.getItems().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body("Debe haber al menos un item en el pedido");
+            }
+
+            // Crear el pedido
+            Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
+
+            System.out.println("✅ Pedido creado exitosamente!");
+            System.out.println("🆔 ID del pedido: " + pedidoCreado.getId());
+            System.out.println("💰 Total: " + pedidoCreado.getTotal());
+            System.out.println("═══════════════════════════════════════");
+
+            return ResponseEntity.ok(pedidoCreado);
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("❌ Error de validación: " + e.getMessage());
             return ResponseEntity.badRequest()
-                    .body("El ID del restaurante es requerido");
+                    .body("Error de validación: " + e.getMessage());
+        } catch (RuntimeException e) {
+            System.err.println("❌ Error al crear pedido: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al crear el pedido: " + e.getMessage());
         }
-
-        if (request.getItems() == null || request.getItems().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("Debe haber al menos un item en el pedido");
-        }
-
-        // Crear el pedido
-        Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
-        
-        System.out.println("✅ Pedido creado exitosamente!");
-        System.out.println("🆔 ID del pedido: " + pedidoCreado.getId());
-        System.out.println("💰 Total: " + pedidoCreado.getTotal());
-        System.out.println("═══════════════════════════════════════");
-        
-        return ResponseEntity.ok(pedidoCreado);
-        
-    } catch (IllegalArgumentException e) {
-        System.err.println("❌ Error de validación: " + e.getMessage());
-        return ResponseEntity.badRequest()
-                .body("Error de validación: " + e.getMessage());
-    } catch (RuntimeException e) {
-        System.err.println("❌ Error al crear pedido: " + e.getMessage());
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error al crear el pedido: " + e.getMessage());
     }
-}
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Pedido> obtenerPedido(@PathVariable("id") UUID id) {
@@ -112,7 +111,7 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
         }
     }
 
- /**
+    /**
      * Listar pedidos de un usuario
      * GET /api/pedidos/usuario/{usuarioId}
      */
@@ -131,7 +130,7 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
     public ResponseEntity<List<Pedido>> listarPedidosUsuarioPorEstado(
             @PathVariable("usuarioId") UUID usuarioId,
             @PathVariable("estado") EstadoPedido estado) {
-        
+
         System.out.println("🔍 Endpoint: Listar pedidos del usuario: " + usuarioId + " con estado: " + estado);
         List<Pedido> pedidos = pedidoService.listarPorUsuarioYEstado(usuarioId, estado);
         return ResponseEntity.ok(pedidos);
@@ -148,6 +147,13 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
         return ResponseEntity.ok(count);
     }
 
+    // hu21
+    // HU021 - Listar pedidos por repartidor
+    @GetMapping("/repartidor/{repartidorId}")
+    public ResponseEntity<List<Pedido>> obtenerPorRepartidor(@PathVariable UUID repartidorId) {
+        System.out.println("🔍 Endpoint: Listar pedidos del repartidor: " + repartidorId);
+        return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
+    }
     /**
      * Asignar repartidor a un pedido
      * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
