@@ -21,6 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/delivery")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class DeliveryUserController {
 
     private final DeliveryUserService service;

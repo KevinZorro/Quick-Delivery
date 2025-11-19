@@ -13,4 +13,7 @@ public class DeliveryUserDto {
     private Double calificacionPromedio;
     private Double ganancias;
 
+    private Double latitud;
+    private Double longitud;
+    private Double rangoKm;
 }

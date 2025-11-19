@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.dto;
+package com.ufps.Quick_Delivery.DTO;
 
 import java.util.UUID;
 

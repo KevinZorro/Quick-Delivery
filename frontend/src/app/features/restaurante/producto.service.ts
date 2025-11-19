@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';  // Ajusta la ruta según tu proyecto
+import { isPlatformBrowser } from '@angular/common';
 
 export interface ProductoRequest {
-  usuarioId?: string; // ⭐ Ya no se envía, se obtiene del token en el backend
+  usuarioId?: string; // Ya no se envía, se obtiene del token en el backend
   nombre: string;
   descripcion: string;
   precio: number;
@@ -30,19 +32,23 @@ export interface ProductoResponse {
   providedIn: 'root'
 })
 export class ProductoService {
-  private apiUrl = 'http://localhost:8081/api/productos';
+  private apiUrl = environment.restaurantesApi + '/api/productos';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+    console.log('Base URL para ProductoService:', this.apiUrl);
+  }
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    let token = '';
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('token') || '';
+    }
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
   }
 
-  // ⭐ Obtener MIS productos (del usuario autenticado)
   obtenerMisProductos(): Observable<ProductoResponse[]> {
     return this.http.get<ProductoResponse[]>(
       `${this.apiUrl}/mis-productos`,

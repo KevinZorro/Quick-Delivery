@@ -1,10 +1,18 @@
-// auth.interceptor.ts
 import { HttpInterceptorFn } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
+import { inject, PLATFORM_ID } from '@angular/core';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const platformId = inject(PLATFORM_ID);
+
+  if (!isPlatformBrowser(platformId)) {
+    // No estamos en navegador, continuar sin token
+    return next(req);
+  }
+
   console.log('🌐 Interceptor ejecutado para:', req.url);
   
-  // Obtener el token del localStorage
+  // Obtener el token del localStorage con seguridad
   const token = localStorage.getItem('quick-delivery-token');
   
   console.log('🔍 Token existe:', token ? 'SÍ' : 'NO');

@@ -1,11 +1,14 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.client.ProductoClient;
-import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
-import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
+import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.DTO.ItemPedidoDto;
+
 import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,7 +110,7 @@ public class PedidoService {
         return pedidoGuardado;
     }
 
-    public Optional<Pedido> buscarPorId(UUID id) {
+    public Optional<Pedido> buscarPorId(@NonNull UUID id) {
         return pedidoRepository.findById(id);
     }
 
@@ -115,16 +118,16 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
-    public void eliminarPorId(UUID id) {
+    public void eliminarPorId(@NonNull UUID id) {
         pedidoRepository.deleteById(id);
     }
 
-    public Pedido guardarPedido(Pedido pedido) {
+    public Pedido guardarPedido(@NonNull Pedido pedido) {
         return pedidoRepository.save(pedido);
     }
 
     @Transactional
-    public Pedido actualizarEstadoPedido(UUID pedidoId, EstadoPedido nuevoEstado) {
+    public Pedido actualizarEstadoPedido(@NonNull UUID pedidoId, EstadoPedido nuevoEstado) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
@@ -135,7 +138,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido actualizarMetodoPago(UUID pedidoId, MetodoPago metodoPago) {
+    public Pedido actualizarMetodoPago(@NonNull UUID pedidoId, MetodoPago metodoPago) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
@@ -189,4 +192,26 @@ public class PedidoService {
         return pedidoRepository.findByRepartidorIdOrderByFechaCreacionDesc(repartidorId);
     }
 
+    /**
+     * Asignar repartidor a un pedido
+     */
+    @Transactional
+    public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        
+        if (pedido.getRepartidorId() != null) {
+            throw new RuntimeException("El pedido ya está asignado a otro repartidor");
+        }
+        
+        if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
+            throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
+        }
+        
+        pedido.setRepartidorId(repartidorId);
+        pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
+        System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
+        
+        return pedidoRepository.save(pedido);
+    }
 }

@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment'; // Ajusta ruta
+import { PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface DireccionRestaurante {
   id?: string;
@@ -17,19 +20,23 @@ export interface DireccionRestaurante {
   providedIn: 'root'
 })
 export class DireccionRestauranteService {
-  private apiUrl = 'http://localhost:8083/api/direcciones';
+  private apiUrl = environment.edgeApi + '/api/direcciones';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+    console.log('Base URL para DireccionRestauranteService:', this.apiUrl);
+  }
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    let token = '';
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('token') || '';
+    }
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
   }
 
-  // ⭐ NUEVO: Obtener MIS direcciones (restaurante autenticado)
   obtenerMisDirecciones(): Observable<DireccionRestaurante[]> {
     return this.http.get<DireccionRestaurante[]>(`${this.apiUrl}/mis-direcciones`, {
       headers: this.getHeaders()

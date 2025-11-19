@@ -1,34 +1,8 @@
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { DeliveryService, PedidoCompleto } from './delivery.service';
+import { DeliveryService, Entrega, PedidoCompleto } from './delivery.service';
 import { AuthService } from '../edge/auth.service';
-
-export interface Entrega {
-  id: string;
-  cliente: {
-    id: string;
-    usuarioId: string;
-  };
-  restauranteId: string;
-  repartidorId: string;
-  direccionEntregaId: string;
-  total: number;
-  metodoPago: string;
-  estado: string;
-  preferencias: string;
-  fechaCreacion: string;
-  fechaActualizacion: string | null;
-  items: ItemPedido[];
-}
-
-export interface ItemPedido {
-  id: string;
-  productoId: string;
-  cantidad: number;
-  precioUnidad: number;
-  subtotal: number;
-}
 
 @Component({
   selector: 'app-delivery-entregas',
@@ -47,6 +21,12 @@ export class DeliveryEntregasComponent implements OnInit {
   pedidoSeleccionado: PedidoCompleto | null = null;
   mostrarDetalles = false;
   cargandoDetalles = false;
+
+  // ✅ AGREGAR ESTAS CONSTANTES para usar en el template HTML
+  readonly ESTADO_EN_CAMINO_RECOGIDO = 'EN_CAMINO_RECOGIDO';
+  readonly ESTADO_EN_CAMINO_HACIA_CLIENTE = 'EN_CAMINO_HACIA_CLIENTE';
+  readonly ESTADO_ENTREGADO = 'ENTREGADO';
+  readonly ESTADO_CON_EL_REPARTIDOR = 'CON_EL_REPARTIDOR';
 
   private platformId = inject(PLATFORM_ID);
 

@@ -5,6 +5,8 @@ import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
 import com.ufps.Quick_Delivery.model.Categoria;
 import com.ufps.Quick_Delivery.model.Restaurante;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +22,7 @@ public class RestauranteService {
     private final RestauranteRepository restauranteRepository;
 
     @Transactional
-    public RestauranteResponseDto crear(RestauranteRequestDto requestDto) {
+    public RestauranteResponseDto crear(@NonNull RestauranteRequestDto requestDto) {
         // Verificar si ya existe un restaurante para este usuario
         if (restauranteRepository.existsByUsuarioId(requestDto.getUsuarioId())) {
             throw new RuntimeException("Ya existe un restaurante para este usuario");
@@ -39,7 +41,7 @@ public class RestauranteService {
     }
 
     @Transactional(readOnly = true)
-    public RestauranteResponseDto obtenerPorId(UUID id) {
+    public RestauranteResponseDto obtenerPorId(@NonNull UUID id) {
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado con id: " + id));
         return mapToResponseDto(restaurante);
@@ -74,7 +76,7 @@ public class RestauranteService {
     }
 
     @Transactional
-    public RestauranteResponseDto actualizar(UUID id, RestauranteRequestDto requestDto) {
+    public RestauranteResponseDto actualizar(@NonNull UUID id, RestauranteRequestDto requestDto) {
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado con id: " + id));
 
@@ -87,7 +89,7 @@ public class RestauranteService {
     }
 
     @Transactional
-    public void actualizarCalificacion(UUID id, Double nuevaCalificacion) {
+    public void actualizarCalificacion(@NonNull UUID id, Double nuevaCalificacion) {
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado con id: " + id));
 
@@ -100,7 +102,7 @@ public class RestauranteService {
     }
 
     @Transactional
-    public void eliminar(UUID id) {
+    public void eliminar(@NonNull UUID id) {
         if (!restauranteRepository.existsById(id)) {
             throw new RuntimeException("Restaurante no encontrado con id: " + id);
         }

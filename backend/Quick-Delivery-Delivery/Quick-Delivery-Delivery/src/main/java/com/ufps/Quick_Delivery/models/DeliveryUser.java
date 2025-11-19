@@ -29,4 +29,15 @@ public class DeliveryUser {
     @Column(name = "ganancias")
     private Double ganancias = 0.0;
 
+
+    @Column(name = "latitud")
+    private Double latitud;
+
+    @Column(name = "longitud")
+    private Double longitud;
+
+    @Builder.Default
+    @Column(name = "rango_km")
+    private Double rangoKm = 10.0; // Rango por defecto de 10 km
+
 }

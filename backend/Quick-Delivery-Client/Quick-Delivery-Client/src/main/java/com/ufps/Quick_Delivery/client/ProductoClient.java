@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import lombok.Data;
 import java.util.UUID;
 
-@FeignClient(name = "producto-service", url = "http://localhost:8081")
+@FeignClient(name = "producto-service", url = "${restaurante-service.url}")
 public interface ProductoClient {
 
     @GetMapping("/api/productos/{id}")

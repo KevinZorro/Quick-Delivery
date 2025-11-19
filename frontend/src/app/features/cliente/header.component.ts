@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../edge/auth.service';
+
 
 @Component({
   selector: 'app-header',
@@ -13,23 +14,29 @@ export class HeaderComponent implements OnInit {
   userName: string = 'Usuario';
   userRole: string = '';
 
+  private platformId = inject(PLATFORM_ID);
+
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+
   ngOnInit(): void {
     // ⭐ Obtener el nombre del usuario desde localStorage si lo guardaste
-    const userName = localStorage.getItem('quick-delivery-userName');
-    if (userName) {
-      this.userName = userName;
-    }
-    
-    const userRole = localStorage.getItem('quick-delivery-userRole');
-    if (userRole) {
-      this.userRole = userRole;
+    if (isPlatformBrowser(this.platformId)) {
+      const userName = localStorage.getItem('quick-delivery-userName');
+      if (userName) {
+        this.userName = userName;
+      }
+      
+      const userRole = localStorage.getItem('quick-delivery-userRole');
+      if (userRole) {
+        this.userRole = userRole;
+      }
     }
   }
+
 
   logout(): void {
     // ⭐ Limpiar localStorage

@@ -14,9 +14,20 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://quick-delivery-84dfb.web.app")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE")
-                        .allowedHeaders("*");
+                        .allowedOrigins(
+                            "https://quick-delivery-84dfb.web.app",
+                            "https://quick-delivery-84dfb.firebaseapp.com",
+                            "http://localhost:4200",
+                            "http://127.0.0.1:4200",
+                            "http://localhost:55000",
+                            "http://127.0.0.1:55000",
+                            "http://localhost:4300",
+                            "http://127.0.0.1:4300"
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600);
             }
         };
     }

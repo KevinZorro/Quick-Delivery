@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.controller;
 
-import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
@@ -153,6 +153,22 @@ public class PedidoController {
     public ResponseEntity<List<Pedido>> obtenerPorRepartidor(@PathVariable UUID repartidorId) {
         System.out.println("🔍 Endpoint: Listar pedidos del repartidor: " + repartidorId);
         return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
+    }
+    /**
+     * Asignar repartidor a un pedido
+     * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
+     */
+    @PatchMapping("/{id}/repartidor")
+    public ResponseEntity<?> asignarRepartidor(
+            @PathVariable("id") UUID id,
+            @RequestParam("repartidorId") UUID repartidorId) {
+        try {
+            Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al asignar repartidor: " + e.getMessage());
+        }
     }
 
 }

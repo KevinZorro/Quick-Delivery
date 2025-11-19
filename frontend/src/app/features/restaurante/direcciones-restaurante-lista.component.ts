@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { DireccionRestauranteService, DireccionRestaurante } from './direcciones-restaurante.service';
 
+
 declare var google: any; // ⭐ Declarar Google Maps
+
 
 @Component({
   selector: 'app-direcciones-restaurante-lista',
@@ -17,31 +19,37 @@ export class DireccionesRestauranteListaComponent implements OnInit {
   errorMessage: string | null = null;
   usuarioId: string = '';
 
+  private platformId = inject(PLATFORM_ID);
+
   // ⭐ Variables para el modal del mapa
   modalMapaAbierto = false;
   direccionSeleccionada: DireccionRestaurante | null = null;
   map: any;
   marker: any;
 
+
   constructor(
     private direccionService: DireccionRestauranteService,
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    const restauranteId = localStorage.getItem('quick-delivery-userId');
-    
-    if (!restauranteId) {
-      this.errorMessage = 'Error: No se pudo identificar el restaurante.';
-      this.loading = false;
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 2000);
-      return;
-    }
 
-    this.usuarioId = restauranteId;
-    this.loadDirecciones();
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const restauranteId = localStorage.getItem('quick-delivery-userId');
+      
+      if (!restauranteId) {
+        this.errorMessage = 'Error: No se pudo identificar el restaurante.';
+        this.loading = false;
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 2000);
+        return;
+      }
+
+      this.usuarioId = restauranteId;
+      this.loadDirecciones();
+    }
   }
 
   loadDirecciones(): void {
