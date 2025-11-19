@@ -13,7 +13,7 @@ import java.util.UUID;
 public class DeliveryUser {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id; //repartidorid
 
     private UUID usuarioId;
 

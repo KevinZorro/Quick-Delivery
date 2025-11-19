@@ -174,28 +174,31 @@ public class DeliveryUserController {
 
     /**
      * HU021: Repartidor consulta historial de entregas.
-     * 
+     * ⭐ Modificado para aceptar usuarioId en lugar de deliveryId
      */
-    @GetMapping("/{deliveryId}/historial")
+    @GetMapping("/historial")
     public ResponseEntity<List<ClientePedido.PedidoResponse>> obtenerHistorialEntregas(
-            @PathVariable UUID deliveryId,
+            @RequestParam UUID usuarioId, // ⭐ Cambio de PathVariable a RequestParam
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
 
         try {
+            // ⭐ 1. Buscar deliveryId a partir del usuarioId
+            UUID deliveryId = service.findDeliveryIdByUsuarioId(usuarioId)
+                    .orElseThrow(() -> new RuntimeException("Repartidor no encontrado para el usuario"));
 
-            // 1. Obtener todos los pedidos del repartidor desde el pedido-service
+            // 2. Obtener todos los pedidos del repartidor desde el pedido-service
             List<ClientePedido.PedidoResponse> pedidos = clientePedido.obtenerPedidosPorRepartidor(deliveryId);
 
-            // 2. Filtro por estado (si se envía)
+            // 3. Filtro por estado (si se envía)
             if (estado != null && !estado.isEmpty()) {
                 pedidos = pedidos.stream()
                         .filter(p -> p.getEstado().equalsIgnoreCase(estado))
                         .toList();
             }
 
-            // 3. Filtro por fechaInicio
+            // 4. Filtro por fechaInicio
             if (fechaInicio != null) {
                 pedidos = pedidos.stream()
                         .filter(p -> p.getFechaCreacion().toLocalDate().isEqual(fechaInicio)
@@ -203,7 +206,7 @@ public class DeliveryUserController {
                         .toList();
             }
 
-            // 4. Filtro por fechaFin
+            // 5. Filtro por fechaFin
             if (fechaFin != null) {
                 pedidos = pedidos.stream()
                         .filter(p -> p.getFechaCreacion().toLocalDate().isEqual(fechaFin)
@@ -213,12 +216,12 @@ public class DeliveryUserController {
 
             return ResponseEntity.ok(pedidos);
 
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(502).build();
         }
     }
-
-    
 
 }

@@ -83,7 +83,10 @@ public class DeliveryUserService {
         repository.save(du);
     }
 
-    //hu 21
+    // ⭐ AGREGAR en DeliveryUserService
+    public Optional<UUID> findDeliveryIdByUsuarioId(UUID usuarioId) {
+        return repository.findByUsuarioId(usuarioId)
+                .map(DeliveryUser::getId);
+    }
 
-    
 }

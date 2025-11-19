@@ -11,6 +11,7 @@ import { DireccionRestauranteFormComponent } from './features/restaurante/direcc
 import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 import { DeliveryMainComponent } from './features/delivery/main.component';
+import { DeliveryEntregasComponent } from './features/delivery/entregas.component';
 
 
 
@@ -40,7 +41,7 @@ export const routes: Routes = [
 
   //Rutas de delivery
 { path: 'delivery/main', component: DeliveryMainComponent },
-
+ { path: 'delivery/entregas', component: DeliveryEntregasComponent },
   
   // Wildcard al FINAL
   { path: '**', redirectTo: 'login' }

@@ -1,92 +1,170 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DeliveryService } from './delivery.service';
+import { DeliveryService, NotificacionPedido } from './delivery.service';
+import { AuthService } from '../edge/auth.service';
 
 @Component({
   selector: 'app-delivery-main',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './main.component.html'
 })
-export class DeliveryMainComponent implements OnInit {
-
-  readonly repartidorId = 'ecc145a3-244b-43f9-9f18-37680c97009a';
-
-  // UI
-  domiciliarioNombre = '';
-  disponible = true;
+export class DeliveryMainComponent implements OnInit, OnDestroy {
+  notificaciones: NotificacionPedido[] = [];
   loading = false;
-  successMessage: string | null = null;
   errorMessage: string | null = null;
+  successMessage: string | null = null;
+  userName: string = '';
+  usuarioId: string = '';
+  ubicacionActualizada = false;
+  rangoKm: number = 10;
+  mostrarConfigRango = false;
+  intervaloNotificaciones: any;
 
-  // Filtros
-  filtroActual: string = 'TODOS';
-
-  // Pedidos
-  pedidos: any[] = [];
-  pedidosFiltrados: any[] = [];
+  private platformId = inject(PLATFORM_ID);
 
   constructor(
+    private deliveryService: DeliveryService,
     private router: Router,
-    private deliveryService: DeliveryService
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.domiciliarioNombre =
-      localStorage.getItem('quick-delivery-userName') || 'Domiciliario';
+    if (isPlatformBrowser(this.platformId)) {
+      this.usuarioId = this.authService.getUserId() || '';
+      this.userName = this.authService.getUserName() || '';
 
-    this.cargarPedidos();
+      if (!this.authService.isRepartidor()) {
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      if (!localStorage.getItem('token')) {
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      // Solicitar ubicación GPS
+      this.obtenerUbicacion();
+      
+      // Cargar notificaciones cada 10 segundos
+      this.intervaloNotificaciones = setInterval(() => {
+        this.cargarNotificaciones();
+      }, 10000);
+    }
   }
 
-  cargarPedidos(): void {
+  ngOnDestroy(): void {
+    if (this.intervaloNotificaciones) {
+      clearInterval(this.intervaloNotificaciones);
+    }
+  }
+
+  obtenerUbicacion(): void {
+    if (!navigator.geolocation) {
+      this.errorMessage = 'Tu navegador no soporta geolocalización';
+      return;
+    }
+
     this.loading = true;
-
-    this.deliveryService.getHistorial(this.repartidorId, this.filtroActual)
-      .subscribe({
-        next: (data) => {
-          this.pedidos = data;
-          this.aplicarFiltro();
-          this.loading = false;
-        },
-        error: (e) => {
-          console.error(e);
-          this.errorMessage = 'Error cargando pedidos.';
-          this.loading = false;
-        }
-      });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitud = position.coords.latitude;
+        const longitud = position.coords.longitude;
+        
+        // Actualizar ubicación en el backend
+        this.deliveryService.actualizarUbicacion(this.usuarioId, latitud, longitud, this.rangoKm).subscribe({
+          next: () => {
+            this.ubicacionActualizada = true;
+            this.cargarNotificaciones();
+          },
+          error: (err) => {
+            console.error('Error al actualizar ubicación:', err);
+            // Aún así, intentar cargar notificaciones (puede que ya tenga ubicación guardada)
+            this.cargarNotificaciones();
+          }
+        });
+      },
+      (error) => {
+        this.errorMessage = 'Error al obtener tu ubicación: ' + error.message;
+        this.loading = false;
+        // Aún así, intentar cargar notificaciones (puede que ya tenga ubicación guardada)
+        this.cargarNotificaciones();
+      }
+    );
   }
 
-  aplicarFiltro(): void {
-    if (this.filtroActual === 'TODOS') {
-      this.pedidosFiltrados = this.pedidos;
-    } else {
-      this.pedidosFiltrados = this.pedidos.filter(
-        p => p.estado === this.filtroActual
-      );
+  cargarNotificaciones(): void {
+    this.errorMessage = null;
+
+    this.deliveryService.obtenerNotificacionesDisponibles(this.usuarioId).subscribe({
+      next: (notificaciones) => {
+        this.notificaciones = notificaciones;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorMessage = 'Error al cargar notificaciones';
+        console.error(err);
+        this.loading = false;
+      }
+    });
+  }
+
+  aceptarNotificacion(notificacion: NotificacionPedido): void {
+    const comentario = prompt(`¿Aceptar el pedido #${notificacion.pedidoId.substring(0, 8)} por $${notificacion.total}?\n\nComentario (opcional):`);
+    if (comentario === null) {
+      return; // Usuario canceló
     }
+
+    this.loading = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    this.deliveryService.aceptarNotificacion(this.usuarioId, notificacion.id, comentario || undefined).subscribe({
+      next: (entrega) => {
+        this.successMessage = `Pedido aceptado exitosamente. Código de entrega: ${entrega.codigoEntrega}`;
+        this.cargarNotificaciones(); // Recargar lista
+        setTimeout(() => this.successMessage = null, 5000);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Error al aceptar el pedido';
+        console.error(err);
+        this.loading = false;
+      }
+    });
   }
 
-  filtrarPedidos(estado: string): void {
-    this.filtroActual = estado;
-    this.cargarPedidos();
+  actualizarRangoKm(): void {
+    this.loading = true;
+    this.deliveryService.actualizarUbicacion(this.usuarioId, 0, 0, this.rangoKm).subscribe({
+      next: () => {
+        this.successMessage = `Rango actualizado a ${this.rangoKm} km`;
+        this.mostrarConfigRango = false;
+        this.cargarNotificaciones();
+        setTimeout(() => this.successMessage = null, 3000);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorMessage = 'Error al actualizar rango';
+        console.error(err);
+        this.loading = false;
+      }
+    });
   }
 
-  getEstadoClass(estado: string): string {
-    switch (estado) {
-      case 'ASIGNADO': return 'bg-orange-100 text-orange-800';
-      case 'EN_CAMINO': return 'bg-blue-100 text-blue-800';
-      case 'ENTREGADO': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-200 text-gray-800';
-    }
-  }
-
-  getEstadoTexto(estado: string): string {
-    return estado.replace('_', ' ');
+  verEntregas(): void {
+    this.router.navigate(['/delivery/entregas']);
   }
 
   cerrarSesion(): void {
-    localStorage.clear();
+    this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  actualizarUbicacion(): void {
+    this.obtenerUbicacion();
   }
 }
