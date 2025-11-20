@@ -13,7 +13,7 @@ import java.util.UUID;
 public class DeliveryUser {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id; //repartidorid
 
     private UUID usuarioId;
 
@@ -24,5 +24,20 @@ public class DeliveryUser {
     @Builder.Default
     @Column(name = "calificacion_promedio")
     private Double calificacionPromedio = 0.0;
+
+    @Builder.Default
+    @Column(name = "ganancias")
+    private Double ganancias = 0.0;
+
+
+    @Column(name = "latitud")
+    private Double latitud;
+
+    @Column(name = "longitud")
+    private Double longitud;
+
+    @Builder.Default
+    @Column(name = "rango_km")
+    private Double rangoKm = 10.0; // Rango por defecto de 10 km
 
 }

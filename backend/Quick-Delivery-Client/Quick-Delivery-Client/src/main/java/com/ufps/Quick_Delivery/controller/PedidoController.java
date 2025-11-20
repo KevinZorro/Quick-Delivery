@@ -182,6 +182,4 @@ public List<PedidoDto> historialCompleto(@PathVariable("restauranteId") UUID res
     return pedidoService.obtenerHistorialConItems(restauranteId);
 }
 
-
-
 }

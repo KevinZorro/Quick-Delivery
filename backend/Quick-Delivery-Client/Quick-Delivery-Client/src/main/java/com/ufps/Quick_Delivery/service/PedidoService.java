@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service; // ⭐ Asegúrate que exista este mapper
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ufps.Quick_Delivery.client.ProductoClient;
@@ -15,7 +15,7 @@ import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.mapper.PedidoMapper;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
-import com.ufps.Quick_Delivery.model.ItemPedido;  // ⭐ IMPORT NECESARIO
+import com.ufps.Quick_Delivery.model.ItemPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
@@ -30,17 +30,22 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ProductoClient productoClient; 
+    private final ProductoClient productoClient;
     private final NotificacionService notificacionService;
 
+    // -------------------------------------------------------------------------
+    // CREAR PEDIDO DESDE CARRITO
+    // -------------------------------------------------------------------------
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
 
-        // 1. Buscar el cliente
+        System.out.println("🔍 Iniciando creación de pedido...");
+
+        // 1. Buscar cliente
         Cliente cliente = clienteRepository.findByUsuarioId(request.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + request.getClienteId()));
 
-        // 2. Crear pedido
+        // 2. Crear pedido base
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
         pedido.setRestauranteId(request.getRestauranteId());
@@ -49,7 +54,7 @@ public class PedidoService {
         pedido.setEstado(EstadoPedido.INICIADO);
 
         // Método de pago
-        if (request.getMetodoPago() != null) {
+        if (request.getMetodoPago() != null && !request.getMetodoPago().isEmpty()) {
             try {
                 pedido.setMetodoPago(MetodoPago.valueOf(request.getMetodoPago().toUpperCase()));
             } catch (Exception e) {
@@ -57,17 +62,20 @@ public class PedidoService {
             }
         }
 
-        // 3. Items
+        // 3. Procesar items
         int totalPedido = 0;
 
         for (ItemPedidoDto itemDto : request.getItems()) {
 
-            ProductoClient.ProductoResponse producto =
-                    productoClient.obtenerProducto(itemDto.getProductoId());
+            System.out.println("🔍 Consultando producto: " + itemDto.getProductoId());
+            ProductoClient.ProductoResponse producto = productoClient.obtenerProducto(itemDto.getProductoId());
 
             if (producto == null || producto.getPrecio() == null) {
-                throw new RuntimeException("Producto no encontrado: " + itemDto.getProductoId());
+                throw new RuntimeException("Producto no encontrado o sin precio: " + itemDto.getProductoId());
             }
+
+            System.out.println("✅ Producto encontrado: " + producto.getNombre() +
+                    " - Precio: $" + producto.getPrecio());
 
             if (Boolean.FALSE.equals(producto.getDisponible())) {
                 throw new RuntimeException("Producto no disponible: " + producto.getNombre());
@@ -79,6 +87,10 @@ public class PedidoService {
             item.setPrecioUnidad(producto.getPrecio());
             item.setSubtotal(producto.getPrecio() * itemDto.getCantidad());
 
+            System.out.println("   📝 Item: " + producto.getNombre()
+                    + " x" + itemDto.getCantidad()
+                    + " = $" + item.getSubtotal());
+
             pedido.addItem(item);
             totalPedido += item.getSubtotal();
         }
@@ -88,6 +100,9 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    // -------------------------------------------------------------------------
+    // CRUD BÁSICO
+    // -------------------------------------------------------------------------
     public Optional<Pedido> buscarPorId(@NonNull UUID id) {
         return pedidoRepository.findById(id);
     }
@@ -104,81 +119,117 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    // -------------------------------------------------------------------------
+    // ACTUALIZAR ESTADO + NOTIFICACIÓN
+    // -------------------------------------------------------------------------
     @Transactional
     public Pedido actualizarEstadoPedido(@NonNull UUID pedidoId, EstadoPedido nuevoEstado) {
+
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
         pedido.setEstado(nuevoEstado);
+        System.out.println("📊 Estado del pedido " + pedidoId + " actualizado a: " + nuevoEstado);
+
         Pedido actualizado = pedidoRepository.save(pedido);
 
-        // llamar al servicio de notificaciones (ahora inyectado)
         notificacionService.notificarCambioEstado(actualizado);
+
         return actualizado;
     }
 
-
-
+    // -------------------------------------------------------------------------
+    // ACTUALIZAR MÉTODO DE PAGO
+    // -------------------------------------------------------------------------
     @Transactional
     public Pedido actualizarMetodoPago(@NonNull UUID pedidoId, MetodoPago metodoPago) {
+
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
         pedido.setMetodoPago(metodoPago);
+
+        System.out.println("💳 Método de pago del pedido " + pedidoId + " actualizado a: " + metodoPago);
+
         return pedidoRepository.save(pedido);
     }
 
+    // -------------------------------------------------------------------------
+    // HISTORIAL PARA CLIENTE
+    // -------------------------------------------------------------------------
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuario(UUID usuarioId) {
-        return pedidoRepository.findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
+
+        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId);
+
+        List<Pedido> pedidos = pedidoRepository
+                .findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
+
+        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
+
+        return pedidos;
     }
 
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuarioYEstado(UUID usuarioId, EstadoPedido estado) {
-        return pedidoRepository.findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(usuarioId, estado);
+
+        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId + " con estado: " + estado);
+
+        List<Pedido> pedidos = pedidoRepository
+                .findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(usuarioId, estado);
+
+        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
+
+        return pedidos;
     }
 
     @Transactional(readOnly = true)
     public long contarPedidosPorUsuario(UUID usuarioId) {
-        return pedidoRepository.countByCliente_UsuarioId(usuarioId);
+
+        long count = pedidoRepository.countByCliente_UsuarioId(usuarioId);
+
+        System.out.println("🔢 Total de pedidos del usuario " + usuarioId + ": " + count);
+
+        return count;
     }
 
-    // ⭐ HISTORIAL PARA EL RESTAURANTE
+    // -------------------------------------------------------------------------
+    // HISTORIAL PARA RESTAURANTE
+    // -------------------------------------------------------------------------
     public List<PedidoDto> obtenerHistorial(
-        UUID restauranteId,
-        String fechaInicio,
-        String fechaFin,
-        String estado,
-        UUID clienteId
-) {
-    LocalDateTime inicio = fechaInicio != null ? LocalDateTime.parse(fechaInicio) : null;
-    LocalDateTime fin = fechaFin != null ? LocalDateTime.parse(fechaFin) : null;
+            UUID restauranteId,
+            String fechaInicio,
+            String fechaFin,
+            String estado,
+            UUID clienteId
+    ) {
 
-    // ⭐ Convertir el String a Enum
-    EstadoPedido estadoEnum = null;
-    if (estado != null && !estado.isBlank()) {
-        try {
-            estadoEnum = EstadoPedido.valueOf(estado.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Estado inválido: " + estado);
+        LocalDateTime inicio = fechaInicio != null ? LocalDateTime.parse(fechaInicio) : null;
+        LocalDateTime fin = fechaFin != null ? LocalDateTime.parse(fechaFin) : null;
+
+        EstadoPedido estadoEnum = null;
+        if (estado != null && !estado.isBlank()) {
+            try {
+                estadoEnum = EstadoPedido.valueOf(estado.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Estado inválido: " + estado);
+            }
         }
-    }
 
-    return pedidoRepository.filtrarPedidos(
-            restauranteId, inicio, fin, estadoEnum, clienteId
-    ).stream()
-    .map(PedidoMapper::toDto)
-    .toList();
+        return pedidoRepository.filtrarPedidos(
+                        restauranteId, inicio, fin, estadoEnum, clienteId)
+                .stream()
+                .map(PedidoMapper::toDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-public List<PedidoDto> obtenerHistorialConItems(UUID restauranteId) {
+    public List<PedidoDto> obtenerHistorialConItems(UUID restauranteId) {
 
-    return pedidoRepository.findHistorialByRestauranteIdConItems(restauranteId)
-            .stream()
-            .map(PedidoMapper::toDto)
-            .toList();
+        return pedidoRepository
+                .findHistorialByRestauranteIdConItems(restauranteId)
+                .stream()
+                .map(PedidoMapper::toDto)
+                .toList();
+    }
 }
-
-}
-

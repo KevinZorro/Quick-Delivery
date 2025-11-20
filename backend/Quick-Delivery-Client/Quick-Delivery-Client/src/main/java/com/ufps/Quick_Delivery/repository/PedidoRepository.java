@@ -59,4 +59,8 @@ List<Pedido> filtrarPedidos(
 """)
 List<Pedido> findHistorialByRestauranteIdConItems(@Param("restauranteId") UUID restauranteId);
 
+    //hu21
+    List<Pedido> findByRepartidorIdOrderByFechaCreacionDesc(UUID repartidorId);
+
+
 }

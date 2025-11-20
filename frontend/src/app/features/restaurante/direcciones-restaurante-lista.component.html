@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-white font-poppins">
   <!-- Header -->
   <header class="bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -13,7 +13,7 @@
           [disabled]="direcciones.length >= 5"
           [class.opacity-50]="direcciones.length >= 5"
           [class.cursor-not-allowed]="direcciones.length >= 5"
-          class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition flex items-center gap-2">
+          class="px-4 py-2 bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 text-white rounded-lg hover:opacity-90 transition flex items-center gap-2">
           <span>➕</span>
           <span>Agregar Dirección</span>
         </button>
@@ -26,12 +26,12 @@
 
     <!-- Loading State -->
     <div *ngIf="loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
       <p class="mt-4 text-gray-600">Cargando direcciones...</p>
     </div>
 
     <!-- Error Message -->
-    <div *ngIf="errorMessage && !loading" class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+    <div *ngIf="errorMessage && !loading" class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-lg mb-6">
       <p class="font-medium">⚠️ {{ errorMessage }}</p>
     </div>
 
@@ -45,7 +45,7 @@
         <p class="text-gray-600 mb-6">Agrega tu primera dirección para empezar a recibir pedidos</p>
         <button 
           (click)="agregarDireccion()"
-          class="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">
+          class="px-6 py-3 bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 text-white rounded-lg hover:opacity-90 transition">
           ➕ Agregar Primera Dirección
         </button>
       </div>
@@ -57,9 +57,9 @@
           class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition overflow-hidden">
           
           <!-- Card Header -->
-          <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3">
+          <div class="bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 px-4 py-3">
             <div class="flex items-center justify-between">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white text-teal-700">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white text-rose-600">
                 {{ direccion.tipoReferencia === 'SEDE_PRINCIPAL' ? '🏢 Sede Principal' : 
                    direccion.tipoReferencia === 'SUCURSAL' ? '🏪 Sucursal' : '🍳 Cocina Central' }}
               </span>
@@ -98,11 +98,10 @@
 
             <!-- Card Actions -->
             <div class="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-              <!-- ⭐ BOTÓN VER MAPA -->
               <button 
                 *ngIf="direccion.coordenadas"
                 (click)="abrirModalMapa(direccion)"
-                class="flex-1 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
+                class="flex-1 px-4 py-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-sm font-medium">
                 🗺️ Ver Mapa
               </button>
               
@@ -114,7 +113,7 @@
               
               <button 
                 (click)="eliminarDireccion(direccion.id!)"
-                class="flex-1 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-medium">
+                class="flex-1 px-4 py-2 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition text-sm font-medium">
                 🗑️ Eliminar
               </button>
             </div>
@@ -123,12 +122,12 @@
       </div>
 
       <!-- Info Footer -->
-      <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div class="flex items-start gap-3">
           <span class="text-2xl">ℹ️</span>
           <div>
-            <p class="text-sm text-blue-900 font-medium">Límite de direcciones</p>
-            <p class="text-sm text-blue-800 mt-1">
+            <p class="text-sm text-amber-900 font-medium">Límite de direcciones</p>
+            <p class="text-sm text-amber-800 mt-1">
               Has registrado <strong>{{ direcciones.length }}</strong> de <strong>5</strong> direcciones permitidas.
               {{ direcciones.length >= 5 ? 'Has alcanzado el límite máximo.' : 'Puedes agregar ' + (5 - direcciones.length) + ' más.' }}
             </p>
@@ -150,80 +149,72 @@
     </a>
   </div>
 
-<!-- ⭐ MODAL DEL MAPA -->
-<div *ngIf="modalMapaAbierto" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" (click)="cerrarModalMapa()">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
-    
-    <!-- Header del Modal -->
-    <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4">
-      <div class="flex justify-between items-center">
-        <div>
-          <h3 class="text-xl font-bold text-white">🗺️ Ubicación en el Mapa</h3>
-          <p class="text-teal-100 text-sm mt-1">{{ direccionSeleccionada?.calle }}</p>
+  <!-- Modal del Mapa -->
+  <div *ngIf="modalMapaAbierto" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50" (click)="cerrarModalMapa()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+      
+      <!-- Header del Modal -->
+      <div class="bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 px-6 py-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-xl font-bold text-white">🗺️ Ubicación en el Mapa</h3>
+            <p class="text-amber-100 text-sm mt-1">{{ direccionSeleccionada?.calle }}</p>
+          </div>
+          <button 
+            title="Cerrar"
+            (click)="cerrarModalMapa()"
+            class="text-white hover:text-gray-200 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
         </div>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="p-6">
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <p class="text-sm font-medium text-gray-500">Dirección Completa</p>
+            <p class="text-base text-gray-900">{{ direccionSeleccionada?.calle }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Ciudad</p>
+              <p class="text-sm text-gray-900">{{ direccionSeleccionada?.ciudad }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Barrio</p>
+              <p class="text-sm text-gray-900">{{ direccionSeleccionada?.barrio }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
+          <div id="modalMap" style="width: 100%; height: 450px; min-height: 450px;"></div>
+        </div>
+
+        <div class="mt-4">
+          <p class="text-sm font-medium text-gray-500">Coordenadas GPS</p>
+          <p class="text-sm text-gray-600 font-mono bg-gray-50 px-3 py-2 rounded mt-1">
+            {{ direccionSeleccionada?.coordenadas }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t">
         <button 
-        title="x"
+          (click)="abrirEnGoogleMaps()"
+          class="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-lg hover:opacity-90 transition font-medium">
+          🌐 Abrir en Google Maps
+        </button>
+        <button 
           (click)="cerrarModalMapa()"
-          class="text-white hover:text-gray-200 transition">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+          Cerrar
         </button>
       </div>
     </div>
-
-    <!-- Cuerpo del Modal -->
-    <div class="p-6">
-      
-      <!-- Info de la dirección -->
-      <div class="grid md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <p class="text-sm font-medium text-gray-500">Dirección Completa</p>
-          <p class="text-base text-gray-900">{{ direccionSeleccionada?.calle }}</p>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Ciudad</p>
-            <p class="text-sm text-gray-900">{{ direccionSeleccionada?.ciudad }}</p>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-gray-500">Barrio</p>
-            <p class="text-sm text-gray-900">{{ direccionSeleccionada?.barrio }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ⭐ MAPA - VERIFICA QUE EL ID SEA "modalMap" -->
-      <div class="bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
-        <div id="modalMap" style="width: 100%; height: 450px; min-height: 450px;"></div>
-      </div>
-
-      <!-- Coordenadas -->
-      <div class="mt-4">
-        <p class="text-sm font-medium text-gray-500">Coordenadas GPS</p>
-        <p class="text-sm text-gray-600 font-mono bg-gray-50 px-3 py-2 rounded mt-1">
-          {{ direccionSeleccionada?.coordenadas }}
-        </p>
-      </div>
-
-    </div>
-
-    <!-- Footer del Modal -->
-    <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t">
-      <button 
-        (click)="abrirEnGoogleMaps()"
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
-        🌐 Abrir en Google Maps
-      </button>
-      <button 
-        (click)="cerrarModalMapa()"
-        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
-        Cerrar
-      </button>
-    </div>
-
   </div>
-</div>
-
-
 </div>

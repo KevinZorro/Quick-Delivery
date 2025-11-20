@@ -6,40 +6,40 @@
   <title>{{ isEditMode ? 'Editar' : 'Nueva' }} Dirección</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-white min-h-screen font-[Poppins]">
   
   <!-- Header -->
-  <header class="bg-white shadow-sm border-b border-gray-200">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <h1 class="text-2xl font-bold text-gray-900">
+  <header class="bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 shadow-md">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-white">
+      <h1 class="text-2xl font-semibold">
         {{ isEditMode ? '✏️ Editar Dirección' : '➕ Nueva Dirección' }}
       </h1>
-      <p class="text-sm text-gray-600 mt-1">
+      <p class="text-sm opacity-90 mt-1">
         {{ isEditMode ? 'Actualiza la información de tu dirección' : 'Registra una nueva ubicación para tu restaurante' }}
       </p>
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
     <!-- Error Message -->
-    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+    <div *ngIf="errorMessage" class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-lg mb-6">
       <p class="font-medium">⚠️ {{ errorMessage }}</p>
     </div>
 
     <!-- Form -->
-    <form [formGroup]="direccionForm" (ngSubmit)="onSubmit()" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      
+    <form [formGroup]="direccionForm" (ngSubmit)="onSubmit()" class="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+
       <!-- Tipo de Referencia -->
       <div class="mb-6">
         <label class="block text-sm font-medium text-gray-700 mb-2">
           Tipo de Ubicación <span class="text-red-500">*</span>
         </label>
         <select 
-        title="x"
+          title="x"
           formControlName="tipoReferencia"
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition">
           <option value="SEDE_PRINCIPAL">🏢 Sede Principal</option>
           <option value="SUCURSAL">🏪 Sucursal</option>
           <option value="COCINA_CENTRAL">🍳 Cocina Central</option>
@@ -55,7 +55,7 @@
           type="text" 
           formControlName="calle"
           placeholder="Ej: Calle 45 #23-56"
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
           [class.border-red-500]="direccionForm.get('calle')?.invalid && direccionForm.get('calle')?.touched">
         <p *ngIf="direccionForm.get('calle')?.invalid && direccionForm.get('calle')?.touched" 
            class="mt-1 text-sm text-red-600">
@@ -73,7 +73,7 @@
             type="text" 
             formControlName="ciudad"
             placeholder="Ej: Bogotá"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
             [class.border-red-500]="direccionForm.get('ciudad')?.invalid && direccionForm.get('ciudad')?.touched">
           <p *ngIf="direccionForm.get('ciudad')?.invalid && direccionForm.get('ciudad')?.touched" 
              class="mt-1 text-sm text-red-600">
@@ -89,7 +89,7 @@
             type="text" 
             formControlName="barrio"
             placeholder="Ej: Chapinero"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
             [class.border-red-500]="direccionForm.get('barrio')?.invalid && direccionForm.get('barrio')?.touched">
           <p *ngIf="direccionForm.get('barrio')?.invalid && direccionForm.get('barrio')?.touched" 
              class="mt-1 text-sm text-red-600">
@@ -107,7 +107,7 @@
           formControlName="referencia"
           rows="3"
           placeholder="Ej: Al frente del parque principal, edificio de dos pisos color blanco"
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition resize-none"></textarea>
+          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition resize-none"></textarea>
         <p class="mt-1 text-xs text-gray-500">Agrega puntos de referencia para facilitar la ubicación</p>
       </div>
 
@@ -120,17 +120,17 @@
           type="text" 
           formControlName="coordenadas"
           placeholder="Ej: 4.6097,-74.0817"
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+          class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition">
         <p class="mt-1 text-xs text-gray-500">Formato: latitud,longitud</p>
       </div>
 
       <!-- Info Box -->
-      <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div class="flex items-start gap-3">
           <span class="text-xl">💡</span>
           <div>
-            <p class="text-sm text-blue-900 font-medium">Consejo</p>
-            <p class="text-sm text-blue-800 mt-1">
+            <p class="text-sm text-amber-900 font-medium">Consejo</p>
+            <p class="text-sm text-amber-800 mt-1">
               Asegúrate de que la dirección sea precisa para que los clientes y repartidores puedan encontrarte fácilmente.
             </p>
           </div>
@@ -138,13 +138,13 @@
       </div>
 
       <!-- Form Actions -->
-      <div class="flex gap-4 pt-4 border-t border-gray-200">
+      <div class="flex gap-4 pt-6 border-t border-gray-200">
         <button 
           type="submit"
           [disabled]="direccionForm.invalid || loading"
           [class.opacity-50]="direccionForm.invalid || loading"
           [class.cursor-not-allowed]="direccionForm.invalid || loading"
-          class="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium">
+          class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 text-white rounded-lg hover:opacity-90 transition font-medium">
           {{ loading ? 'Guardando...' : (isEditMode ? '✅ Actualizar Dirección' : '➕ Crear Dirección') }}
         </button>
         <button 
