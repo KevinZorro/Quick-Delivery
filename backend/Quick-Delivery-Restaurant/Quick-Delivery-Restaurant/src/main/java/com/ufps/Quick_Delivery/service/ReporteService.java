@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.config.PedidoFeignClient;
+import com.ufps.Quick_Delivery.client.PedidoFeignClient;
 import com.ufps.Quick_Delivery.dto.*;
 import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.repository.ProductoRepository;

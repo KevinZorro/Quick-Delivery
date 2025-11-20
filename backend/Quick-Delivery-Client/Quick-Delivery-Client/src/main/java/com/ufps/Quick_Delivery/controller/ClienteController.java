@@ -1,5 +1,6 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.service.ClienteService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final com.ufps.Quick_Delivery.service.PedidoService pedidoService;
 
     @PostMapping
     public ResponseEntity<Cliente> crearCliente(@Valid @RequestBody Cliente cliente) {
@@ -50,4 +52,16 @@ public class ClienteController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{restauranteId}/historial")
+public List<PedidoDto> obtenerHistorial(
+        @PathVariable UUID restauranteId,
+        @RequestParam(required = false) String fechaInicio,
+        @RequestParam(required = false) String fechaFin,
+        @RequestParam(required = false) String estado,
+        @RequestParam(required = false) UUID clienteId
+) {
+    return pedidoService.obtenerHistorial(restauranteId, fechaInicio, fechaFin, estado, clienteId);
+}
+
 }

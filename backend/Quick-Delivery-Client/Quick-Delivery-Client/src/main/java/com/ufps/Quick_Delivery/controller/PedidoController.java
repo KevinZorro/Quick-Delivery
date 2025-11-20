@@ -1,6 +1,8 @@
 package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
+import com.ufps.Quick_Delivery.mapper.PedidoMapper;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
@@ -147,5 +149,34 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
         long count = pedidoService.contarPedidosPorUsuario(usuarioId);
         return ResponseEntity.ok(count);
     }
+    
+    @GetMapping("/historial")
+    public ResponseEntity<List<PedidoDto>> obtenerHistorial(
+    @RequestParam(value = "restauranteId", required = false) UUID restauranteId,
+    @RequestParam(value = "fechaInicio", required = false) String fechaInicio,
+    @RequestParam(value = "fechaFin", required = false) String fechaFin,
+    @RequestParam(value = "estado", required = false) String estado,
+    @RequestParam(value = "clienteId", required = false) UUID clienteId
+    ) {
+    List<PedidoDto> historial = pedidoService.obtenerHistorial(
+            restauranteId, fechaInicio, fechaFin, estado, clienteId
+    );
+    return ResponseEntity.ok(historial);
+    }
+
+    @PutMapping("/{pedidoId}/estado")
+    public ResponseEntity<?> actualizarEstadoPedido(
+    @PathVariable("pedidoId") UUID pedidoId,
+    @RequestParam(value = "nuevoEstado", required = false) EstadoPedido nuevoEstado
+    ) {
+    try {
+        Pedido actualizado = pedidoService.actualizarEstadoPedido(pedidoId, nuevoEstado);
+        return ResponseEntity.ok(PedidoMapper.toDto(actualizado));
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+    }
+
+
 
 }

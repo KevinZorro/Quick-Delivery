@@ -253,4 +253,9 @@ verReportes(): void {
   this.router.navigate(['/dashboard-reportes']);
 }
 
+
+verHistorialPedidos(): void {
+  this.router.navigate(['/restaurante/pedidos']);
+}
+
 }

@@ -11,7 +11,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * en este caso, para obtener los pedidos desde el microservicio 'client'.
  */
 @SpringBootApplication
-@EnableFeignClients(basePackages = "com.ufps.Quick_Delivery.config")
+@EnableFeignClients(basePackages = "com.ufps.Quick_Delivery.client")
 public class QuickDeliveryRestaurantApplication {
 
     public static void main(String[] args) {

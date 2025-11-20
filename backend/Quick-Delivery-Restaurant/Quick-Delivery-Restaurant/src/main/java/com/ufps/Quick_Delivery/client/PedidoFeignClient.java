@@ -1,10 +1,11 @@
-package com.ufps.Quick_Delivery.config;
+package com.ufps.Quick_Delivery.client;
 
-import com.ufps.Quick_Delivery.dto.PedidoDto;
+import java.util.List;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.List;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
 
 @FeignClient(name = "pedido-service", url = "${cliente-service.url}")
 public interface PedidoFeignClient {
