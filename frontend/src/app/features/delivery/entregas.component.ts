@@ -1,13 +1,15 @@
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DeliveryService, Entrega, PedidoCompleto } from './delivery.service';
 import { AuthService } from '../edge/auth.service';
 
+
 @Component({
   selector: 'app-delivery-entregas',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './entregas.component.html'
 })
 export class DeliveryEntregasComponent implements OnInit {
@@ -22,7 +24,13 @@ export class DeliveryEntregasComponent implements OnInit {
   mostrarDetalles = false;
   cargandoDetalles = false;
 
-  // ✅ AGREGAR ESTAS CONSTANTES para usar en el template HTML
+  // ✅ Propiedades para el modal de confirmación
+  mostrarModalConfirmacion = false;
+  entregaSeleccionada: Entrega | null = null;
+  codigoEntrega = '';
+  comentariosEntrega = '';
+
+  // ✅ Constantes para usar en el template HTML
   readonly ESTADO_EN_CAMINO_RECOGIDO = 'EN_CAMINO_RECOGIDO';
   readonly ESTADO_EN_CAMINO_HACIA_CLIENTE = 'EN_CAMINO_HACIA_CLIENTE';
   readonly ESTADO_ENTREGADO = 'ENTREGADO';
@@ -95,7 +103,58 @@ export class DeliveryEntregasComponent implements OnInit {
     this.pedidoSeleccionado = null;
   }
 
-  actualizarEstado(entrega: Entrega, nuevoEstado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO'): void {
+  // ✅ Abrir modal de confirmación
+  abrirModalConfirmarEntrega(entrega: Entrega): void {
+    this.entregaSeleccionada = entrega;
+    this.mostrarModalConfirmacion = true;
+    this.codigoEntrega = '';
+    this.comentariosEntrega = '';
+    this.errorMessage = null;
+  }
+
+  // ✅ Cerrar modal de confirmación
+  cerrarModalConfirmacion(): void {
+    this.mostrarModalConfirmacion = false;
+    this.entregaSeleccionada = null;
+    this.codigoEntrega = '';
+    this.comentariosEntrega = '';
+  }
+
+  // ✅ Confirmar entrega final
+  confirmarEntregaFinal(): void {
+    if (!this.codigoEntrega.trim()) {
+      this.errorMessage = 'El código de confirmación es obligatorio';
+      return;
+    }
+
+    if (!this.entregaSeleccionada) return;
+
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.deliveryService.confirmarEntrega({
+      pedidoId: this.entregaSeleccionada.pedidoId,
+      codigoEntrega: this.codigoEntrega.trim(),
+      comentarios: this.comentariosEntrega.trim() || ''
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Entrega confirmada correctamente';
+        this.cerrarModalConfirmacion();
+        this.cargarEntregas();
+        setTimeout(() => this.successMessage = null, 3000);
+        this.loading = false;
+      },
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Error al confirmar entrega';
+        this.loading = false;
+      }
+    });
+  }
+
+  actualizarEstado(
+    entrega: Entrega, 
+    nuevoEstado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO' | 'CON_EL_REPARTIDOR' // ✅ ACTUALIZADO
+  ): void {
     if (!confirm(`¿Cambiar estado a ${this.getEstadoTexto(nuevoEstado)}?`)) {
       return;
     }

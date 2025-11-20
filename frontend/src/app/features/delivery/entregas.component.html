@@ -111,39 +111,44 @@
             </div>
           </div>
 
-<!-- Botones de acción -->
-<div class="flex gap-2 flex-wrap">
-  <!-- Botón Ver Detalles - SIEMPRE visible -->
-  <button
-    (click)="verDetallesPedido(entrega.pedidoId || entrega.id)"
-    class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 text-sm font-medium"
-  >
-    📋 Ver Detalles
-  </button>
+          <!-- Botones de acción -->
+          <div class="flex gap-2 flex-wrap">
+            <!-- Botón Ver Detalles - SIEMPRE visible -->
+            <button
+              (click)="verDetallesPedido(entrega.pedidoId || entrega.id)"
+              class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 text-sm font-medium"
+            >
+              📋 Ver Detalles
+            </button>
 
-  <!-- Botones de cambio de estado -->
-  <button
-    *ngIf="entrega.estado === ESTADO_EN_CAMINO_RECOGIDO"
-    (click)="actualizarEstado(entrega, 'EN_CAMINO_HACIA_CLIENTE')"
-    class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-sm font-medium"
-  >
-    🚗 En Camino al Cliente
-  </button>
-  <button
-    *ngIf="entrega.estado === ESTADO_EN_CAMINO_HACIA_CLIENTE"
-    (click)="actualizarEstado(entrega, 'ENTREGADO')"
-    class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 text-sm font-medium"
-  >
-    ✅ Marcar Entregado
-  </button>
-  <button
-    *ngIf="entrega.estado === ESTADO_ENTREGADO"
-    disabled
-    class="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm font-medium"
-  >
-    ✓ Entregado
-  </button>
-</div>
+            <!-- Botón Confirmar Entrega - ✅ ACTUALIZADO: aparece con CON_EL_REPARTIDOR o EN_CAMINO_HACIA_CLIENTE -->
+            <button
+              *ngIf="entrega.estado === ESTADO_CON_EL_REPARTIDOR || entrega.estado === ESTADO_EN_CAMINO_HACIA_CLIENTE"
+              (click)="abrirModalConfirmarEntrega(entrega)"
+              class="flex-1 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors duration-200 text-sm font-medium"
+            >
+              ✅ Confirmar Entrega
+            </button>
+
+            <!-- Botones de cambio de estado -->
+            <button
+              *ngIf="entrega.estado === ESTADO_EN_CAMINO_RECOGIDO"
+              (click)="actualizarEstado(entrega, 'EN_CAMINO_HACIA_CLIENTE')"
+              class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-sm font-medium"
+            >
+              🚗 En Camino al Cliente
+            </button>
+
+            <!-- ✅ ELIMINADO: el botón "Marcar Entregado" directo, ahora solo se usa el modal -->
+
+            <button
+              *ngIf="entrega.estado === ESTADO_ENTREGADO"
+              disabled
+              class="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm font-medium"
+            >
+              ✓ Entregado
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -267,6 +272,72 @@
         >
           Cerrar
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAR ENTREGA -->
+  <div *ngIf="mostrarModalConfirmacion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+      <!-- Header del Modal -->
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900">Confirmar Entrega</h2>
+        <button
+          (click)="cerrarModalConfirmacion()"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Formulario -->
+      <div class="space-y-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">
+            Código de Confirmación <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="codigoEntrega"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Ej: ENT-123456"
+            maxlength="20"
+            autocomplete="off"
+          />
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">
+            Comentarios (opcional)
+          </label>
+          <textarea
+            [(ngModel)]="comentariosEntrega"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+            rows="3"
+            placeholder="Observaciones del cliente o la entrega..."
+          ></textarea>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end gap-2 mt-6">
+          <button
+            type="button"
+            (click)="cerrarModalConfirmacion()"
+            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="confirmarEntregaFinal()"
+            [disabled]="!codigoEntrega.trim()"
+            class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            Confirmar Entrega
+          </button>
+        </div>
       </div>
     </div>
   </div>

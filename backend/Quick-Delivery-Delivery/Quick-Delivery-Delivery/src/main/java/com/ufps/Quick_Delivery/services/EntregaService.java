@@ -1,164 +1,70 @@
 package com.ufps.Quick_Delivery.services;
 
-import com.ufps.Quick_Delivery.client.PedidoClient;
-import com.ufps.Quick_Delivery.dto.AceptarPedidoRequestDto;
-import com.ufps.Quick_Delivery.dto.EntregaDto;
-import com.ufps.Quick_Delivery.models.DeliveryUser;
+import com.ufps.Quick_Delivery.dto.ConfirmarEntregaDto;
+import com.ufps.Quick_Delivery.dto.IniciarEntregaDto;
+import com.ufps.Quick_Delivery.dto.RegistrarTiempoEntregaDto;
+import com.ufps.Quick_Delivery.exceptions.EntregaException;
 import com.ufps.Quick_Delivery.models.Entrega;
-import com.ufps.Quick_Delivery.models.EstadoEntrega;
-import com.ufps.Quick_Delivery.models.PedidoNotificacion;
-import com.ufps.Quick_Delivery.repository.DeliveryUserRepository;
 import com.ufps.Quick_Delivery.repository.EntregaRepository;
-import com.ufps.Quick_Delivery.repository.PedidoNotificacionRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class EntregaService {
 
     private final EntregaRepository entregaRepository;
-    private final PedidoNotificacionRepository notificacionRepository;
-    private final DeliveryUserRepository deliveryUserRepository;
-    private final PedidoClient pedidoClient;
 
-    /**
-     * Aceptar un pedido y crear entrega
-     */
-    @Transactional
-    public EntregaDto aceptarPedido(UUID usuarioId, UUID notificacionId, AceptarPedidoRequestDto request) {
-        log.info("Repartidor {} aceptando pedido de notificación {}", usuarioId, notificacionId);
+    // INICIAR ENTREGA
+    public Entrega iniciarEntrega(IniciarEntregaDto dto) {
 
-        // 1. Verificar que el repartidor existe
-        DeliveryUser deliveryUser = deliveryUserRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Repartidor no encontrado"));
+        entregaRepository.findByPedidoId(dto.getPedidoId()).ifPresent(e -> {
+            throw new EntregaException("El pedido ya tiene una entrega iniciada.");
+        });
 
-        // 2. Obtener la notificación
-        PedidoNotificacion notificacion = notificacionRepository.findById(notificacionId)
-                .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
+        Entrega entrega = new Entrega();
+        entrega.setPedidoId(dto.getPedidoId());
+        entrega.setRepartidorId(dto.getRepartidorId());
+        entrega.setEstado("EN_CAMINO");
+        entrega.setHoraInicio(LocalDateTime.now());
+        entrega.setCodigoConfirmacion(generarCodigo());
 
-        // 3. Verificar que no esté procesada
-        if (notificacion.getProcesado()) {
-            throw new RuntimeException("Esta notificación ya fue procesada");
-        }
-
-        // 4. Verificar que no exista ya una entrega para este pedido
-        Optional<Entrega> entregaExistente = entregaRepository.findByPedidoId(notificacion.getPedidoId());
-        if (entregaExistente.isPresent()) {
-            throw new RuntimeException("Ya existe una entrega para este pedido");
-        }
-
-        // 5. Generar código de entrega único
-        String codigoEntrega = generarCodigoEntrega();
-
-        // 6. Crear la entrega
-        Entrega entrega = Entrega.builder()
-                .clienteId(notificacion.getClienteId())
-                .codigoEntrega(codigoEntrega)
-                .comentario(request.getComentario())
-                .estado(EstadoEntrega.EN_CAMINO_RECOGIDO)
-                .pedidoId(notificacion.getPedidoId())
-                .repartidorId(deliveryUser.getId())
-                .fechaCreacion(LocalDateTime.now())
-                .build();
-
-        entrega = entregaRepository.save(entrega);
-
-        // 7. Marcar notificación como procesada
-        notificacion.setProcesado(true);
-        notificacionRepository.save(notificacion);
-
-        // 8. Asignar repartidor al pedido en el servicio Client
-        try {
-            pedidoClient.asignarRepartidor(notificacion.getPedidoId(), deliveryUser.getId());
-            log.info("Repartidor asignado al pedido {} en el servicio Client", notificacion.getPedidoId());
-        } catch (Exception e) {
-            log.error("Error al asignar repartidor al pedido: {}", e.getMessage());
-            // No lanzar excepción, la entrega ya está creada
-        }
-
-        log.info("Entrega creada con ID: {} y código: {}", entrega.getId(), codigoEntrega);
-        return convertirADto(entrega);
+        return entregaRepository.save(entrega);
     }
 
-    /**
-     * Listar entregas de un repartidor
-     */
-    @Transactional(readOnly = true)
-    public List<EntregaDto> listarEntregasPorRepartidor(UUID usuarioId) {
-        log.info("Listando entregas para repartidor: {}", usuarioId);
-
-        DeliveryUser deliveryUser = deliveryUserRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Repartidor no encontrado"));
-
-        List<Entrega> entregas = entregaRepository.findByRepartidorIdOrderByFechaCreacionDesc(deliveryUser.getId());
-        
-        return entregas.stream()
-                .map(this::convertirADto)
-                .collect(Collectors.toList());
+    private String generarCodigo() {
+        return "ENT-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 
-    /**
-     * Actualizar estado de una entrega
-     */
-    @Transactional
-    public EntregaDto actualizarEstadoEntrega(UUID entregaId, EstadoEntrega nuevoEstado) {
-        log.info("Actualizando estado de entrega {} a {}", entregaId, nuevoEstado);
+    public Entrega confirmarEntrega(ConfirmarEntregaDto dto) {
 
-        Entrega entrega = entregaRepository.findById(entregaId)
-                .orElseThrow(() -> new RuntimeException("Entrega no encontrada"));
+        Entrega entrega = entregaRepository.findByPedidoId(dto.getPedidoId())
+                .orElseThrow(() -> new EntregaException("Entrega no encontrada"));
 
-        entrega.setEstado(nuevoEstado);
-        entrega.setFechaActualizacion(LocalDateTime.now());
+        if (!entrega.getEstado().equals("EN_CAMINO"))
+            throw new EntregaException("Solo se pueden confirmar entregas en estado 'EN_CAMINO'");
 
-        // Si el estado es ENTREGADO, también actualizar el pedido en Client
-        if (nuevoEstado == EstadoEntrega.ENTREGADO) {
-            try {
-                pedidoClient.cambiarEstado(entrega.getPedidoId(), "ENTREGADO");
-                log.info("Estado del pedido {} actualizado a ENTREGADO", entrega.getPedidoId());
-            } catch (Exception e) {
-                log.error("Error al actualizar estado del pedido: {}", e.getMessage());
-            }
-        }
+        if (!entrega.getCodigoConfirmacion().equals(dto.getCodigoEntrega()))
+            throw new EntregaException("Código de entrega incorrecto");
 
-        entrega = entregaRepository.save(entrega);
-        return convertirADto(entrega);
-    }
+        // Cambiar estado
+        entrega.setEstado("ENTREGADO");
 
-    private String generarCodigoEntrega() {
-        // Generar código alfanumérico de 8 caracteres
-        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder codigo = new StringBuilder();
-        java.util.Random random = new java.util.Random();
-        
-        for (int i = 0; i < 8; i++) {
-            codigo.append(caracteres.charAt(random.nextInt(caracteres.length())));
-        }
-        
-        return codigo.toString();
-    }
+        // Guardar comentarios
+        entrega.setComentariosEntrega(dto.getComentarios());
 
-    private EntregaDto convertirADto(Entrega entrega) {
-        return EntregaDto.builder()
-                .id(entrega.getId())
-                .clienteId(entrega.getClienteId())
-                .codigoEntrega(entrega.getCodigoEntrega())
-                .comentario(entrega.getComentario())
-                .estado(entrega.getEstado())
-                .pedidoId(entrega.getPedidoId())
-                .repartidorId(entrega.getRepartidorId())
-                .fechaCreacion(entrega.getFechaCreacion())
-                .fechaActualizacion(entrega.getFechaActualizacion())
-                .build();
+        // Registrar hora fin
+        entrega.setHoraFin(LocalDateTime.now());
+
+        // Calcular duración
+        long minutos = Duration.between(entrega.getHoraInicio(), entrega.getHoraFin()).toMinutes();
+        entrega.setDuracionMinutos(minutos);
+
+        return entregaRepository.save(entrega);
     }
 }
-
