@@ -24,7 +24,7 @@ public class Entrega {
     private UUID repartidorId;
 
     @Column(nullable = false)
-    private String estado; // EN_CAMINO, ENTREGADO
+    private String estado; // ✅ CON_EL_REPARTIDOR, EN_CAMINO_RECOGIDO, EN_CAMINO_HACIA_CLIENTE, ENTREGADO
 
     @Column(nullable = false)
     private String codigoConfirmacion;
@@ -34,7 +34,7 @@ public class Entrega {
     private LocalDateTime horaInicio;
     private LocalDateTime horaFin;
 
-    private Long duracionMinutos; // calculado automáticamente
+    private Long duracionMinutos;
 
     private String observaciones;
 }

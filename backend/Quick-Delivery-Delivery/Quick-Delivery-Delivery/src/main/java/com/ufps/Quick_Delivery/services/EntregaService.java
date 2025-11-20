@@ -2,7 +2,6 @@ package com.ufps.Quick_Delivery.services;
 
 import com.ufps.Quick_Delivery.dto.ConfirmarEntregaDto;
 import com.ufps.Quick_Delivery.dto.IniciarEntregaDto;
-import com.ufps.Quick_Delivery.dto.RegistrarTiempoEntregaDto;
 import com.ufps.Quick_Delivery.exceptions.EntregaException;
 import com.ufps.Quick_Delivery.models.Entrega;
 import com.ufps.Quick_Delivery.repository.EntregaRepository;
@@ -20,7 +19,6 @@ public class EntregaService {
 
     private final EntregaRepository entregaRepository;
 
-    // INICIAR ENTREGA
     public Entrega iniciarEntrega(IniciarEntregaDto dto) {
 
         entregaRepository.findByPedidoId(dto.getPedidoId()).ifPresent(e -> {
@@ -30,7 +28,7 @@ public class EntregaService {
         Entrega entrega = new Entrega();
         entrega.setPedidoId(dto.getPedidoId());
         entrega.setRepartidorId(dto.getRepartidorId());
-        entrega.setEstado("EN_CAMINO");
+        entrega.setEstado("CON_EL_REPARTIDOR");
         entrega.setHoraInicio(LocalDateTime.now());
         entrega.setCodigoConfirmacion(generarCodigo());
 
@@ -46,25 +44,31 @@ public class EntregaService {
         Entrega entrega = entregaRepository.findByPedidoId(dto.getPedidoId())
                 .orElseThrow(() -> new EntregaException("Entrega no encontrada"));
 
-        if (!entrega.getEstado().equals("EN_CAMINO"))
-            throw new EntregaException("Solo se pueden confirmar entregas en estado 'EN_CAMINO'");
+        System.out.println("🔍 Entrega encontrada - ID: " + entrega.getId() + " - Estado actual: " + entrega.getEstado());
 
-        if (!entrega.getCodigoConfirmacion().equals(dto.getCodigoEntrega()))
+        if (entrega.getEstado().equals("ENTREGADO")) {
+            throw new EntregaException("Esta entrega ya fue confirmada anteriormente");
+        }
+
+        if (!entrega.getCodigoConfirmacion().equals(dto.getCodigoEntrega())) {
             throw new EntregaException("Código de entrega incorrecto");
+        }
 
-        // Cambiar estado
+        System.out.println("✅ Código correcto. Cambiando estado a ENTREGADO...");
+
         entrega.setEstado("ENTREGADO");
-
-        // Guardar comentarios
         entrega.setComentariosEntrega(dto.getComentarios());
-
-        // Registrar hora fin
         entrega.setHoraFin(LocalDateTime.now());
 
-        // Calcular duración
         long minutos = Duration.between(entrega.getHoraInicio(), entrega.getHoraFin()).toMinutes();
         entrega.setDuracionMinutos(minutos);
 
-        return entregaRepository.save(entrega);
+        Entrega entregaGuardada = entregaRepository.save(entrega);
+        
+        System.out.println("💾 Entrega guardada - ID: " + entregaGuardada.getId() + 
+                         " - Estado guardado: " + entregaGuardada.getEstado() + 
+                         " - Duración: " + minutos + " minutos");
+
+        return entregaGuardada;
     }
 }

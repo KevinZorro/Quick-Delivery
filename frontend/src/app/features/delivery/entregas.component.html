@@ -41,10 +41,30 @@
       <p class="text-red-800 text-sm font-medium">{{ errorMessage }}</p>
     </div>
 
-    <!-- Título -->
+    <!-- Título con botones de filtro -->
     <div class="mb-6">
       <h2 class="text-2xl font-bold text-gray-900">Mis Entregas</h2>
       <p class="text-gray-600 mt-1">Pedidos que has aceptado</p>
+      
+      <!-- Botones de filtro -->
+      <div class="flex gap-2 mt-4">
+        <button
+          (click)="cambiarFiltro('en_camino')"
+          [class]="filtroActual === 'en_camino' 
+            ? 'px-4 py-2 bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium'
+            : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 text-sm font-medium'"
+        >
+          🚗 En Camino ({{ entregasEnCamino.length }})
+        </button>
+        <button
+          (click)="cambiarFiltro('entregadas')"
+          [class]="filtroActual === 'entregadas' 
+            ? 'px-4 py-2 bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium'
+            : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 text-sm font-medium'"
+        >
+          ✅ Entregadas ({{ entregasEntregadas.length }})
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -53,9 +73,9 @@
     </div>
 
     <!-- Lista de entregas -->
-    <div *ngIf="!loading && entregas.length > 0" class="space-y-4">
+    <div *ngIf="!loading && entregasFiltradas.length > 0" class="space-y-4">
       <div
-        *ngFor="let entrega of entregas"
+        *ngFor="let entrega of entregasFiltradas"
         class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200"
       >
         <!-- Header -->
@@ -111,9 +131,23 @@
             </div>
           </div>
 
-          <!-- Botones de acción -->
-          <div class="flex gap-2 flex-wrap">
-            <!-- Botón Ver Detalles - SIEMPRE visible -->
+          <!-- Mostrar duración si está entregado -->
+          <div *ngIf="entrega.estado === ESTADO_ENTREGADO" class="mb-4 pb-4 border-b border-gray-200">
+            <div class="bg-green-50 p-3 rounded-lg">
+              <div class="flex items-center gap-2 text-sm text-green-800">
+                <span class="font-medium">⏱️ Tiempo de entrega:</span>
+                <span class="font-bold">{{ calcularDuracion(entrega) }}</span>
+              </div>
+              <div *ngIf="entrega.comentario" class="mt-2 text-xs text-gray-600">
+                <span class="font-medium">Comentarios de entrega:</span>
+                <p class="mt-1">{{ entrega.comentario }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción - Solo si NO está entregado -->
+          <div *ngIf="entrega.estado !== ESTADO_ENTREGADO" class="flex gap-2 flex-wrap">
+            <!-- Botón Ver Detalles -->
             <button
               (click)="verDetallesPedido(entrega.pedidoId || entrega.id)"
               class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 text-sm font-medium"
@@ -121,7 +155,7 @@
               📋 Ver Detalles
             </button>
 
-            <!-- Botón Confirmar Entrega - ✅ ACTUALIZADO: aparece con CON_EL_REPARTIDOR o EN_CAMINO_HACIA_CLIENTE -->
+            <!-- Botón Confirmar Entrega -->
             <button
               *ngIf="entrega.estado === ESTADO_CON_EL_REPARTIDOR || entrega.estado === ESTADO_EN_CAMINO_HACIA_CLIENTE"
               (click)="abrirModalConfirmarEntrega(entrega)"
@@ -138,15 +172,15 @@
             >
               🚗 En Camino al Cliente
             </button>
+          </div>
 
-            <!-- ✅ ELIMINADO: el botón "Marcar Entregado" directo, ahora solo se usa el modal -->
-
+          <!-- Botón solo para ver detalles si está entregado -->
+          <div *ngIf="entrega.estado === ESTADO_ENTREGADO" class="flex gap-2">
             <button
-              *ngIf="entrega.estado === ESTADO_ENTREGADO"
-              disabled
-              class="flex-1 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm font-medium"
+              (click)="verDetallesPedido(entrega.pedidoId || entrega.id)"
+              class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 text-sm font-medium"
             >
-              ✓ Entregado
+              📋 Ver Detalles
             </button>
           </div>
         </div>
@@ -154,13 +188,18 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!loading && entregas.length === 0" class="text-center py-12 bg-white rounded-lg border border-gray-200">
+    <div *ngIf="!loading && entregasFiltradas.length === 0" class="text-center py-12 bg-white rounded-lg border border-gray-200">
       <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
-      <h3 class="mt-4 text-lg font-medium text-gray-900">No tienes entregas asignadas</h3>
-      <p class="mt-2 text-gray-500">Acepta pedidos desde el panel principal para verlos aquí.</p>
+      <h3 class="mt-4 text-lg font-medium text-gray-900">
+        {{ filtroActual === 'en_camino' ? 'No tienes entregas en camino' : 'No tienes entregas completadas' }}
+      </h3>
+      <p class="mt-2 text-gray-500">
+        {{ filtroActual === 'en_camino' ? 'Acepta pedidos desde el panel principal para verlos aquí.' : 'Las entregas que completes aparecerán aquí.' }}
+      </p>
       <button
+        *ngIf="filtroActual === 'en_camino'"
         (click)="volver()"
         class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
       >
