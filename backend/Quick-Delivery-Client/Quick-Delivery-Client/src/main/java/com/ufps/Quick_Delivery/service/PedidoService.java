@@ -1,24 +1,28 @@
 package com.ufps.Quick_Delivery.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service; // ⭐ Asegúrate que exista este mapper
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.dto.PedidoDto;
-import com.ufps.Quick_Delivery.mapper.PedidoMapper; // ⭐ Asegúrate que exista este mapper
-import com.ufps.Quick_Delivery.model.*;
+import com.ufps.Quick_Delivery.mapper.PedidoMapper;
+import com.ufps.Quick_Delivery.model.Cliente;
+import com.ufps.Quick_Delivery.model.EstadoPedido;
+import com.ufps.Quick_Delivery.model.ItemPedido;  // ⭐ IMPORT NECESARIO
+import com.ufps.Quick_Delivery.model.MetodoPago;
+import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
-import com.ufps.Quick_Delivery.service.NotificacionService;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;  // ⭐ IMPORT NECESARIO
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -166,5 +170,15 @@ public class PedidoService {
     .map(PedidoMapper::toDto)
     .toList();
     }
+
+    @Transactional(readOnly = true)
+public List<PedidoDto> obtenerHistorialConItems(UUID restauranteId) {
+
+    return pedidoRepository.findHistorialByRestauranteIdConItems(restauranteId)
+            .stream()
+            .map(PedidoMapper::toDto)
+            .toList();
+}
+
 }
 

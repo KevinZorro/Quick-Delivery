@@ -1,9 +1,10 @@
 package com.ufps.Quick_Delivery.mapper;
 
-import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.dto.PedidoDto;
+import com.ufps.Quick_Delivery.model.Pedido;
 
 import java.math.BigDecimal;
+import java.util.stream.Collectors;
 
 public class PedidoMapper {
 
@@ -15,12 +16,17 @@ public class PedidoMapper {
                 .clienteId(pedido.getCliente().getId())
                 .restauranteId(pedido.getRestauranteId())
 
-                // Conversión correcta:
-                .estado(pedido.getEstado().name()) // enum → String
-                .total(BigDecimal.valueOf(pedido.getTotal())) // int → BigDecimal
-
+                .estado(pedido.getEstado().name())
+                .total(BigDecimal.valueOf(pedido.getTotal()))
                 .fechaCreacion(pedido.getFechaCreacion())
                 .preferencias(pedido.getPreferencias())
+
+                // ⭐ AHORA SÍ MAPEAMOS LOS ITEMS
+                .items(
+                        pedido.getItems().stream()
+                            .map(ItemPedidoMapper::toDto)
+                            .collect(Collectors.toList())
+                )
                 .build();
     }
 }

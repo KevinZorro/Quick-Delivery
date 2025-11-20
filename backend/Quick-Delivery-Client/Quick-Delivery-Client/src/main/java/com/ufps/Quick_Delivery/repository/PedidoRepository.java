@@ -1,17 +1,18 @@
 package com.ufps.Quick_Delivery.repository;
 
-import com.ufps.Quick_Delivery.model.Cliente;
-import com.ufps.Quick_Delivery.model.EstadoPedido;
-import com.ufps.Quick_Delivery.model.Pedido;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.ufps.Quick_Delivery.model.Cliente;
+import com.ufps.Quick_Delivery.model.EstadoPedido;
+import com.ufps.Quick_Delivery.model.Pedido;
 
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
@@ -49,5 +50,13 @@ List<Pedido> filtrarPedidos(
         @Param("clienteId") UUID clienteId
 );
 
+@Query("""
+    SELECT DISTINCT p
+    FROM Pedido p
+    LEFT JOIN FETCH p.items i
+    WHERE p.restauranteId = :restauranteId
+    ORDER BY p.fechaCreacion DESC
+""")
+List<Pedido> findHistorialByRestauranteIdConItems(@Param("restauranteId") UUID restauranteId);
 
 }

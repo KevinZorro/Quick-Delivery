@@ -177,6 +177,11 @@ public ResponseEntity<?> crearPedidoDesdeCarrito(
     }
     }
 
+@GetMapping("/restaurante/{restauranteId}/historial-completo")
+public List<PedidoDto> historialCompleto(@PathVariable("restauranteId") UUID restauranteId) {
+    return pedidoService.obtenerHistorialConItems(restauranteId);
+}
+
 
 
 }

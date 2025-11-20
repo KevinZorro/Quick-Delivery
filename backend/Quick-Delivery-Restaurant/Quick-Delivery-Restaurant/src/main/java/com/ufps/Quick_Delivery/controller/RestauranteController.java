@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -95,13 +96,28 @@ public class RestauranteController {
     return ResponseEntity.ok(historial);
     }
 
-    @PutMapping("/pedidos/{pedidoId}/estado")
-public ResponseEntity<String> actualizarEstado(
+@PutMapping("/pedidos/{pedidoId}/estado")
+public ResponseEntity<?> actualizarEstado(
         @PathVariable("pedidoId") UUID pedidoId,
-        @RequestParam (value = "nuevoEstado", required = false) String nuevoEstado
-    ) {
+        @RequestParam("nuevoEstado") String nuevoEstado
+) {
     pedidoClient.actualizarEstadoPedido(pedidoId, nuevoEstado);
-    return ResponseEntity.ok("Estado actualizado correctamente");
+
+    return ResponseEntity.ok(
+        Map.of(
+            "mensaje", "Estado actualizado correctamente",
+            "pedidoId", pedidoId.toString(),
+            "nuevoEstado", nuevoEstado
+        )
+    );
+}
+
+
+
+
+@GetMapping("/{restauranteId}/historial-completo")
+public List<PedidoDto> historialCompleto(@PathVariable("restauranteId") UUID restauranteId) {
+    return restauranteService.listarHistorialCompleto(restauranteId);
 }
 
 

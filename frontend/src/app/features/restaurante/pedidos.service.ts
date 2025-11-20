@@ -20,8 +20,18 @@ export class PedidosService {
   constructor(private http: HttpClient) {}
 
   getHistorial(restauranteId: string): Observable<PedidoDto[]> {
-    return this.http.get<PedidoDto[]>(
-      `${this.baseUrl}/${restauranteId}/pedidos/historial`
-    );
-  }
+  return this.http.get<PedidoDto[]>(
+    `${this.baseUrl}/${restauranteId}/historial-completo`
+  );
+}
+
+
+  actualizarEstado(pedidoId: string, nuevoEstado: string) {
+  return this.http.put(
+    `${this.baseUrl}/pedidos/${pedidoId}/estado`,
+    null,
+    { params: { nuevoEstado } }
+  );
+}
+
 }

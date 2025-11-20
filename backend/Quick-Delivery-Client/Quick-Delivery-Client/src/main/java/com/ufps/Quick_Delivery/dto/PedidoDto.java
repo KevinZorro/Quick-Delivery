@@ -3,9 +3,10 @@ package com.ufps.Quick_Delivery.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
-import lombok.Builder;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -15,8 +16,9 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PedidoDto {
-    private UUID id;             // ← AÑADIDO
-    private UUID restauranteId;  // ← AÑADIDO
+
+    private UUID id;
+    private UUID restauranteId;
     private UUID clienteId;
 
     private LocalDateTime fechaPedido;
@@ -28,6 +30,6 @@ public class PedidoDto {
     private String preferencias;
     private LocalDateTime fechaCreacion;
 
-    private UUID productoId;
+    // ⭐ ESTA ES LA PARTE QUE FALTABA
+    private List<ItemPedidoDto> items;
 }
-

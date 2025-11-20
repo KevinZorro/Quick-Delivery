@@ -1,69 +1,121 @@
-<!-- src/app/features/pedidos/pedidos.component.html -->
+<div class="p-6 max-w-4xl mx-auto">
 
-<h2 class="text-2xl font-bold mb-4 text-gray-800">Historial de pedidos</h2>
+  <h2 class="text-3xl font-bold text-gray-800 mb-6">📦 Historial de pedidos</h2>
 
-<!-- Cargando -->
-<div *ngIf="cargando" class="text-gray-600 animate-pulse">
-  Cargando...
-</div>
+  <!-- Cargando -->
+  <div *ngIf="cargando" class="flex items-center gap-2 text-purple-600">
+    <span class="animate-spin border-2 border-purple-600 border-t-transparent rounded-full w-5 h-5"></span>
+    Cargando pedidos...
+  </div>
 
-<!-- Sin pedidos -->
-<div
-  *ngIf="!cargando && pedidos.length === 0"
-  class="text-gray-500 bg-gray-100 py-3 px-4 rounded-lg border border-gray-200"
+  <!-- Sin pedidos -->
+  <div *ngIf="!cargando && pedidos.length === 0"
+       class="bg-yellow-100 text-yellow-800 p-4 rounded-lg shadow-sm border-l-4 border-yellow-500 text-center">
+    No hay pedidos aún.
+  </div>
+
+  <!-- Mensaje -->
+  <div *ngIf="mensaje"
+       class="bg-green-100 text-green-700 p-3 rounded-xl mb-4 text-center font-medium shadow">
+    {{ mensaje }}
+  </div>
+
+  <!-- Lista de pedidos -->
+  <div *ngFor="let pedido of pedidos"
+       class="bg-white mt-6 p-5 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+
+    <!-- Encabezado -->
+    <div class="flex justify-between items-center">
+      <h3 class="text-xl font-semibold text-gray-800">
+        🧾 Pedido <span class="text-purple-600">#{{ pedido.id.slice(0, 8) }}</span>
+      </h3>
+
+      <!-- Estado actual con colores -->
+      <span
+        class="px-3 py-1 rounded-full text-sm font-semibold border"
+        [ngClass]="{
+          'bg-yellow-100 text-yellow-800 border-yellow-300': pedido.estado === 'INICIADO',
+          'bg-blue-100 text-blue-800 border-blue-300': pedido.estado === 'EN_COCINA',
+          'bg-purple-100 text-purple-800 border-purple-300': pedido.estado === 'CON_EL_REPARTIDOR',
+          'bg-green-100 text-green-800 border-green-300': pedido.estado === 'ENTREGADO'
+        }">
+        {{ pedido.estado }}
+      </span>
+    </div>
+
+    <!-- Información general -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-700 mt-4">
+
+      <div class="p-3 bg-gray-50 rounded-lg border">
+        <p class="text-sm text-gray-500">Total</p>
+        <p class="text-lg font-bold text-green-600">
+          {{ pedido.total | currency:'COP' }}
+        </p>
+      </div>
+
+      <div class="p-3 bg-gray-50 rounded-lg border">
+        <p class="text-sm text-gray-500">Fecha</p>
+        <p class="font-medium">
+          {{ pedido.fechaCreacion | date:'short' }}
+        </p>
+      </div>
+
+      <div class="p-3 bg-gray-50 rounded-lg border">
+        <p class="text-sm text-gray-500">Productos</p>
+        <p class="font-medium">
+          {{ pedido.items?.length || 0 }} items
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Cambiar estado -->
+    <div class="mt-5">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Cambiar estado:</label>
+
+      <div class="flex gap-3 items-center">
+        <select
+  aria-label="Cambiar estado del pedido"
+  (change)="cambiarEstado(pedido.id, $any($event.target).value)"
+  class="border rounded-lg px-3 py-2 bg-gray-50 text-gray-800 shadow-sm"
+  [disabled]="cargandoCambio === pedido.id"
 >
-  No hay pedidos aún.
-</div>
 
-<!-- Lista de pedidos -->
-<div
-  *ngFor="let pedido of pedidos"
-  class="mt-4 p-5 bg-white rounded-xl shadow-md border border-gray-200"
->
 
-  <h4 class="text-lg font-semibold text-blue-700 mb-2">
-    Pedido ID: {{ pedido.id }}
-  </h4>
+          <option disabled selected>Selecciona estado...</option>
 
-  <p class="text-gray-700">
-    <strong class="font-medium">Total:</strong>
-    {{ pedido.total | currency:'COP' }}
-  </p>
+          <option *ngFor="let estado of estados" [value]="estado">
+            {{ estado }}
+          </option>
+        </select>
 
-  <p class="text-gray-700">
-    <strong class="font-medium">Fecha:</strong>
-    {{ pedido.fechaCreacion | date:'short' }}
-  </p>
+        <span *ngIf="cargandoCambio === pedido.id" class="text-sm text-purple-600">
+          Actualizando...
+        </span>
+      </div>
+    </div>
 
-  <p class="text-gray-700 mb-3">
-    <strong class="font-medium">Estado:</strong>
-    <span
-      class="px-2 py-1 rounded-md text-purple text-xs"
-      [ngClass]="{
-        'bg-green-600': pedido.estado === 'ENTREGADO',
-        'bg-yellow-600': pedido.estado === 'EN_CAMINO',
-        'bg-blue-600': pedido.estado === 'PENDIENTE',
-        'bg-red-600': pedido.estado === 'CANCELADO'
-      }"
-    >
-      {{ pedido.estado }}
-    </span>
-  </p>
+    <!-- Items -->
+    <div *ngIf="pedido.items" class="mt-6">
+      <h4 class="text-lg font-semibold text-gray-800 mb-3">🛍️ Productos del pedido</h4>
 
-  <!-- Items -->
-  <div *ngIf="pedido.items" class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-    <h5 class="text-md font-semibold text-gray-800 mb-2">Items:</h5>
+      <div class="space-y-3">
+        <div *ngFor="let item of pedido.items"
+             class="p-3 bg-gray-100 rounded-xl border flex justify-between items-center">
 
-    <ul class="space-y-2">
-      <li
-        *ngFor="let item of pedido.items"
-        class="bg-white border border-gray-200 p-3 rounded-lg shadow-sm text-gray-700"
-      >
-        <span class="font-medium">{{ item.nombre }}</span>
-        — Cant: {{ item.cantidad }}
-        — Subtotal: {{ item.subtotal | currency:'COP' }}
-      </li>
-    </ul>
+          <div>
+            <p class="font-medium text-gray-800">{{ item.nombre }}</p>
+            <p class="text-sm text-gray-600">Cantidad: <strong>{{ item.cantidad }}</strong></p>
+          </div>
+
+          <p class="font-semibold text-gray-800">
+            {{ item.subtotal | currency:'COP' }}
+          </p>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>

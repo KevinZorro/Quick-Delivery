@@ -1,5 +1,14 @@
 package com.ufps.Quick_Delivery.service;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ufps.Quick_Delivery.client.PedidoFeignClient;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
 import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
 import com.ufps.Quick_Delivery.model.Categoria;
@@ -8,18 +17,13 @@ import com.ufps.Quick_Delivery.repository.RestauranteRepository;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
+    private final PedidoFeignClient pedidoFeignClient; // <
 
     @Transactional
     public RestauranteResponseDto crear(@NonNull RestauranteRequestDto requestDto) {
@@ -119,4 +123,9 @@ public class RestauranteService {
                 .imagenUrl(restaurante.getImagenUrl())
                 .build();
     }
+
+    public List<PedidoDto> listarHistorialCompleto(UUID restauranteId) {
+    return pedidoFeignClient.obtenerHistorialCompleto(restauranteId);
+}
+
 }
