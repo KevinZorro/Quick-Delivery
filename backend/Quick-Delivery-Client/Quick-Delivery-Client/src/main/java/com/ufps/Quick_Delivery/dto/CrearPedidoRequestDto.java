@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.DTO;
+package com.ufps.Quick_Delivery.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

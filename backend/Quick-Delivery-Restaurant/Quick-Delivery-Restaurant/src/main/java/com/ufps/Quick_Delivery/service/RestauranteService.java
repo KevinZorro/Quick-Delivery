@@ -1,5 +1,6 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.config.UsuarioClient;
 import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
 import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
 import com.ufps.Quick_Delivery.model.Categoria;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
+    private final UsuarioClient usuarioClient;
 
     @Transactional
     public RestauranteResponseDto crear(@NonNull RestauranteRequestDto requestDto) {
@@ -56,9 +59,21 @@ public class RestauranteService {
 
     @Transactional(readOnly = true)
     public List<RestauranteResponseDto> listarTodos() {
-        return restauranteRepository.findAll().stream()
-                .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
+        try {
+            // Obtener IDs de usuarios activos con rol RESTAURANTE
+            List<UUID> usuariosActivosIds = usuarioClient.obtenerUsuariosActivosPorRol("RESTAURANTE");
+            
+            // Filtrar restaurantes cuyos usuarios estén activos
+            return restauranteRepository.findAll().stream()
+                    .filter(restaurante -> usuariosActivosIds.contains(restaurante.getUsuarioId()))
+                    .map(this::mapToResponseDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            // En caso de error, retornar lista vacía o loguear el error
+            System.err.println("Error al obtener usuarios activos: " + e.getMessage());
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
 
     @Transactional(readOnly = true)

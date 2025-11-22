@@ -82,10 +82,11 @@ public class AuthService {
         return usuarioRepository.existsByCorreo(correo);
     }
 
-    // ⭐ Login actualizado para incluir userId en la respuesta
+    // ⭐ Login actualizado para incluir userId en la respuesta y validar usuarios activos
     public Optional<LoginResponseDto> login(LoginRequestDto dto) {
         try {
             return usuarioRepository.findByCorreo(dto.getCorreo())
+                    .filter(usuario -> usuario.isActivo()) // ⭐ Validar que el usuario esté activo
                     .filter(usuario -> passwordEncoder.matches(dto.getContraseña(), usuario.getContraseña()))
                     .map(usuario -> {
                         String token = jwtService.generateToken(usuario);

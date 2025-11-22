@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import com.ufps.Quick_Delivery.DTO.UsuarioResponse;
+import com.ufps.Quick_Delivery.dto.UsuarioResponse;
 
 import java.util.UUID;
 

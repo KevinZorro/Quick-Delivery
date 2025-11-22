@@ -50,8 +50,21 @@ public class UsuarioService {
         });
     }
 
-    // Eliminar usuario
+    // Eliminar usuario (soft delete)
+    @Transactional
     public void eliminarUsuario(@NonNull UUID id) {
-        usuarioRepository.deleteById(id);
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+        usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+    }
+
+    // Reactivar usuario (opcional para futuro)
+    @Transactional
+    public void reactivarUsuario(@NonNull UUID id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+        usuario.setActivo(true);
+        usuarioRepository.save(usuario);
     }
 }
