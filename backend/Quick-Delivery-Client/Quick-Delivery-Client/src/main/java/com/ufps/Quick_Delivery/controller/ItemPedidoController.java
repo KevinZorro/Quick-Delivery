@@ -1,5 +1,6 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.dto.CarritoRequest;
 import com.ufps.Quick_Delivery.model.ItemPedido;
 import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.service.ItemPedidoService;
@@ -8,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import com.ufps.Quick_Delivery.DTO.CarritoRequest;
 
 import java.util.List;
 import java.util.UUID;

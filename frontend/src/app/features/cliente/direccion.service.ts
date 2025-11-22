@@ -28,7 +28,7 @@ export class DireccionService {
   private getHeaders(): HttpHeaders {
     let token = '';
     if (isPlatformBrowser(this.platformId)) {
-      token = localStorage.getItem('token') || '';
+      token = localStorage.getItem('quick-delivery-token') || '';
     }
     return new HttpHeaders({
       'Content-Type': 'application/json',

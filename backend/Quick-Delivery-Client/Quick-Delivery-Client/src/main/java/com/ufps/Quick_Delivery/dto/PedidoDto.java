@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.DTO;
+package com.ufps.Quick_Delivery.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

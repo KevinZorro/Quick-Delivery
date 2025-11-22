@@ -1,9 +1,8 @@
 package com.ufps.Quick_Delivery.service;
 
 import com.ufps.Quick_Delivery.client.ProductoClient;
-import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
-import com.ufps.Quick_Delivery.DTO.ItemPedidoDto;
-
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;

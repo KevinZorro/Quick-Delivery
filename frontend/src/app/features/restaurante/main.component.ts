@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductoService, ProductoResponse, ProductoRequest } from './producto.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../edge/auth.service';
 
 
 @Component({
@@ -41,7 +42,8 @@ export class RestauranteMainComponent implements OnInit {
   constructor(
     private productoService: ProductoService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
 
@@ -50,7 +52,8 @@ export class RestauranteMainComponent implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       this.restauranteNombre = localStorage.getItem('quick-delivery-userName') || '';
 
-      if (!localStorage.getItem('token')) {
+      // ⭐ Usar AuthService para verificar autenticación (usa la clave correcta del token)
+      if (!this.authService.isLoggedIn()) {
         this.router.navigate(['/login']);
         return;
       }
@@ -241,16 +244,18 @@ export class RestauranteMainComponent implements OnInit {
   }
 
   cerrarSesion(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('quick-delivery-userId');
-    localStorage.removeItem('quick-delivery-userName');
-    localStorage.removeItem('quick-delivery-userRole');
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 
   // ✅ NUEVO: Navegar a reportes
-verReportes(): void {
-  this.router.navigate(['/dashboard-reportes']);
-}
+  verReportes(): void {
+    this.router.navigate(['/dashboard-reportes']);
+  }
+
+  // ✅ NUEVO: Navegar a perfil
+  verPerfil(): void {
+    this.router.navigate(['/restaurante/perfil']);
+  }
 
 }
