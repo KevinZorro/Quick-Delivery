@@ -11,6 +11,14 @@ export interface UserResponse {
   rol: string;
 }
 
+export interface PerfilUsuario {
+  nombre: string;
+  correo: string;
+  telefono: string;
+  fotoPerfil: string | null;
+  rol: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -135,6 +143,36 @@ export class AuthService {
     return this.http.post(
       `${environment.edgeApi}/api/usuarios/mi-cuenta`,
       { contraseña: contrasena },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
+
+  obtenerMiPerfil(): Observable<PerfilUsuario> {
+    const token = this.getToken();
+    if (!token) throw new Error('No hay token disponible');
+
+    return this.http.get<PerfilUsuario>(
+      `${environment.edgeApi}/api/usuarios/mi-perfil`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
+
+  actualizarFotoPerfil(fotoPerfil: string | null): Observable<PerfilUsuario> {
+    const token = this.getToken();
+    if (!token) throw new Error('No hay token disponible');
+
+    return this.http.put<PerfilUsuario>(
+      `${environment.edgeApi}/api/usuarios/mi-perfil/foto`,
+      { fotoPerfil },
       {
         headers: {
           'Content-Type': 'application/json',

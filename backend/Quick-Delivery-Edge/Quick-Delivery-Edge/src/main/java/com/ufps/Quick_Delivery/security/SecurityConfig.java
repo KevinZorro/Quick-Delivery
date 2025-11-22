@@ -30,6 +30,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // ⭐ Endpoint para obtener usuarios activos por rol (para otros servicios)
                         .requestMatchers("/api/usuarios/activos/**").permitAll()
+                        // ⭐ Endpoints de perfil requieren autenticación
+                        .requestMatchers("/api/usuarios/mi-perfil/**").authenticated()
                         // ⭐ Endpoint de eliminación de cuenta requiere autenticación
                         .requestMatchers("/api/usuarios/mi-cuenta").authenticated()
                         // ⭐ Puedes agregar más rutas públicas aquí si las necesitas

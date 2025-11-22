@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ufps.Quick_Delivery.dto.ActualizarFotoPerfilRequest;
 import com.ufps.Quick_Delivery.dto.EliminarCuentaRequest;
+import com.ufps.Quick_Delivery.dto.PerfilResponseDto;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
 import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
@@ -79,6 +81,7 @@ public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioDto dto) {
         datos.setCorreo(dto.getCorreo());
         datos.setTelefono(dto.getTelefono());
         datos.setRol(dto.getRol());
+        datos.setFotoPerfil(dto.getFotoPerfil());
         return usuarioService.actualizarUsuario(id, datos)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -141,6 +144,79 @@ public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioDto dto) {
             return ResponseEntity.ok(userIds);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Obtener perfil del usuario autenticado
+    @GetMapping("/mi-perfil")
+    public ResponseEntity<?> obtenerMiPerfil() {
+        try {
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body("Usuario no autenticado");
+            }
+
+            String userIdStr = authentication.getName();
+            UUID userId;
+            try {
+                userId = UUID.fromString(userIdStr);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(401).body("Token inválido");
+            }
+
+            Usuario usuario = usuarioRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            PerfilResponseDto perfil = PerfilResponseDto.builder()
+                    .nombre(usuario.getNombre())
+                    .correo(usuario.getCorreo())
+                    .telefono(usuario.getTelefono())
+                    .fotoPerfil(usuario.getFotoPerfil())
+                    .rol(usuario.getRol())
+                    .build();
+
+            return ResponseEntity.ok(perfil);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al obtener el perfil: " + e.getMessage());
+        }
+    }
+
+    // Actualizar foto de perfil del usuario autenticado
+    @PutMapping("/mi-perfil/foto")
+    public ResponseEntity<?> actualizarFotoPerfil(@Valid @RequestBody ActualizarFotoPerfilRequest request) {
+        try {
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body("Usuario no autenticado");
+            }
+
+            String userIdStr = authentication.getName();
+            UUID userId;
+            try {
+                userId = UUID.fromString(userIdStr);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(401).body("Token inválido");
+            }
+
+            Usuario usuarioActualizado = usuarioService.actualizarFotoPerfil(userId, request.getFotoPerfil());
+            
+            PerfilResponseDto perfil = PerfilResponseDto.builder()
+                    .nombre(usuarioActualizado.getNombre())
+                    .correo(usuarioActualizado.getCorreo())
+                    .telefono(usuarioActualizado.getTelefono())
+                    .fotoPerfil(usuarioActualizado.getFotoPerfil())
+                    .rol(usuarioActualizado.getRol())
+                    .build();
+
+            return ResponseEntity.ok(perfil);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al actualizar la foto de perfil: " + e.getMessage());
         }
     }
 }
