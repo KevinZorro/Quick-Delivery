@@ -41,7 +41,8 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (!localStorage.getItem('token')) {
+      // ⭐ Usar AuthService para verificar autenticación (usa la clave correcta del token)
+      if (!this.authService.isLoggedIn()) {
         this.router.navigate(['/login']);
         return;
       }
@@ -157,6 +158,10 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
 
   verEntregas(): void {
     this.router.navigate(['/delivery/entregas']);
+  }
+
+  verPerfil(): void {
+    this.router.navigate(['/delivery/perfil']);
   }
 
   cerrarSesion(): void {

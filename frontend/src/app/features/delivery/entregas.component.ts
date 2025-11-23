@@ -57,7 +57,8 @@ export class DeliveryEntregasComponent implements OnInit {
         return;
       }
 
-      if (!localStorage.getItem('token')) {
+      // ⭐ Usar AuthService para verificar autenticación (usa la clave correcta del token)
+      if (!this.authService.isLoggedIn()) {
         this.router.navigate(['/login']);
         return;
       }

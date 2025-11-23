@@ -2,8 +2,11 @@ package com.ufps.Quick_Delivery.controller;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +16,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ufps.Quick_Delivery.dto.ActualizarFotoPerfilRequest;
+import com.ufps.Quick_Delivery.dto.EliminarCuentaRequest;
+import com.ufps.Quick_Delivery.dto.PerfilResponseDto;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
+import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
+import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 import com.ufps.Quick_Delivery.service.UsuarioService;
 
 import jakarta.validation.Valid;
@@ -26,6 +34,8 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // Crear usuario
     @PostMapping("/crear")
@@ -71,6 +81,7 @@ public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioDto dto) {
         datos.setCorreo(dto.getCorreo());
         datos.setTelefono(dto.getTelefono());
         datos.setRol(dto.getRol());
+        datos.setFotoPerfil(dto.getFotoPerfil());
         return usuarioService.actualizarUsuario(id, datos)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -81,5 +92,131 @@ public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioDto dto) {
     public ResponseEntity<Void> eliminarUsuario(@PathVariable UUID id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Eliminar mi propia cuenta (con verificación de contraseña)
+    @PostMapping("/mi-cuenta")
+    public ResponseEntity<?> eliminarMiCuenta(@Valid @RequestBody EliminarCuentaRequest request) {
+        try {
+            // Extraer userId del SecurityContext (establecido por JwtAuthenticationFilter)
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body("Usuario no autenticado");
+            }
+
+            String userIdStr = authentication.getName();
+            UUID userId;
+            try {
+                userId = UUID.fromString(userIdStr);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(401).body("Token inválido");
+            }
+
+            // Obtener el usuario de la base de datos
+            Usuario usuario = usuarioRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Validar la contraseña
+            if (!passwordEncoder.matches(request.getContraseña(), usuario.getContraseña())) {
+                return ResponseEntity.status(401).body("Contraseña incorrecta");
+            }
+
+            // Si la contraseña es correcta, hacer soft delete
+            usuarioService.eliminarUsuario(userId);
+            return ResponseEntity.noContent().build();
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al eliminar la cuenta: " + e.getMessage());
+        }
+    }
+
+    // Obtener IDs de usuarios activos por rol
+    @GetMapping("/activos/rol/{rol}")
+    public ResponseEntity<List<UUID>> obtenerUsuariosActivosPorRol(@PathVariable("rol") String rol) {
+        try {
+            Rol rolEnum = Rol.valueOf(rol.toUpperCase());
+            List<Usuario> usuarios = usuarioRepository.findByRolAndActivoTrue(rolEnum);
+            List<UUID> userIds = usuarios.stream()
+                    .map(Usuario::getId)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(userIds);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Obtener perfil del usuario autenticado
+    @GetMapping("/mi-perfil")
+    public ResponseEntity<?> obtenerMiPerfil() {
+        try {
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body("Usuario no autenticado");
+            }
+
+            String userIdStr = authentication.getName();
+            UUID userId;
+            try {
+                userId = UUID.fromString(userIdStr);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(401).body("Token inválido");
+            }
+
+            Usuario usuario = usuarioRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            PerfilResponseDto perfil = PerfilResponseDto.builder()
+                    .nombre(usuario.getNombre())
+                    .correo(usuario.getCorreo())
+                    .telefono(usuario.getTelefono())
+                    .fotoPerfil(usuario.getFotoPerfil())
+                    .rol(usuario.getRol())
+                    .build();
+
+            return ResponseEntity.ok(perfil);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al obtener el perfil: " + e.getMessage());
+        }
+    }
+
+    // Actualizar foto de perfil del usuario autenticado
+    @PutMapping("/mi-perfil/foto")
+    public ResponseEntity<?> actualizarFotoPerfil(@Valid @RequestBody ActualizarFotoPerfilRequest request) {
+        try {
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body("Usuario no autenticado");
+            }
+
+            String userIdStr = authentication.getName();
+            UUID userId;
+            try {
+                userId = UUID.fromString(userIdStr);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(401).body("Token inválido");
+            }
+
+            Usuario usuarioActualizado = usuarioService.actualizarFotoPerfil(userId, request.getFotoPerfil());
+            
+            PerfilResponseDto perfil = PerfilResponseDto.builder()
+                    .nombre(usuarioActualizado.getNombre())
+                    .correo(usuarioActualizado.getCorreo())
+                    .telefono(usuarioActualizado.getTelefono())
+                    .fotoPerfil(usuarioActualizado.getFotoPerfil())
+                    .rol(usuarioActualizado.getRol())
+                    .build();
+
+            return ResponseEntity.ok(perfil);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al actualizar la foto de perfil: " + e.getMessage());
+        }
     }
 }

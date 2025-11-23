@@ -24,8 +24,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // ⭐ Permitir peticiones OPTIONS (preflight CORS) sin autenticación
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // ⭐ Rutas públicas sin autenticación
                         .requestMatchers("/api/auth/**").permitAll()
+                        // ⭐ Endpoint para obtener usuarios activos por rol (para otros servicios)
+                        .requestMatchers("/api/usuarios/activos/**").permitAll()
+                        // ⭐ Endpoints de perfil requieren autenticación
+                        .requestMatchers("/api/usuarios/mi-perfil/**").authenticated()
+                        // ⭐ Endpoint de eliminación de cuenta requiere autenticación
+                        .requestMatchers("/api/usuarios/mi-cuenta").authenticated()
                         // ⭐ Puedes agregar más rutas públicas aquí si las necesitas
                         .anyRequest().permitAll() // Esto está bien para desarrollo
                 )

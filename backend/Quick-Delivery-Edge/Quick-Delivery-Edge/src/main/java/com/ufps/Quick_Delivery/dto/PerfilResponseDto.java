@@ -1,17 +1,20 @@
 package com.ufps.Quick_Delivery.dto;
 
 import com.ufps.Quick_Delivery.model.Rol;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import java.util.Map;
+import lombok.NoArgsConstructor;
 
 @Data
-public class UsuarioDto {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PerfilResponseDto {
     private String nombre;
-    private String contraseña;
     private String correo;
     private String telefono;
-    private Rol rol;
     private String fotoPerfil;
-
-    private Map<String, Object> detalles;
+    private Rol rol;
 }
+
