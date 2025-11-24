@@ -80,7 +80,7 @@ public class DeliveryUserController {
      */
     @GetMapping("/{clienteId}/contacto")
     public ResponseEntity<ClienteClient.ClienteContactoResponse> obtenerContactoCliente(
-            @PathVariable UUID clienteId) {
+            @PathVariable("clienteId") UUID clienteId) {
         try {
             ClienteClient.ClienteContactoResponse contacto = clienteClient.obtenerContactoCliente(clienteId);
             return ResponseEntity.ok(contacto);
@@ -90,7 +90,7 @@ public class DeliveryUserController {
     }
 
     @GetMapping("cliente/pedido/{pedidoId}")
-    public ResponseEntity<ClientePedido.PedidoResponse> obtenerPedido(@PathVariable UUID pedidoId) {
+    public ResponseEntity<ClientePedido.PedidoResponse> obtenerPedido(@PathVariable("pedidoId") UUID pedidoId) {
 
         ClientePedido.PedidoResponse pedido = clientePedido.obtenerPedidoPorId(pedidoId);
 
@@ -103,7 +103,7 @@ public class DeliveryUserController {
 
     @GetMapping("/direccion/{direccionId}")
     public ResponseEntity<ClienteDireccion.DireccionResponse> obtenerDireccion(
-            @PathVariable UUID direccionId) {
+            @PathVariable("direccionId") UUID direccionId) {
 
         try {
             ClienteDireccion.DireccionResponse direccion = clienteDireccion.obtenerDireccionPorId(direccionId);
@@ -121,7 +121,7 @@ public class DeliveryUserController {
 
     @GetMapping("/producto/{productoId}")
     public ResponseEntity<ClienteProducto.ProductoResponse> obtenerProducto(
-            @PathVariable UUID productoId) {
+            @PathVariable("productoId") UUID productoId) {
 
         try {
             ClienteProducto.ProductoResponse producto = clienteProducto.obtenerProductoPorId(productoId);
@@ -138,7 +138,7 @@ public class DeliveryUserController {
     }
 
     @GetMapping("/pedido/completo/{pedidoId}")
-    public ResponseEntity<PedidoCompletoResponse> obtenerPedidoCompleto(@PathVariable UUID pedidoId) {
+    public ResponseEntity<PedidoCompletoResponse> obtenerPedidoCompleto(@PathVariable("pedidoId") UUID pedidoId) {
         try {
             // 1. Obtener el pedido
             ClientePedido.PedidoResponse pedido = clientePedido.obtenerPedidoPorId(pedidoId);
@@ -179,7 +179,7 @@ public class DeliveryUserController {
      */
     @GetMapping("/historial")
     public ResponseEntity<List<ClientePedido.PedidoResponse>> obtenerHistorialEntregas(
-            @RequestParam UUID usuarioId, // ⭐ Cambio de PathVariable a RequestParam
+            @RequestParam("usuarioId") UUID usuarioId, // ⭐ Cambio de PathVariable a RequestParam
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
