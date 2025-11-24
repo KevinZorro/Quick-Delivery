@@ -33,8 +33,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
         
         String path = request.getRequestURI();
+        String method = request.getMethod();
         
-        // ⭐ PASO 1: Excluir rutas públicas (login y register)
+        // ⭐ PASO 1: Permitir peticiones OPTIONS (preflight CORS) sin validación
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            System.out.println("🔓 Petición OPTIONS (preflight) detectada: " + path + " - saltando validación JWT");
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        // ⭐ PASO 2: Excluir rutas públicas (login y register)
         if (path.startsWith("/api/auth/")) {
             System.out.println("🔓 Ruta pública detectada: " + path + " - saltando validación JWT");
             filterChain.doFilter(request, response);

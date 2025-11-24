@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -55,6 +53,8 @@ public class Usuario {
     @NotNull(message = "El rol es obligatorio")
     @Enumerated(EnumType.STRING)
     private Rol rol;
+
+    private String fotoPerfil;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Direccion> direcciones = new ArrayList<>();

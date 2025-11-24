@@ -2,7 +2,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { environment } from '../../../environments/environment';  // Ajusta ruta si es necesario
+import { environment } from '../../../environments/environment'; // Ajusta ruta si es necesario
 export interface UserResponse {
   token: string;
   userId: string;
@@ -11,8 +11,16 @@ export interface UserResponse {
   rol: string;
 }
 
+export interface PerfilUsuario {
+  nombre: string;
+  correo: string;
+  telefono: string;
+  fotoPerfil: string | null;
+  rol: string;
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private baseUrl = `${environment.edgeApi}/api/auth`;
@@ -21,12 +29,16 @@ export class AuthService {
   private userNameKey = 'quick-delivery-userName';
   private userRoleKey = 'quick-delivery-userRole';
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   login(correo: string, contraseña: string): Observable<UserResponse> {
-    return this.http.post<UserResponse>(`${this.baseUrl}/login`, { correo, contraseña })
+    return this.http
+      .post<UserResponse>(`${this.baseUrl}/login`, { correo, contraseña })
       .pipe(
-        tap(res => {
+        tap((res) => {
           if (isPlatformBrowser(this.platformId)) {
             if (res.token) localStorage.setItem(this.tokenKey, res.token);
             if (res.userId) localStorage.setItem(this.userIdKey, res.userId);
@@ -38,7 +50,7 @@ export class AuthService {
   }
 
   register(data: any): Observable<any> {
-      console.log('Registro usando URL:', this.baseUrl + '/register');
+    console.log('Registro usando URL:', this.baseUrl + '/register');
     return this.http.post(`${this.baseUrl}/register`, data);
   }
 
@@ -95,24 +107,79 @@ export class AuthService {
     return this.getUserRole() === 'REPARTIDOR';
   }
 
-  getCurrentUser(): { userId: string | null; nombre: string | null; rol: string | null } {
+  getCurrentUser(): {
+    userId: string | null;
+    nombre: string | null;
+    rol: string | null;
+  } {
     return {
       userId: this.getUserId(),
       nombre: this.getUserName(),
-      rol: this.getUserRole()
+      rol: this.getUserRole(),
     };
   }
 
-recuperarContrasena(correo: string): Observable<any> {
-  return this.http.post(`${this.baseUrl}/recuperar-contrasena`, { correo });
-}
+  recuperarContrasena(correo: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/recuperar-contrasena`, { correo });
+  }
 
-validarToken(token: string): Observable<any> {
-  return this.http.get(`${this.baseUrl}/reset-password`, { params: { token } });
-}
+  validarToken(token: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reset-password`, {
+      params: { token },
+    });
+  }
 
-cambiarContrasena(token: string, nuevaContrasena: string): Observable<any> {
-  return this.http.post(`${this.baseUrl}/reset-password`, { token, nuevaContrasena });
-}
+  cambiarContrasena(token: string, nuevaContrasena: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/reset-password`, {
+      token,
+      nuevaContrasena,
+    });
+  }
 
+  eliminarMiCuenta(contrasena: string): Observable<any> {
+    const token = this.getToken();
+    if (!token) throw new Error('No hay token disponible');
+  
+    return this.http.post(
+      `${environment.edgeApi}/api/usuarios/mi-cuenta`,
+      { contraseña: contrasena },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
+
+  obtenerMiPerfil(): Observable<PerfilUsuario> {
+    const token = this.getToken();
+    if (!token) throw new Error('No hay token disponible');
+
+    return this.http.get<PerfilUsuario>(
+      `${environment.edgeApi}/api/usuarios/mi-perfil`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
+
+  actualizarFotoPerfil(fotoPerfil: string | null): Observable<PerfilUsuario> {
+    const token = this.getToken();
+    if (!token) throw new Error('No hay token disponible');
+
+    return this.http.put<PerfilUsuario>(
+      `${environment.edgeApi}/api/usuarios/mi-perfil/foto`,
+      { fotoPerfil },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+  }
+  
 }
