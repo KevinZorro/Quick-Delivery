@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.DTO;
+package com.ufps.Quick_Delivery.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
