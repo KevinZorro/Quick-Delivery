@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/delivery")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class DeliveryUserController {
 
     private final DeliveryUserService service;
@@ -164,8 +163,8 @@ public class DeliveryUserController {
      * Ahora devuelve las entregas desde la tabla entregas (con estado real)
      */
     @GetMapping("/historial")
-    public ResponseEntity<List<ClientePedido.PedidoResponse>> obtenerHistorialEntregas(
-            @RequestParam("usuarioId") UUID usuarioId, // ⭐ Cambio de PathVariable a RequestParam
+    public ResponseEntity<List<Map<String, Object>>> obtenerHistorialEntregas(
+            @RequestParam("usuarioId") UUID usuarioId,
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
@@ -181,21 +180,22 @@ public class DeliveryUserController {
 
             // 2. Obtener ENTREGAS (no pedidos) desde la tabla entregas
             List<Entrega> entregas = entregaRepository.findByRepartidorId(deliveryId);
-            
+
             System.out.println("✅ Entregas encontradas: " + entregas.size());
 
             // 3. Para cada entrega, obtener información del pedido
             List<Map<String, Object>> historial = entregas.stream()
                     .map(entrega -> {
                         Map<String, Object> info = new HashMap<>();
-                        
-                        System.out.println("  📦 Procesando entrega ID: " + entrega.getId() + 
-                                         " - Estado: " + entrega.getEstado() + 
-                                         " - Pedido: " + entrega.getPedidoId());
+
+                        System.out.println("  📦 Procesando entrega ID: " + entrega.getId() +
+                                " - Estado: " + entrega.getEstado() +
+                                " - Pedido: " + entrega.getPedidoId());
 
                         try {
                             // Obtener datos del pedido desde el microservicio
-                            ClientePedido.PedidoResponse pedido = clientePedido.obtenerPedidoPorId(entrega.getPedidoId());
+                            ClientePedido.PedidoResponse pedido = clientePedido
+                                    .obtenerPedidoPorId(entrega.getPedidoId());
 
                             // ✅ Construir la respuesta con el estado REAL de la tabla entregas
                             info.put("id", entrega.getId());
@@ -206,7 +206,7 @@ public class DeliveryUserController {
                             info.put("fechaCreacion", entrega.getHoraInicio());
                             info.put("fechaActualizacion", entrega.getHoraFin());
                             info.put("duracionMinutos", entrega.getDuracionMinutos());
-                            
+
                             // Agregar datos del pedido
                             if (pedido != null) {
                                 info.put("clienteId", pedido.getCliente().getId());
@@ -278,4 +278,21 @@ public class DeliveryUserController {
             return ResponseEntity.status(502).build();
         }
     }
+
+    @PostMapping("/{id}/ubicacion")
+public ResponseEntity<Void> actualizarUbicacion(
+    @PathVariable("id") UUID id,
+    @RequestParam("latitud") double latitud,
+    @RequestParam("longitud") double longitud) {
+
+    boolean updated = service.actualizarUbicacion(id, latitud, longitud);
+    if (updated) {
+        return ResponseEntity.ok().build();
+    } else {
+        return ResponseEntity.notFound().build();
+    }
+}
+
+
+
 }

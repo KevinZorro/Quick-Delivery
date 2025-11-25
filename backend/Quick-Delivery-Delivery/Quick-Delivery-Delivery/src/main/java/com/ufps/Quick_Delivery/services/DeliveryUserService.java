@@ -3,9 +3,12 @@ package com.ufps.Quick_Delivery.services;
 import com.ufps.Quick_Delivery.dto.DeliveryUserDto;
 import com.ufps.Quick_Delivery.models.DeliveryUser;
 import com.ufps.Quick_Delivery.repository.DeliveryUserRepository;
+import com.ufps.Quick_Delivery.client.ClienteDireccion;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +20,7 @@ import java.util.stream.Collectors;
 public class DeliveryUserService {
 
     private final DeliveryUserRepository repository;
+    private final ClienteDireccion clienteDireccion;
 
     // Convertir entidad a DTO
     private DeliveryUserDto toDto(DeliveryUser entity) {
@@ -105,5 +109,12 @@ public class DeliveryUserService {
         return repository.findByUsuarioId(usuarioId)
                 .map(DeliveryUser::getId);
     }
+
+    public boolean actualizarUbicacion(UUID usuarioId, double latitud, double longitud) {
+    String coordenadas = latitud + "," + longitud;
+    ResponseEntity<Void> response = clienteDireccion.actualizarUbicacion(usuarioId, coordenadas);
+    return response.getStatusCode().is2xxSuccessful();
+}
+
 
 }
