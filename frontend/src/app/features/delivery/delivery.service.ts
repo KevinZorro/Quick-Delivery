@@ -177,14 +177,13 @@ export class DeliveryService {
   }
 
 
-  actualizarUbicacion(usuarioId: string, latitud: number, longitud: number, rangoKm?: number): Observable<any> {
+actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Observable<any> {
     const headers = this.getAuthHeaders();
     let url = `${this.baseUrl}/${usuarioId}/ubicacion?latitud=${latitud}&longitud=${longitud}`;
-    if (rangoKm) {
-      url += `&rangoKm=${rangoKm}`;
-    }
-    return this.http.patch<any>(url, null, { headers });
-  }
+
+    return this.http.post<any>(url, null, { headers });
+}
+
 
 
   // Notificaciones

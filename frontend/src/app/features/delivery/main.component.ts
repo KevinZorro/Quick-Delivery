@@ -51,9 +51,9 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
       this.obtenerUbicacion();
       
       // Cargar notificaciones cada 10 segundos
-      this.intervaloNotificaciones = setInterval(() => {
+      //this.intervaloNotificaciones = setInterval(() => {
         this.cargarNotificaciones();
-      }, 10000);
+      //}, 10000);
     }
   }
 
@@ -76,7 +76,7 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
         const longitud = position.coords.longitude;
         
         // Actualizar ubicación en el backend
-        this.deliveryService.actualizarUbicacion(this.usuarioId, latitud, longitud, this.rangoKm).subscribe({
+        this.deliveryService.actualizarUbicacion(this.usuarioId, latitud, longitud).subscribe({
           next: () => {
             this.ubicacionActualizada = true;
             this.cargarNotificaciones();
@@ -140,7 +140,7 @@ export class DeliveryMainComponent implements OnInit, OnDestroy {
 
   actualizarRangoKm(): void {
     this.loading = true;
-    this.deliveryService.actualizarUbicacion(this.usuarioId, 0, 0, this.rangoKm).subscribe({
+    this.deliveryService.actualizarUbicacion(this.usuarioId, 0, 0).subscribe({
       next: () => {
         this.successMessage = `Rango actualizado a ${this.rangoKm} km`;
         this.mostrarConfigRango = false;
