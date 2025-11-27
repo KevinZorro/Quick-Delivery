@@ -275,4 +275,15 @@ public class DeliveryUserController {
             return ResponseEntity.status(502).build();
         }
     }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<Map<String, UUID>> getRepartidorIdByUsuarioId(@PathVariable UUID usuarioId) {
+        return service.findDeliveryIdByUsuarioId(usuarioId)
+                .map(id -> {
+                    Map<String, UUID> response = new HashMap<>();
+                    response.put("repartidorId", id);
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
