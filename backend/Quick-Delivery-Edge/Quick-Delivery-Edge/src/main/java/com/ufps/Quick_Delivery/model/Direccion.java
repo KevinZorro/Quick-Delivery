@@ -20,19 +20,19 @@ public class Direccion {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "calle", nullable = false, length = 255)
+    @Column(name = "calle",nullable = true, length = 255)
     private String calle;
 
-    @Column(name = "referencia", length = 255)
+    @Column(name = "referencia",nullable = true, length = 255)
     private String referencia;
 
-    @Column(name = "ciudad", nullable = false, length = 100)
+    @Column(name = "ciudad",nullable = true, length = 100)
     private String ciudad;
 
-    @Column(name = "barrio", nullable = false, length = 100)
+    @Column(name = "barrio",nullable = true, length = 100)
     private String barrio;
 
-    @Column(name = "coordenadas", length = 100)
+    @Column(name = "coordenadas",nullable = true, length = 100)
     private String coordenadas;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,6 +41,6 @@ public class Direccion {
     private Usuario usuario;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_referencia", nullable = false)
+    @Column(name = "tipo_referencia")
     private TipoReferencia tipoReferencia;
 }
