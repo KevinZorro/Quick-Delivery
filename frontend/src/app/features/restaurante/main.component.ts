@@ -4,12 +4,17 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ProductoService, ProductoResponse, ProductoRequest } from './producto.service';
 import { Router } from '@angular/router';
 import { AuthService } from '../edge/auth.service';
+import { PromocionMainComponent } from './promocion-main.component';
 
 
 @Component({
   selector: 'app-restaurante-main',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    PromocionMainComponent // <-- Agrega aquí tu componente de promociones
+  ],
   templateUrl: './main.component.html'
 })
 export class RestauranteMainComponent implements OnInit {
@@ -64,6 +69,13 @@ export class RestauranteMainComponent implements OnInit {
 
     this.inicializarFormulario();
   }
+
+  irAPromociones(): void {
+  const seccion = document.getElementById('seccion-promociones');
+  if (seccion) {
+    seccion.scrollIntoView({ behavior: 'smooth' });
+  }
+}
 
 
   cargarProductos(): void {

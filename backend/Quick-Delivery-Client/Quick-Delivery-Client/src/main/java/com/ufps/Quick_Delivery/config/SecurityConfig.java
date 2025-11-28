@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                  .requestMatchers("/clientes/**").permitAll()
                 .requestMatchers("/api/pedidos/**").permitAll()
-                .anyRequest().authenticated())
+                .anyRequest().permitAll())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .cors(withDefaults())
             .headers(headers -> headers.frameOptions(Customizer.withDefaults()));
