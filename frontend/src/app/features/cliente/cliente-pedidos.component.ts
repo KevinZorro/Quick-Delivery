@@ -120,7 +120,7 @@ export class ClientePedidosComponent implements OnInit {
     this.aplicarFiltros();
   }
 
-  // ✅ NUEVO: Cargar detalles del pedido con información de productos
+  // Cargar detalles del pedido con información de productos
   verDetallePedido(pedidoId: string): void {
     console.log('🔍 Cargando detalles completos del pedido:', pedidoId);
     this.loadingDetalles = true;
@@ -129,11 +129,9 @@ export class ClientePedidosComponent implements OnInit {
       next: (pedidoCompleto) => {
         console.log('✅ Pedido completo recibido:', pedidoCompleto);
         
-        // Si el pedido tiene items, cargar información de productos
         if (pedidoCompleto.items && pedidoCompleto.items.length > 0) {
           this.cargarInformacionProductos(pedidoCompleto);
         } else {
-          // Si no hay items, mostrar el pedido sin productos
           this.mostrarPedidoEnModal(pedidoCompleto);
         }
       },
@@ -141,7 +139,6 @@ export class ClientePedidosComponent implements OnInit {
         console.error('❌ Error al cargar detalles del pedido:', error);
         this.loadingDetalles = false;
         
-        // Fallback: usar el pedido de la lista actual
         const pedido = this.pedidos.find(p => p.id === pedidoId);
         if (pedido) {
           this.mostrarPedidoEnModal(pedido);
@@ -150,15 +147,13 @@ export class ClientePedidosComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Cargar información de productos desde el microservicio
+  // Cargar información de productos desde el microservicio
   private cargarInformacionProductos(pedido: Pedido): void {
     console.log('🛒 Cargando información de productos...');
 
-    // Crear array de observables para cada producto
     const productosObservables = pedido.items!.map(item => 
       this.restauranteService.getProductosByRestaurante(pedido.restauranteId).pipe(
         map(productos => {
-          // Buscar el producto específico por ID
           const producto = productos.find(p => p.id === item.productoId);
           return { item, producto };
         }),
@@ -169,12 +164,10 @@ export class ClientePedidosComponent implements OnInit {
       )
     );
 
-    // Esperar a que todas las peticiones terminen
     forkJoin(productosObservables).subscribe({
       next: (resultados) => {
         console.log('✅ Información de productos cargada:', resultados);
 
-        // Actualizar items con información de productos
         const itemsConProductos = resultados.map(({ item, producto }) => ({
           ...item,
           nombreProducto: producto?.nombre || 'Producto no disponible',
@@ -182,7 +175,6 @@ export class ClientePedidosComponent implements OnInit {
           imagenProducto: producto?.imagenUrl || ''
         }));
 
-        // Crear pedido actualizado con items completos
         const pedidoActualizado = {
           ...pedido,
           items: itemsConProductos
@@ -197,7 +189,7 @@ export class ClientePedidosComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Mostrar pedido en el modal
+  // Mostrar pedido en el modal
   private mostrarPedidoEnModal(pedido: Pedido): void {
     this.pedidoSeleccionado = {
       ...pedido,
@@ -269,7 +261,6 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   formatearPrecio(precio: number): string {
-    // ✅ Verificar si es NaN
     if (isNaN(precio) || precio === null || precio === undefined) {
       return 'Precio no disponible';
     }
@@ -285,5 +276,20 @@ export class ClientePedidosComponent implements OnInit {
     if (!this.pedidoSeleccionado?.items) return 0;
     
     return this.pedidoSeleccionado.items.reduce((total, item) => total + item.cantidad, 0);
+  }
+
+  obtenerCodigoEntrega(pedidoId: string): void {
+    console.log(' Obtener código de entrega para pedido:', pedidoId);
+
+    this.pedidoService.obtenerCodigoEntrega(pedidoId).subscribe({
+      next: (codigo: string) => {
+        console.log(' Código de entrega recibido:', codigo);
+        alert('Tu código de entrega es: ' + codigo);
+      },
+      error: (error) => {
+        console.error('Error al obtener código de entrega:', error);
+        alert('No se pudo obtener el código de entrega. Intenta nuevamente.');
+      }
+    });
   }
 }

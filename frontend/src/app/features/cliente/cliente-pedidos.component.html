@@ -151,6 +151,13 @@
                   class="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-2 rounded-lg hover:from-amber-500 hover:to-orange-600 transition font-medium">
                   Ver detalles
                 </button>
+
+                <button
+                  *ngIf="pedido.estado === 'CON_EL_REPARTIDOR'"
+                  (click)="obtenerCodigoEntrega(pedido.id)"
+                  class="border border-amber-400 text-amber-600 px-6 py-2 rounded-lg hover:bg-amber-50 transition font-medium">
+                  Obtener código
+                </button>
               </div>
             </div>
           </div>

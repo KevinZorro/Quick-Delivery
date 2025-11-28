@@ -1,6 +1,8 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.DTO.AsignarRepartidorResponse;
 import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.client.DeliveryClient;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final DeliveryClient deliveryClient;
 
     @PostMapping("/crear-desde-carrito")
     public ResponseEntity<?> crearPedidoDesdeCarrito(
@@ -154,6 +157,7 @@ public class PedidoController {
         System.out.println("🔍 Endpoint: Listar pedidos del repartidor: " + repartidorId);
         return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
     }
+
     /**
      * Asignar repartidor a un pedido
      * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
@@ -163,12 +167,25 @@ public class PedidoController {
             @PathVariable("id") UUID id,
             @RequestParam("repartidorId") UUID repartidorId) {
         try {
+            // lógica de negocio existente en el servicio
             Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
-            return ResponseEntity.ok(actualizado);
+
+            // llamada a Delivery para iniciar la entrega y obtener el código
+            DeliveryClient.IniciarEntregaRequest req = new DeliveryClient.IniciarEntregaRequest();
+            req.setPedidoId(id);
+            req.setRepartidorId(repartidorId);
+
+            DeliveryClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+
+            AsignarRepartidorResponse resp =
+                    new AsignarRepartidorResponse(actualizado, entrega.getCodigoConfirmacion());
+
+            return ResponseEntity.ok(resp);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body("Error al asignar repartidor: " + e.getMessage());
         }
     }
 
+    
 }

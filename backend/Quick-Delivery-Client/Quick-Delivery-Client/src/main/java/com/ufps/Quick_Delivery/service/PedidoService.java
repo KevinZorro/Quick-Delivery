@@ -1,10 +1,14 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.client.DeliveryClient;
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.DTO.ItemPedidoDto;
-
-import com.ufps.Quick_Delivery.model.*;
+import com.ufps.Quick_Delivery.model.Cliente;
+import com.ufps.Quick_Delivery.model.EstadoPedido;
+import com.ufps.Quick_Delivery.model.ItemPedido;
+import com.ufps.Quick_Delivery.model.MetodoPago;
+import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
@@ -12,8 +16,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +28,7 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoClient productoClient; // ⭐ INYECTAR ProductoClient
+    private final DeliveryClient deliveryClient; // ⭐ Cliente Feign hacia Delivery
 
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
@@ -199,19 +204,26 @@ public class PedidoService {
     public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        
+
         if (pedido.getRepartidorId() != null) {
             throw new RuntimeException("El pedido ya está asignado a otro repartidor");
         }
-        
+
         if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
             throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
         }
-        
+
         pedido.setRepartidorId(repartidorId);
         pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
         System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
-        
+
+        DeliveryClient.IniciarEntregaRequest req = new DeliveryClient.IniciarEntregaRequest();
+        req.setPedidoId(pedidoId);
+        req.setRepartidorId(repartidorId);
+
+        DeliveryClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+        System.out.println("📦 Entrega creada en Delivery. Código: " + entrega.getCodigoConfirmacion());
+
         return pedidoRepository.save(pedido);
     }
 }

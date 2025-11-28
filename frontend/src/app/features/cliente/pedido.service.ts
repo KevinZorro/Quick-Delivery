@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';  // Ajusta la ruta según tu proyecto
-import { PLATFORM_ID, Inject } from '@angular/core';
+import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 export interface ItemPedidoRequest {
@@ -47,7 +47,10 @@ export interface Pedido {
 export class PedidoService {
   private baseUrl = environment.clientesApi + '/api';
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     console.log('Base URL para PedidoService:', this.baseUrl);
   }
 
@@ -142,5 +145,15 @@ export class PedidoService {
       `${this.baseUrl}/pedidos/cliente/${clienteId}`,
       { headers }
     );
+  }
+
+  obtenerCodigoEntrega(pedidoId: string): Observable<string> {
+    const headers = this.getAuthHeaders();
+    const deliveryBaseUrl = environment.deliveryApi + '/api';
+
+    return this.http.get(`${deliveryBaseUrl}/entregas/codigo`, {
+      headers,
+      params: { pedidoId }
+    }) as Observable<string>;
   }
 }
