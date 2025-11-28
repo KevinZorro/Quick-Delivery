@@ -65,7 +65,4 @@ obtenerTotal(): number {
     .reduce((acc, item) => acc + (item.producto.precio * item.cantidad), 0);
 }
 
-
-
-
 }

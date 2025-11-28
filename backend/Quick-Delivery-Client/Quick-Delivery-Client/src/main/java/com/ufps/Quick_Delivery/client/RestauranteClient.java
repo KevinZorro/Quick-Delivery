@@ -12,4 +12,7 @@ import java.util.UUID;
 public interface RestauranteClient {
     @GetMapping("/api/restaurante/{id}")
     RestauranteDto obtenerRestaurantePorId(@PathVariable("id") UUID id);
+
+    @GetMapping("/api/restaurante/usuario/{usuarioId}")
+    RestauranteDto obtenerRestaurantePorUsuarioId(@PathVariable("usuarioId") UUID usuarioId);
 }

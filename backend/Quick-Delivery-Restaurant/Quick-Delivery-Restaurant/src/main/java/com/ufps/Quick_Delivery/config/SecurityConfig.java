@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("api/restaurante/**").permitAll()   // Permitir mock restaurante
                 .requestMatchers("/pedidos/**").permitAll()       // Permitir mock pedidos
                 .requestMatchers("api/productos/**").permitAll()
-                .anyRequest().authenticated()                     // El resto requiere token
+                .anyRequest().permitAll()                     // El resto requiere token
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
