@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';  // Ajusta la ruta según tu proyecto
 import { PLATFORM_ID, Inject } from '@angular/core';
@@ -140,6 +140,30 @@ export class PedidoService {
     const headers = this.getAuthHeaders();
     return this.http.get<Pedido[]>(
       `${this.baseUrl}/pedidos/cliente/${clienteId}`,
+      { headers }
+    );
+  }
+   // ⭐ NUEVO MÉTODO: Calificar Restaurante
+  calificarRestaurante(pedidoId: string, calificacion: number, comentario: string): Observable<void> {
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams()
+      .set('calificacion', calificacion.toString())
+      .set('comentario', comentario);
+
+    return this.http.post<void>(
+      `${this.baseUrl}/pedidos/${pedidoId}/calificar-restaurante`,
+      null, // Body vacío porque usamos query params
+      { headers, params }
+    );
+  }
+
+    // ⭐ Calificar Repartidor
+  calificarRepartidor(pedidoId: string, calificacion: number, comentario: string): Observable<void> {
+    const headers = this.getAuthHeaders();
+    // Se usa endpoint orquestador en Cliente que comunica con Delivery
+    return this.http.post<void>(
+      `${this.baseUrl}/pedidos/${pedidoId}/calificar-repartidor?calificacion=${calificacion}&comentario=${encodeURIComponent(comentario)}`,
+      null,
       { headers }
     );
   }

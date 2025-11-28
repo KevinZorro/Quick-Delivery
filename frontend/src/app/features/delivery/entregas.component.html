@@ -19,6 +19,15 @@
             <span class="hidden sm:inline">Volver</span>
           </button>
 
+          <!-- ✅ NUEVO BOTÓN: Ver Reseñas -->
+          <button
+            (click)="verMisResenas()"
+            class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2 shadow-sm"
+          >
+            <span>⭐</span>
+            <span class="hidden sm:inline">Mis Reseñas</span>
+          </button>
+
           <!-- Cerrar sesión -->
           <button
             (click)="cerrarSesion()"
@@ -380,4 +389,97 @@
       </div>
     </div>
   </div>
+
+  <!-- ✅ NUEVO: MODAL DE RESEÑAS DEL REPARTIDOR -->
+  <div *ngIf="mostrarModalResenas" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-fade-in-up">
+      
+      <!-- Header Modal -->
+      <div class="bg-gradient-to-r from-yellow-500 to-orange-400 p-6 text-white shrink-0">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold flex items-center gap-2">
+              ⭐ Mis Calificaciones
+            </h2>
+            <p class="text-sm opacity-90 mt-1">Lo que dicen los clientes de ti</p>
+          </div>
+          <button (click)="cerrarModalResenas()" class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body Modal -->
+      <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+        
+        <!-- Loading -->
+        <div *ngIf="cargandoResenas" class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+        </div>
+
+        <div *ngIf="!cargandoResenas">
+          
+          <!-- Resumen Promedio -->
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 text-center">
+            <p class="text-gray-500 text-sm font-medium uppercase tracking-wide mb-2">Calificación Promedio</p>
+            <div class="flex items-center justify-center gap-4">
+              <span class="text-5xl font-bold text-gray-800">{{ promedioCalificacion | number:'1.1-1' }}</span>
+              <div class="flex flex-col items-start">
+                <div class="flex text-yellow-400 text-2xl">
+                  <!-- Estrellas del promedio -->
+                  <span *ngFor="let star of getEstrellas(promedioCalificacion)">
+                    {{ star ? '★' : '☆' }}
+                  </span>
+                </div>
+                <span class="text-sm text-gray-400 mt-1">{{ misResenas.length }} opiniones recibidas</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de Comentarios -->
+          <h3 class="text-lg font-bold text-gray-800 mb-4 px-1">Historial de Opiniones</h3>
+          
+          <div class="space-y-4">
+            <div *ngFor="let opinion of misResenas" class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex justify-between items-start mb-2">
+                <div class="flex text-yellow-400 text-lg">
+                  <span *ngFor="let star of getEstrellas(opinion.calificacion)">
+                    {{ star ? '★' : '☆' }}
+                  </span>
+                </div>
+                <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                  {{ opinion.fechaCreacion | date:'mediumDate' }}
+                </span>
+              </div>
+              
+              <p class="text-gray-700 italic mb-3">"{{ opinion.comentario }}"</p>
+              
+              <div class="text-xs text-gray-400 border-t pt-2 flex justify-between">
+                <span>Pedido: #{{ opinion.pedidoId.substring(0,8) }}</span>
+                <span>Cliente: #{{ opinion.clienteId.substring(0,8) }}</span>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="misResenas.length === 0" class="text-center py-10 text-gray-500">
+              <span class="text-4xl block mb-2">😶</span>
+              <p>Aún no tienes reseñas registradas.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-4 bg-white border-t shrink-0">
+        <button (click)="cerrarModalResenas()" class="w-full py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </div>

@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RestauranteService, Restaurante, Producto } from './restaurante.service';
-import { CarritoService } from './carrito.service';
+import { RestauranteService, Restaurante, Producto, ResenaRestaurante } from './restaurante.service';
+import { CarritoService, CarritoItem } from './carrito.service';
 import { PedidoService } from './pedido.service';
 import { DireccionService, Direccion } from './direccion.service';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,7 @@ import { PromocionResponse } from '../restaurante/promocion.types';
 export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   restaurante: Restaurante | null = null;
   productos: Producto[] = [];
+  resenas: ResenaRestaurante[] = []; // ⭐ Lista de reseñas
   loading = true;
   errorMessage: string | null = null;
   restauranteId: string = '';
@@ -47,6 +48,8 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   metodoPagoSeleccionado: string = '';
   preferenciasPago: string = '';
   direccionSeleccionada: string = '';
+  
+  // Direcciones
   estadoPedido = 'INICIADO';
 
   // Lista de direcciones
@@ -59,6 +62,7 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
     private restauranteService: RestauranteService,
     private carritoService: CarritoService,
     private pedidoService: PedidoService,
+    private direccionService: DireccionService
     private direccionService: DireccionService,
     private promocionService: PromocionService
   ) {}
@@ -150,6 +154,7 @@ validarCodigo() {
   }
 
   loadRestauranteData(): void {
+    // 1. Cargar info restaurante
     this.restauranteService.getRestauranteById(this.restauranteId).subscribe({
       next: (data) => {
         this.restaurante = data;
@@ -159,6 +164,7 @@ validarCodigo() {
       }
     });
 
+    // 2. Cargar productos
     this.restauranteService.getProductosByRestaurante(this.restauranteId).subscribe({
       next: (data) => {
         this.productos = data;
@@ -168,6 +174,17 @@ validarCodigo() {
       error: () => {
         this.errorMessage = 'Error al cargar productos';
         this.loading = false;
+      }
+    });
+
+    // ⭐ 3. Cargar reseñas
+    this.restauranteService.getResenasRestaurante(this.restauranteId).subscribe({
+      next: (data) => {
+        this.resenas = data;
+        console.log('💬 Reseñas cargadas:', this.resenas.length);
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar reseñas:', err);
       }
     });
   }
@@ -198,6 +215,12 @@ validarCodigo() {
     this.abrirPanelCarrito();
   }
 
+  // ⭐ Helper para estrellas en HTML
+  getEstrellas(calificacion: number): number[] {
+    return Array(5).fill(0).map((_, i) => i + 1 <= calificacion ? 1 : 0);
+  }
+
+  // ========== CARRITO ==========
   abrirPanelCarrito(): void {
     this.cargarCarrito();
     this.panelCarritoAbierto = true;
@@ -254,7 +277,6 @@ validarCodigo() {
       alert('Debes agregar al menos una dirección de entrega antes de hacer un pedido');
       return;
     }
-
     this.modalPagoAbierto = true;
     this.metodoPagoSeleccionado = '';
     this.preferenciasPago = '';
@@ -275,12 +297,10 @@ validarCodigo() {
       alert('Por favor selecciona una dirección de entrega');
       return;
     }
-
     if (!this.metodoPagoSeleccionado) {
       alert('Por favor selecciona un método de pago');
       return;
     }
-
     if (this.carritoItems.length === 0) {
       alert('El carrito está vacío');
       return;
@@ -308,6 +328,8 @@ validarCodigo() {
       total: this.totalFinal
     };
 
+    this.pedidoService.crearPedidoDesdeCarrito(pedidoRequest).subscribe({
+      next: (pedidoCreado) => {
     console.log('═══════════════════════════════════════');
     console.log('📦 ENVIANDO PEDIDO COMPLETO AL BACKEND');
     console.log('═══════════════════════════════════════');
@@ -326,12 +348,12 @@ validarCodigo() {
         console.log('✅ PEDIDO CREADO EXITOSAMENTE:', pedidoCreado);
 
         alert(`¡Pago realizado con éxito! Tu pedido ${pedidoCreado.id}`);
-
         this.vaciarCarrito();
         this.modalPagoAbierto = false;
         this.panelCarritoAbierto = false;
       },
       error: (error) => {
+        let mensajeError = 'Error al procesar el pago';
         console.error('❌ ERROR AL CREAR PEDIDO:', error);
 
         let mensajeError = 'Error al procesar el pago';
@@ -340,7 +362,7 @@ validarCodigo() {
           mensajeError = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
           this.router.navigate(['/login']);
         } else if (error.status === 0) {
-          mensajeError = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+          mensajeError = 'No se pudo conectar con el servidor.';
         } else if (error.error && typeof error.error === 'string') {
           mensajeError = error.error;
         }

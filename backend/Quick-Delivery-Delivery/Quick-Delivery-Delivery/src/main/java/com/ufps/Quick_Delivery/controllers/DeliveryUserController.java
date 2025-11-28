@@ -279,6 +279,16 @@ public class DeliveryUserController {
         }
     }
 
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<Map<String, UUID>> getRepartidorIdByUsuarioId(@PathVariable UUID usuarioId) {
+        return service.findDeliveryIdByUsuarioId(usuarioId)
+                .map(id -> {
+                    Map<String, UUID> response = new HashMap<>();
+                    response.put("repartidorId", id);
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
     @PostMapping("/{id}/ubicacion")
 public ResponseEntity<Void> actualizarUbicacion(
     @PathVariable("id") UUID id,
