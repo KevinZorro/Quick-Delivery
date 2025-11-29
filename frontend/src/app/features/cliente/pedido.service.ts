@@ -147,13 +147,15 @@ export class PedidoService {
     );
   }
 
+  // ✅ Nuevo: obtener código de entrega desde el microservicio Delivery (texto plano)
   obtenerCodigoEntrega(pedidoId: string): Observable<string> {
     const headers = this.getAuthHeaders();
     const deliveryBaseUrl = environment.deliveryApi + '/api';
 
     return this.http.get(`${deliveryBaseUrl}/entregas/codigo`, {
       headers,
-      params: { pedidoId }
-    }) as Observable<string>;
+      params: { pedidoId },
+      responseType: 'text'  // 👈 importante para leer "ENT-XXXXXX" como string
+    });
   }
 }
