@@ -1,7 +1,7 @@
 package com.ufps.Quick_Delivery.controller;
 
-import com.ufps.Quick_Delivery.DTO.AsignarRepartidorResponse;
-import com.ufps.Quick_Delivery.DTO.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.dto.AsignarRepartidorResponse;
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.client.DeliveryClient;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
