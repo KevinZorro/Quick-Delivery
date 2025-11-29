@@ -27,6 +27,7 @@ public class PedidoService {
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
         System.out.println("🔍 Iniciando creación de pedido...");
+        System.out.println(request.getTotal() + " " + request.getItems().size());
 
         // 1. Buscar el cliente
         Cliente cliente = clienteRepository.findByUsuarioId(request.getClienteId())
@@ -55,7 +56,7 @@ public class PedidoService {
         }
 
         // 3. Calcular el total y crear los items
-        int totalPedido = 0;
+        int totalPedido = request.getTotal();
 
         System.out.println("📦 Procesando " + request.getItems().size() + " items...");
 
@@ -88,7 +89,7 @@ public class PedidoService {
                         + item.getSubtotal());
 
                 pedido.addItem(item);
-                totalPedido += item.getSubtotal();
+                totalPedido = request.getTotal();
 
             } catch (Exception e) {
                 System.err.println("❌ Error al procesar producto " + itemDto.getProductoId() + ": " + e.getMessage());
