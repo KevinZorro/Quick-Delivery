@@ -6,7 +6,7 @@ import { CarritoService, CarritoItem } from './carrito.service';
 import { PedidoService } from './pedido.service';
 import { DireccionService, Direccion } from './direccion.service';
 import { FormsModule } from '@angular/forms';
-//hola
+
 
 @Component({
   selector: 'app-restaurante-detalle',
