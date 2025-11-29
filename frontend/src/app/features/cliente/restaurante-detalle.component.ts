@@ -6,7 +6,6 @@ import { CarritoService, CarritoItem } from './carrito.service';
 import { PedidoService } from './pedido.service';
 import { DireccionService, Direccion } from './direccion.service';
 import { FormsModule } from '@angular/forms';
-import { CarritoItem } from './carrito.service';
 import { PromocionService } from '../restaurante/promocion.service';
 import { PromocionResponse } from '../restaurante/promocion.types';
 
@@ -48,7 +47,7 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   metodoPagoSeleccionado: string = '';
   preferenciasPago: string = '';
   direccionSeleccionada: string = '';
-  
+
   // Direcciones
   estadoPedido = 'INICIADO';
 
@@ -62,7 +61,6 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
     private restauranteService: RestauranteService,
     private carritoService: CarritoService,
     private pedidoService: PedidoService,
-    private direccionService: DireccionService
     private direccionService: DireccionService,
     private promocionService: PromocionService
   ) {}
@@ -91,63 +89,61 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
     return undefined;
   }
 
-validarCodigo() {
-  if (!this.codigoPromocion || this.codigoPromocion.trim() === '') {
-    this.mensajeCodigo = null;
-    this.descuento = 0;
-    this.mensajeCodigoValido = false;
-    this.actualizarTotal();
-    return;
-  }
-
-  const clienteId = localStorage.getItem('quick-delivery-userId');
-  if (!clienteId) {
-    this.mensajeCodigo = 'Debes iniciar sesión para usar un código de promoción';
-    this.mensajeCodigoValido = false;
-    this.descuento = 0;
-    this.actualizarTotal();
-    return;
-  }
-
-  // ⭐ Obtener restauranteId de la URL o localStorage
-  if (!this.restauranteId) {
-    this.mensajeCodigo = 'Error: No se pudo identificar el restaurante';
-    return;
-  }
-
-  this.validandoCodigo = true;
-  this.mensajeCodigo = null;
-
-  this.promocionService.validarCodigo(
-    encodeURIComponent(this.codigoPromocion.trim()),
-    clienteId,
-    this.restauranteId  // ⭐ Enviar restauranteId
-  ).subscribe({
-    next: (promo: PromocionResponse) => {
-      this.descuento = promo.descuentoPorcentaje;
-      this.mensajeCodigo = `Código válido. Descuento: ${this.descuento}%`;
-      this.mensajeCodigoValido = true;
+  validarCodigo() {
+    if (!this.codigoPromocion || this.codigoPromocion.trim() === '') {
+      this.mensajeCodigo = null;
+      this.descuento = 0;
+      this.mensajeCodigoValido = false;
       this.actualizarTotal();
-      this.validandoCodigo = false;
-    },
-    error: (err) => {
-      console.error('Error al validar código:', err);
-      if (err.error && err.error.error) {
-        this.mensajeCodigo = err.error.error;
-      } else if (err.status === 400) {
-        this.mensajeCodigo = 'Código inválido, expirado, ya usado o no válido para este restaurante';
-      } else {
-        this.mensajeCodigo = 'Error al validar el código. Intenta nuevamente';
-      }
+      return;
+    }
+
+    const clienteId = localStorage.getItem('quick-delivery-userId');
+    if (!clienteId) {
+      this.mensajeCodigo = 'Debes iniciar sesión para usar un código de promoción';
       this.mensajeCodigoValido = false;
       this.descuento = 0;
       this.actualizarTotal();
-      this.validandoCodigo = false;
+      return;
     }
-  });
-}
 
+    // ⭐ Obtener restauranteId de la URL o localStorage
+    if (!this.restauranteId) {
+      this.mensajeCodigo = 'Error: No se pudo identificar el restaurante';
+      return;
+    }
 
+    this.validandoCodigo = true;
+    this.mensajeCodigo = null;
+
+    this.promocionService.validarCodigo(
+      encodeURIComponent(this.codigoPromocion.trim()),
+      clienteId,
+      this.restauranteId  // ⭐ Enviar restauranteId
+    ).subscribe({
+      next: (promo: PromocionResponse) => {
+        this.descuento = promo.descuentoPorcentaje;
+        this.mensajeCodigo = `Código válido. Descuento: ${this.descuento}%`;
+        this.mensajeCodigoValido = true;
+        this.actualizarTotal();
+        this.validandoCodigo = false;
+      },
+      error: (err) => {
+        console.error('Error al validar código:', err);
+        if (err.error && err.error.error) {
+          this.mensajeCodigo = err.error.error;
+        } else if (err.status === 400) {
+          this.mensajeCodigo = 'Código inválido, expirado, ya usado o no válido para este restaurante';
+        } else {
+          this.mensajeCodigo = 'Error al validar el código. Intenta nuevamente';
+        }
+        this.mensajeCodigoValido = false;
+        this.descuento = 0;
+        this.actualizarTotal();
+        this.validandoCodigo = false;
+      }
+    });
+  }
 
   actualizarTotal() {
     this.totalFinal = this.totalBase * (1 - this.descuento / 100);
@@ -196,7 +192,6 @@ validarCodigo() {
       next: (direcciones) => {
         this.direcciones = direcciones;
         this.cargandoDirecciones = false;
-
         console.log('📍 Direcciones cargadas:', direcciones.length);
       },
       error: (err) => {
@@ -328,8 +323,7 @@ validarCodigo() {
       total: this.totalFinal
     };
 
-    this.pedidoService.crearPedidoDesdeCarrito(pedidoRequest).subscribe({
-      next: (pedidoCreado) => {
+    // Logs movidos antes de la llamada para verificar los datos
     console.log('═══════════════════════════════════════');
     console.log('📦 ENVIANDO PEDIDO COMPLETO AL BACKEND');
     console.log('═══════════════════════════════════════');
@@ -343,6 +337,7 @@ validarCodigo() {
     console.log('💰 Total con descuento:', pedidoRequest.total);
     console.log('═══════════════════════════════════════');
 
+    // Llamada única al servicio (se eliminó la duplicación externa)
     this.pedidoService.crearPedidoDesdeCarrito(pedidoRequest).subscribe({
       next: (pedidoCreado) => {
         console.log('✅ PEDIDO CREADO EXITOSAMENTE:', pedidoCreado);
@@ -355,8 +350,6 @@ validarCodigo() {
       error: (error) => {
         let mensajeError = 'Error al procesar el pago';
         console.error('❌ ERROR AL CREAR PEDIDO:', error);
-
-        let mensajeError = 'Error al procesar el pago';
 
         if (error.status === 401 || error.status === 403) {
           mensajeError = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
