@@ -20,6 +20,15 @@
             <span class="hidden sm:inline">Reportes</span>
           </button>
 
+          <button
+  (click)="irAPromociones()"
+  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+>
+  <span>🎁</span>
+  <span class="hidden sm:inline">Promociones</span>
+</button>
+
+
           <!-- Direcciones -->
           <button
             (click)="verDirecciones()"
@@ -27,6 +36,15 @@
           >
             <span>📍</span>
             <span class="hidden sm:inline">Mis Direcciones</span>
+          </button>
+
+          <!-- Perfil -->
+          <button
+            (click)="verPerfil()"
+            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+          >
+            <span>👤</span>
+            <span class="hidden sm:inline">Mi Perfil</span>
           </button>
 
           <!-- Cerrar sesión -->
@@ -42,7 +60,7 @@
   </header>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
+  
     <!-- Mensajes de éxito/error -->
     <div *ngIf="successMessage" class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
       <p class="text-amber-800 text-sm font-medium">{{ successMessage }}</p>
@@ -163,6 +181,14 @@
         </div>
       </div>
     </div>
+
+          <!-- Sección de promociones -->
+<section id="seccion-promociones" class="mb-10">
+  <h2 class="text-xl font-bold mb-4 text-amber-700 flex items-center gap-2">
+    <span>🎁</span> Promociones del restaurante
+  </h2>
+  <app-promocion-main></app-promocion-main>
+</section>
 
     <!-- Sin productos -->
     <div *ngIf="!loading && productosFiltrados.length === 0" class="text-center py-12">

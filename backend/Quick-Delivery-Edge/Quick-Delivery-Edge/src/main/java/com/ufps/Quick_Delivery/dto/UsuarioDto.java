@@ -11,6 +11,7 @@ public class UsuarioDto {
     private String correo;
     private String telefono;
     private Rol rol;
+    private String fotoPerfil;
 
     private Map<String, Object> detalles;
 }

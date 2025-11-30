@@ -2,6 +2,7 @@ package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.dto.UsuarioResponse;
 import com.ufps.Quick_Delivery.client.UsuarioClient;
+import com.ufps.Quick_Delivery.dto.UsuarioResponse;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.service.ClienteService;
 import lombok.RequiredArgsConstructor;

@@ -2,21 +2,21 @@
   <div class="container mx-auto px-4 py-3 flex justify-between items-center">
     <!-- Logo / Nombre de la aplicación -->
     <div class="flex items-center space-x-4">
-      <h1 class="text-2xl font-bold cursor-pointer" routerLink="/main">
+      <h1 class="text-2xl font-bold cursor-pointer" routerLink="/delivery/main">
         QuickDelivery
       </h1>
     </div>
 
     <!-- Navegación -->
     <nav class="hidden md:flex space-x-6">
-      <a routerLink="/main" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
+      <a routerLink="/delivery/main" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
         Inicio
       </a>
-      <a routerLink="/cliente/direcciones" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
-        Mis Direcciones
+      <a routerLink="/delivery/entregas" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
+        Mis Entregas
       </a>
-      <a routerLink="/cliente/pedidos" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
-        Mis Pedidos
+      <a routerLink="/delivery/perfil" routerLinkActive="border-b-2 border-white" class="hover:text-gray-200 transition pb-1">
+        Mi Perfil
       </a>
     </nav>
 
@@ -33,14 +33,14 @@
 
   <!-- Navegación móvil -->
   <nav class="md:hidden bg-teal-700 px-4 py-2 space-y-2">
-    <a routerLink="/main" routerLinkActive="bg-teal-800" class="block py-2 px-3 rounded hover:bg-teal-800 transition">
+    <a routerLink="/delivery/main" routerLinkActive="bg-teal-800" class="block py-2 px-3 rounded hover:bg-teal-800 transition">
       Inicio
     </a>
-    <a routerLink="/cliente/direcciones" routerLinkActive="bg-teal-800" class="block py-2 px-3 rounded hover:bg-teal-800 transition">
-      Mis Direcciones
+    <a routerLink="/delivery/entregas" routerLinkActive="bg-teal-800" class="block py-2 px-3 rounded hover:bg-teal-800 transition">
+      Mis Entregas
     </a>
-    <a routerLink="/cliente/pedidos" routerLinkActive="bg-teal-800" class="block py-2 px-3 rounded hover:bg-teal-800 transition">
-      Mis Pedidos
+    <a routerLink="/delivery/perfil" routerLinkActive="bg-teal-800" class="block py-2 px-3 rounded hover:bg-teal-800 transition">
+      Mi Perfil
     </a>
   </nav>
 </header>

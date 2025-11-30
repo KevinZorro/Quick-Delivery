@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PedidoService, Pedido, ItemPedido } from './pedido.service';
-import { RestauranteService, Producto } from './restaurante.service';
+import { PedidoService, Pedido } from './pedido.service';
+import { RestauranteService } from './restaurante.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from './header.component';
@@ -28,9 +28,23 @@ export class ClientePedidosComponent implements OnInit {
   filtroEstado: string = 'TODOS';
   ordenamiento: string = 'reciente';
 
+  // Modal Detalles
   mostrarModal: boolean = false;
   pedidoSeleccionado: PedidoDetallado | null = null;
   loadingDetalles: boolean = false;
+
+  // ⭐ Modal Calificación
+  mostrarModalCalificacion: boolean = false;
+  pedidoParaCalificar: PedidoDetallado | null = null;
+  
+  // Estado calificación
+  calificacionRestaurante: number = 0;
+  comentarioRestaurante: string = '';
+  enviandoCalificacionRestaurante: boolean = false;
+  
+  calificacionRepartidor: number = 0;
+  comentarioRepartidor: string = '';
+  enviandoCalificacionRepartidor: boolean = false;
 
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
@@ -53,34 +67,28 @@ export class ClientePedidosComponent implements OnInit {
   cargarPedidos(): void {
     this.loading = true;
     this.error = '';
-
     const usuarioId = localStorage.getItem('quick-delivery-userId');
     
     if (!usuarioId) {
-      this.error = 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.';
+      this.error = 'No se pudo identificar al usuario.';
       this.loading = false;
       return;
     }
 
-    console.log('📦 Cargando pedidos del usuario:', usuarioId);
-
     this.pedidoService.listarPedidosUsuario(usuarioId).subscribe({
       next: (pedidos) => {
-        console.log('✅ Pedidos recibidos:', pedidos);
-        
         this.pedidos = pedidos.map(pedido => ({
           ...pedido,
           fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
           estadoColor: this.obtenerColorEstado(pedido.estado),
           estadoTexto: this.obtenerTextoEstado(pedido.estado)
         }));
-
         this.aplicarFiltros();
         this.loading = false;
       },
       error: (error) => {
-        console.error('❌ Error al cargar pedidos:', error);
-        this.error = 'No se pudieron cargar los pedidos. Por favor, intenta de nuevo.';
+        console.error('Error al cargar pedidos:', error);
+        this.error = 'No se pudieron cargar los pedidos.';
         this.loading = false;
       }
     });
@@ -90,19 +98,13 @@ export class ClientePedidosComponent implements OnInit {
     if (this.filtroEstado === 'TODOS') {
       this.pedidosFiltrados = [...this.pedidos];
     } else {
-      this.pedidosFiltrados = this.pedidos.filter(
-        pedido => pedido.estado === this.filtroEstado
-      );
+      this.pedidosFiltrados = this.pedidos.filter(p => p.estado === this.filtroEstado);
     }
 
     if (this.ordenamiento === 'reciente') {
-      this.pedidosFiltrados.sort((a, b) => 
-        new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
-      );
+      this.pedidosFiltrados.sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime());
     } else if (this.ordenamiento === 'antiguo') {
-      this.pedidosFiltrados.sort((a, b) => 
-        new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()
-      );
+      this.pedidosFiltrados.sort((a, b) => new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime());
     } else if (this.ordenamiento === 'mayor') {
       this.pedidosFiltrados.sort((a, b) => b.total - a.total);
     } else if (this.ordenamiento === 'menor') {
@@ -110,86 +112,47 @@ export class ClientePedidosComponent implements OnInit {
     }
   }
 
-  cambiarFiltroEstado(estado: string): void {
-    this.filtroEstado = estado;
-    this.aplicarFiltros();
-  }
-
-  cambiarOrdenamiento(orden: string): void {
-    this.ordenamiento = orden;
-    this.aplicarFiltros();
-  }
-
-  // Cargar detalles del pedido con información de productos
+  cambiarFiltroEstado(estado: string): void { this.filtroEstado = estado; this.aplicarFiltros(); }
+  cambiarOrdenamiento(orden: string): void { this.ordenamiento = orden; this.aplicarFiltros(); }
+  
   verDetallePedido(pedidoId: string): void {
-    console.log('🔍 Cargando detalles completos del pedido:', pedidoId);
     this.loadingDetalles = true;
-    
     this.pedidoService.obtenerPedido(pedidoId).subscribe({
       next: (pedidoCompleto) => {
-        console.log('✅ Pedido completo recibido:', pedidoCompleto);
-        
         if (pedidoCompleto.items && pedidoCompleto.items.length > 0) {
           this.cargarInformacionProductos(pedidoCompleto);
         } else {
           this.mostrarPedidoEnModal(pedidoCompleto);
         }
       },
-      error: (error) => {
-        console.error('❌ Error al cargar detalles del pedido:', error);
-        this.loadingDetalles = false;
-        
+      error: () => {
         const pedido = this.pedidos.find(p => p.id === pedidoId);
-        if (pedido) {
-          this.mostrarPedidoEnModal(pedido);
-        }
+        if (pedido) this.mostrarPedidoEnModal(pedido);
       }
     });
   }
 
-  // Cargar información de productos desde el microservicio
   private cargarInformacionProductos(pedido: Pedido): void {
-    console.log('🛒 Cargando información de productos...');
-
-    const productosObservables = pedido.items!.map(item => 
+    const observables = pedido.items!.map(item => 
       this.restauranteService.getProductosByRestaurante(pedido.restauranteId).pipe(
-        map(productos => {
-          const producto = productos.find(p => p.id === item.productoId);
-          return { item, producto };
-        }),
-        catchError(error => {
-          console.error(`❌ Error al cargar producto ${item.productoId}:`, error);
-          return of({ item, producto: null });
-        })
+        map(productos => ({ item, producto: productos.find(p => p.id === item.productoId) })),
+        catchError(() => of({ item, producto: null }))
       )
     );
 
-    forkJoin(productosObservables).subscribe({
+    forkJoin(observables).subscribe({
       next: (resultados) => {
-        console.log('✅ Información de productos cargada:', resultados);
-
         const itemsConProductos = resultados.map(({ item, producto }) => ({
           ...item,
           nombreProducto: producto?.nombre || 'Producto no disponible',
           descripcionProducto: producto?.descripcion || '',
           imagenProducto: producto?.imagenUrl || ''
         }));
-
-        const pedidoActualizado = {
-          ...pedido,
-          items: itemsConProductos
-        };
-
-        this.mostrarPedidoEnModal(pedidoActualizado);
-      },
-      error: (error) => {
-        console.error('❌ Error al cargar información de productos:', error);
-        this.mostrarPedidoEnModal(pedido);
+        this.mostrarPedidoEnModal({ ...pedido, items: itemsConProductos });
       }
     });
   }
 
-  // Mostrar pedido en el modal
   private mostrarPedidoEnModal(pedido: Pedido): void {
     this.pedidoSeleccionado = {
       ...pedido,
@@ -197,85 +160,113 @@ export class ClientePedidosComponent implements OnInit {
       estadoColor: this.obtenerColorEstado(pedido.estado),
       estadoTexto: this.obtenerTextoEstado(pedido.estado)
     };
-    
     this.mostrarModal = true;
     this.loadingDetalles = false;
     document.body.style.overflow = 'hidden';
-    
-    console.log('✅ Modal abierto con pedido:', this.pedidoSeleccionado);
   }
 
   cerrarModal(): void {
-    console.log('❌ Cerrando modal');
     this.mostrarModal = false;
     this.pedidoSeleccionado = null;
-    this.loadingDetalles = false;
     document.body.style.overflow = 'auto';
   }
 
+  // ⭐ LÓGICA DE CALIFICACIÓN
+  abrirModalCalificacion(pedido: PedidoDetallado, event: Event): void {
+    event.stopPropagation();
+    this.pedidoParaCalificar = pedido;
+    this.calificacionRestaurante = 0;
+    this.comentarioRestaurante = '';
+    this.calificacionRepartidor = 0;
+    this.comentarioRepartidor = '';
+    this.mostrarModalCalificacion = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarModalCalificacion(): void {
+    this.mostrarModalCalificacion = false;
+    this.pedidoParaCalificar = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  setCalificacionRestaurante(stars: number): void { this.calificacionRestaurante = stars; }
+  setCalificacionRepartidor(stars: number): void { this.calificacionRepartidor = stars; }
+
+  enviarCalificacionRestaurante(): void {
+    if (!this.pedidoParaCalificar || this.calificacionRestaurante === 0) return;
+    this.enviandoCalificacionRestaurante = true;
+    
+    this.pedidoService.calificarRestaurante(
+      this.pedidoParaCalificar.id,
+      this.calificacionRestaurante,
+      this.comentarioRestaurante
+    ).subscribe({
+      next: () => {
+        alert('¡Gracias por calificar al restaurante!');
+        this.calificacionRestaurante = 0;
+        this.comentarioRestaurante = '';
+        this.enviandoCalificacionRestaurante = false;
+        this.checkCerrarModal();
+      },
+      error: (err) => {
+        console.error('Error calificar restaurante:', err);
+        alert('Error al enviar calificación del restaurante.');
+        this.enviandoCalificacionRestaurante = false;
+      }
+    });
+  }
+
+  enviarCalificacionRepartidor(): void {
+    if (!this.pedidoParaCalificar || this.calificacionRepartidor === 0) return;
+    this.enviandoCalificacionRepartidor = true;
+
+    this.pedidoService.calificarRepartidor(
+      this.pedidoParaCalificar.id,
+      this.calificacionRepartidor,
+      this.comentarioRepartidor
+    ).subscribe({
+      next: () => {
+        alert('¡Gracias por calificar al repartidor!');
+        this.calificacionRepartidor = 0;
+        this.comentarioRepartidor = '';
+        this.enviandoCalificacionRepartidor = false;
+        this.checkCerrarModal();
+      },
+      error: (err) => {
+        console.error('Error calificar repartidor:', err);
+        alert('Error al enviar calificación del repartidor.');
+        this.enviandoCalificacionRepartidor = false;
+      }
+    });
+  }
+
+  // Cerrar modal si ya se enviaron ambas o el usuario quiere salir
+  checkCerrarModal(): void {
+    // Opcional: lógica para cerrar automático si ambas calificaciones están en 0 (reseteadas tras envío)
+  }
+
   formatearFecha(fecha: string): string {
-    const date = new Date(fecha);
-    const opciones: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-    return date.toLocaleDateString('es-ES', opciones);
+    return new Date(fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
-
-  formatearId(id: string | undefined | null): string {
-    if (!id) return 'N/A';
-    return id.substring(0, 8);
-  }
-
+  formatearId(id: string | undefined): string { return id ? id.substring(0, 8) : 'N/A'; }
+  
   obtenerColorEstado(estado: string): string {
-    const colores: { [key: string]: string } = {
-      'INICIADO': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      'EN_COCINA': 'bg-blue-100 text-blue-800 border-blue-300',
-      'CON_EL_REPARTIDOR': 'bg-purple-100 text-purple-800 border-purple-300',
-      'ENTREGADO': 'bg-green-100 text-green-800 border-green-300'
-    };
-    return colores[estado] || 'bg-gray-100 text-gray-800 border-gray-300';
+    const colores: any = { 'INICIADO': 'bg-yellow-100 text-yellow-800 border-yellow-300', 'EN_COCINA': 'bg-blue-100 text-blue-800 border-blue-300', 'CON_EL_REPARTIDOR': 'bg-purple-100 text-purple-800 border-purple-300', 'ENTREGADO': 'bg-green-100 text-green-800 border-green-300' };
+    return colores[estado] || 'bg-gray-100 text-gray-800';
   }
 
   obtenerTextoEstado(estado: string): string {
-    const textos: { [key: string]: string } = {
-      'INICIADO': 'Iniciado',
-      'EN_COCINA': 'En cocina',
-      'CON_EL_REPARTIDOR': 'Con el repartidor',
-      'ENTREGADO': 'Entregado'
-    };
+    const textos: any = { 'INICIADO': 'Iniciado', 'EN_COCINA': 'En cocina', 'CON_EL_REPARTIDOR': 'Con repartidor', 'ENTREGADO': 'Entregado' };
     return textos[estado] || estado;
   }
 
   obtenerIconoEstado(estado: string): string {
-    const iconos: { [key: string]: string } = {
-      'INICIADO': '⏳',
-      'EN_COCINA': '👨‍🍳',
-      'CON_EL_REPARTIDOR': '🚴',
-      'ENTREGADO': '✅'
-    };
+    const iconos: any = { 'INICIADO': '⏳', 'EN_COCINA': '👨‍🍳', 'CON_EL_REPARTIDOR': '🚴', 'ENTREGADO': '✅' };
     return iconos[estado] || '📦';
   }
 
   formatearPrecio(precio: number): string {
-    if (isNaN(precio) || precio === null || precio === undefined) {
-      return 'Precio no disponible';
-    }
-    
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(precio);
-  }
-
-  calcularCantidadTotal(): number {
-    if (!this.pedidoSeleccionado?.items) return 0;
-    
-    return this.pedidoSeleccionado.items.reduce((total, item) => total + item.cantidad, 0);
+    return isNaN(precio) ? 'N/A' : new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(precio);
   }
 
   obtenerCodigoEntrega(pedidoId: string): void {

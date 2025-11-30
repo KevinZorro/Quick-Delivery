@@ -2,7 +2,7 @@ import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DeliveryService, Entrega, PedidoCompleto } from './delivery.service';
+import { DeliveryService, Entrega, PedidoCompleto, ResenasResponse, Opinion } from './delivery.service';
 import { AuthService } from '../edge/auth.service';
 
 @Component({
@@ -12,26 +12,36 @@ import { AuthService } from '../edge/auth.service';
   templateUrl: './entregas.component.html'
 })
 export class DeliveryEntregasComponent implements OnInit {
+  // Entregas
   entregas: Entrega[] = [];
   entregasEnCamino: Entrega[] = [];
   entregasEntregadas: Entrega[] = [];
   filtroActual: 'en_camino' | 'entregadas' = 'en_camino';
   
+  // Estados de carga y mensajes
   loading = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
   userName: string = '';
   usuarioId: string = '';
   
+  // Detalles del pedido
   pedidoSeleccionado: PedidoCompleto | null = null;
   mostrarDetalles = false;
   cargandoDetalles = false;
 
-  // Propiedades para el modal de confirmación
+  // Modal de confirmación de entrega
   mostrarModalConfirmacion = false;
   entregaSeleccionada: Entrega | null = null;
   codigoEntrega = '';
   comentariosEntrega = '';
+
+  // ✅ NUEVO: Modal y datos de Reseñas
+  mostrarModalResenas = false;
+  cargandoResenas = false;
+  misResenas: Opinion[] = [];
+  promedioCalificacion = 0;
+  repartidorId: string | null = null;
 
   // Constantes para usar en el template HTML
   readonly ESTADO_EN_CAMINO_RECOGIDO = 'EN_CAMINO_RECOGIDO';
@@ -57,7 +67,7 @@ export class DeliveryEntregasComponent implements OnInit {
         return;
       }
 
-      if (!localStorage.getItem('token')) {
+      if (!this.authService.isLoggedIn()) {
         this.router.navigate(['/login']);
         return;
       }
@@ -65,6 +75,10 @@ export class DeliveryEntregasComponent implements OnInit {
       this.cargarEntregas();
     }
   }
+
+  // ==========================================
+  // LÓGICA DE ENTREGAS
+  // ==========================================
 
   cargarEntregas(): void {
     this.loading = true;
@@ -80,7 +94,6 @@ export class DeliveryEntregasComponent implements OnInit {
         this.entregasEnCamino = entregas.filter(e => e.estado !== 'ENTREGADO');
         this.entregasEntregadas = entregas.filter(e => e.estado === 'ENTREGADO');
         
-        // Log para debug
         console.log(`📊 Entregadas: ${this.entregasEntregadas.length}, En camino: ${this.entregasEnCamino.length}`);
         
         this.loading = false;
@@ -93,17 +106,14 @@ export class DeliveryEntregasComponent implements OnInit {
     });
   }
 
-  // Cambiar filtro
   cambiarFiltro(filtro: 'en_camino' | 'entregadas'): void {
     this.filtroActual = filtro;
   }
 
-  // Obtener entregas según filtro
   get entregasFiltradas(): Entrega[] {
     return this.filtroActual === 'en_camino' ? this.entregasEnCamino : this.entregasEntregadas;
   }
 
-  // Calcular duración de entrega
   calcularDuracion(entrega: Entrega): string {
     if (entrega.estado !== 'ENTREGADO' || !entrega.fechaCreacion || !entrega.fechaActualizacion) {
       return 'N/A';
@@ -122,6 +132,10 @@ export class DeliveryEntregasComponent implements OnInit {
       return `${horas}h ${minutosRestantes}min`;
     }
   }
+
+  // ==========================================
+  // LÓGICA DE DETALLES
+  // ==========================================
 
   verDetallesPedido(pedidoId: string): void {
     this.cargandoDetalles = true;
@@ -146,10 +160,12 @@ export class DeliveryEntregasComponent implements OnInit {
     this.pedidoSeleccionado = null;
   }
 
+  // ==========================================
+  // LÓGICA DE CONFIRMACIÓN DE ENTREGA
+  // ==========================================
+
   abrirModalConfirmarEntrega(entrega: Entrega): void {
     console.log('🔵 Abriendo modal para entrega:', entrega);
-    console.log('🔵 pedidoId:', entrega.pedidoId);
-    console.log('🔵 estado actual:', entrega.estado);
     
     this.entregaSeleccionada = entrega;
     this.mostrarModalConfirmacion = true;
@@ -179,7 +195,6 @@ export class DeliveryEntregasComponent implements OnInit {
     const pedidoId = this.entregaSeleccionada.pedidoId || this.entregaSeleccionada.id;
 
     if (!pedidoId) {
-      console.error('❌ Entrega sin pedidoId:', this.entregaSeleccionada);
       this.errorMessage = 'Error: No se encontró el ID del pedido';
       return;
     }
@@ -187,45 +202,30 @@ export class DeliveryEntregasComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
-    console.log('🟢 Confirmando entrega con datos:', {
-      pedidoId: pedidoId,
-      codigoEntrega: this.codigoEntrega.trim(),
-      comentarios: this.comentariosEntrega.trim() || '',
-      entregaActual: this.entregaSeleccionada
-    });
-
     this.deliveryService.confirmarEntrega({
       pedidoId: pedidoId,
       codigoEntrega: this.codigoEntrega.trim(),
       comentarios: this.comentariosEntrega.trim() || ''
     }).subscribe({
       next: (entregaActualizada) => {
-        console.log('✅ Entrega confirmada exitosamente:', entregaActualizada);
-        console.log('✅ Estado recibido del backend:', entregaActualizada.estado);
+        console.log('✅ Entrega confirmada exitosamente');
         
         // Actualizar el estado local inmediatamente
         const index = this.entregas.findIndex(e => e.id === this.entregaSeleccionada?.id);
         if (index !== -1) {
           this.entregas[index].estado = 'ENTREGADO';
           this.entregas[index].fechaActualizacion = new Date().toISOString();
-          console.log('✅ Estado actualizado localmente para entrega:', this.entregas[index].id);
         }
 
         // Re-filtrar las entregas
         this.entregasEnCamino = this.entregas.filter(e => e.estado !== 'ENTREGADO');
         this.entregasEntregadas = this.entregas.filter(e => e.estado === 'ENTREGADO');
         
-        console.log(`📊 Después de confirmar - Entregadas: ${this.entregasEntregadas.length}, En camino: ${this.entregasEnCamino.length}`);
-
-        // Cambiar al filtro de entregadas automáticamente
         this.filtroActual = 'entregadas';
-
         this.successMessage = 'Entrega confirmada correctamente';
         this.cerrarModalConfirmacion();
         
-        // Recargar desde el servidor después de un breve delay
         setTimeout(() => {
-          console.log('🔄 Recargando entregas desde el servidor...');
           this.cargarEntregas();
           this.successMessage = null;
         }, 1000);
@@ -266,6 +266,61 @@ export class DeliveryEntregasComponent implements OnInit {
       }
     });
   }
+
+  // ==========================================
+  // ✅ NUEVA LÓGICA: RESEÑAS (CALIFICACIONES)
+  // ==========================================
+
+  verMisResenas(): void {
+    this.mostrarModalResenas = true;
+    this.cargandoResenas = true;
+    this.errorMessage = null;
+
+    // Si ya tenemos el repartidorId, consultamos directamente
+    if (this.repartidorId) {
+      this.cargarDatosResenas(this.repartidorId);
+    } else {
+      // Si no, primero obtenemos el ID del repartidor
+      this.deliveryService.obtenerRepartidorId(this.usuarioId).subscribe({
+        next: (response) => {
+          this.repartidorId = response.repartidorId;
+          this.cargarDatosResenas(this.repartidorId);
+        },
+        error: (err) => {
+          console.error('Error al obtener ID repartidor', err);
+          this.errorMessage = 'No se pudo identificar tu perfil de repartidor.';
+          this.cargandoResenas = false;
+        }
+      });
+    }
+  }
+
+  private cargarDatosResenas(id: string): void {
+    this.deliveryService.obtenerResenas(id).subscribe({
+      next: (data: ResenasResponse) => {
+        this.misResenas = data.opiniones;
+        this.promedioCalificacion = data.promedio;
+        this.cargandoResenas = false;
+      },
+      error: (err) => {
+        console.error('Error cargando reseñas', err);
+        this.errorMessage = 'Error al cargar tus calificaciones.';
+        this.cargandoResenas = false;
+      }
+    });
+  }
+
+  cerrarModalResenas(): void {
+    this.mostrarModalResenas = false;
+  }
+
+  getEstrellas(calificacion: number): number[] {
+    return Array(5).fill(0).map((_, i) => i < calificacion ? 1 : 0);
+  }
+
+  // ==========================================
+  // UTILIDADES
+  // ==========================================
 
   getEstadoTexto(estado: string): string {
     const estados: { [key: string]: string } = {

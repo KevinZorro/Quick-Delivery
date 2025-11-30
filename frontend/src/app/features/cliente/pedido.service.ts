@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';  // Ajusta la ruta según tu proyecto
 import { PLATFORM_ID } from '@angular/core';
@@ -145,17 +145,5 @@ export class PedidoService {
       `${this.baseUrl}/pedidos/cliente/${clienteId}`,
       { headers }
     );
-  }
-
-  // ✅ Nuevo: obtener código de entrega desde el microservicio Delivery (texto plano)
-  obtenerCodigoEntrega(pedidoId: string): Observable<string> {
-    const headers = this.getAuthHeaders();
-    const deliveryBaseUrl = environment.deliveryApi + '/api';
-
-    return this.http.get(`${deliveryBaseUrl}/entregas/codigo`, {
-      headers,
-      params: { pedidoId },
-      responseType: 'text'  // 👈 importante para leer "ENT-XXXXXX" como string
-    });
   }
 }

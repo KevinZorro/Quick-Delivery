@@ -3,6 +3,7 @@ package com.ufps.Quick_Delivery.controller;
 import com.ufps.Quick_Delivery.dto.AsignarRepartidorResponse;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.client.DeliveryClient;
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
@@ -39,6 +40,7 @@ public class PedidoController {
             System.out.println("🍽️ Restaurante ID: " + request.getRestauranteId());
             System.out.println("💳 Método de pago: " + request.getMetodoPago());
             System.out.println("📝 Cantidad de items: " + request.getItems().size());
+            System.out.println("📍 Total: " + request.getTotal());
             System.out.println("═══════════════════════════════════════");
 
             // Validaciones
@@ -54,7 +56,6 @@ public class PedidoController {
 
             // Crear el pedido
             Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
-
             System.out.println("✅ Pedido creado exitosamente!");
             System.out.println("🆔 ID del pedido: " + pedidoCreado.getId());
             System.out.println("💰 Total: " + pedidoCreado.getTotal());
