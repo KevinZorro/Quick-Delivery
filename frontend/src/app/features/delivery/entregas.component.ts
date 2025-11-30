@@ -17,14 +17,20 @@ export class DeliveryEntregasComponent implements OnInit {
   entregasEnCamino: Entrega[] = [];
   entregasEntregadas: Entrega[] = [];
   filtroActual: 'en_camino' | 'entregadas' = 'en_camino';
-  
+
+  // Filtros de fecha (se usan para ambos estados)
+  filtroFechaDesde: string = '';
+  filtroFechaHasta: string = '';
+  // Orden solo para ENTREGADAS
+  ordenEntregadas: 'mas_rapidas' | 'mas_lentas' | 'reciente' | 'antiguo' = 'reciente';
+
   // Estados de carga y mensajes
   loading = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
   userName: string = '';
   usuarioId: string = '';
-  
+
   // Detalles del pedido
   pedidoSeleccionado: PedidoCompleto | null = null;
   mostrarDetalles = false;
@@ -36,14 +42,14 @@ export class DeliveryEntregasComponent implements OnInit {
   codigoEntrega = '';
   comentariosEntrega = '';
 
-  // ✅ NUEVO: Modal y datos de Reseñas
+  // Reseñas
   mostrarModalResenas = false;
   cargandoResenas = false;
   misResenas: Opinion[] = [];
   promedioCalificacion = 0;
   repartidorId: string | null = null;
 
-  // Constantes para usar en el template HTML
+  // Constantes estados
   readonly ESTADO_EN_CAMINO_RECOGIDO = 'EN_CAMINO_RECOGIDO';
   readonly ESTADO_EN_CAMINO_HACIA_CLIENTE = 'EN_CAMINO_HACIA_CLIENTE';
   readonly ESTADO_ENTREGADO = 'ENTREGADO';
@@ -62,12 +68,7 @@ export class DeliveryEntregasComponent implements OnInit {
       this.usuarioId = this.authService.getUserId() || '';
       this.userName = this.authService.getUserName() || '';
 
-      if (!this.authService.isRepartidor()) {
-        this.router.navigate(['/login']);
-        return;
-      }
-
-      if (!this.authService.isLoggedIn()) {
+      if (!this.authService.isRepartidor() || !this.authService.isLoggedIn()) {
         this.router.navigate(['/login']);
         return;
       }
@@ -76,9 +77,9 @@ export class DeliveryEntregasComponent implements OnInit {
     }
   }
 
-  // ==========================================
-  // LÓGICA DE ENTREGAS
-  // ==========================================
+  // =========================
+  // ENTREGAS
+  // =========================
 
   cargarEntregas(): void {
     this.loading = true;
@@ -87,15 +88,12 @@ export class DeliveryEntregasComponent implements OnInit {
     this.deliveryService.listarEntregas(this.usuarioId).subscribe({
       next: (entregas) => {
         console.log('✅ Entregas cargadas desde servidor:', entregas);
-        
+
         this.entregas = entregas;
-        
-        // Separar por estado
         this.entregasEnCamino = entregas.filter(e => e.estado !== 'ENTREGADO');
         this.entregasEntregadas = entregas.filter(e => e.estado === 'ENTREGADO');
-        
+
         console.log(`📊 Entregadas: ${this.entregasEntregadas.length}, En camino: ${this.entregasEnCamino.length}`);
-        
         this.loading = false;
       },
       error: (err) => {
@@ -111,7 +109,61 @@ export class DeliveryEntregasComponent implements OnInit {
   }
 
   get entregasFiltradas(): Entrega[] {
-    return this.filtroActual === 'en_camino' ? this.entregasEnCamino : this.entregasEntregadas;
+    let lista = this.filtroActual === 'en_camino'
+      ? [...this.entregasEnCamino]
+      : [...this.entregasEntregadas];
+
+    // Filtro de fechas para ambos estados
+    if (this.filtroFechaDesde || this.filtroFechaHasta) {
+      const desde = this.filtroFechaDesde ? new Date(this.filtroFechaDesde) : null;
+      const hasta = this.filtroFechaHasta ? new Date(this.filtroFechaHasta) : null;
+
+      lista = lista.filter(e => {
+        // Para en_camino usamos fechaCreacion, para entregadas fechaActualizacion
+        const fechaBase = this.filtroActual === 'en_camino'
+          ? e.fechaCreacion
+          : (e.fechaActualizacion || e.fechaCreacion);
+
+        if (!fechaBase) return false;
+        const fecha = new Date(fechaBase);
+
+        if (desde && fecha < desde) {
+          return false;
+        }
+        if (hasta) {
+          const hastaInclusive = new Date(hasta);
+          hastaInclusive.setDate(hastaInclusive.getDate() + 1);
+          if (fecha >= hastaInclusive) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // Orden extra solo para ENTREGADAS (por fecha o tiempo de entrega)
+    if (this.filtroActual === 'entregadas') {
+      lista.sort((a, b) => {
+        const fa = a.fechaActualizacion ? new Date(a.fechaActualizacion).getTime() : 0;
+        const fb = b.fechaActualizacion ? new Date(b.fechaActualizacion).getTime() : 0;
+
+        const durA = this.getDuracionMinutos(a);
+        const durB = this.getDuracionMinutos(b);
+
+        if (this.ordenEntregadas === 'reciente') {
+          return fb - fa;
+        } else if (this.ordenEntregadas === 'antiguo') {
+          return fa - fb;
+        } else if (this.ordenEntregadas === 'mas_rapidas') {
+          return durA - durB;
+        } else if (this.ordenEntregadas === 'mas_lentas') {
+          return durB - durA;
+        }
+        return 0;
+      });
+    }
+
+    return lista;
   }
 
   calcularDuracion(entrega: Entrega): string {
@@ -133,9 +185,19 @@ export class DeliveryEntregasComponent implements OnInit {
     }
   }
 
-  // ==========================================
-  // LÓGICA DE DETALLES
-  // ==========================================
+  private getDuracionMinutos(entrega: Entrega): number {
+    if (entrega.estado !== 'ENTREGADO' || !entrega.fechaCreacion || !entrega.fechaActualizacion) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    const inicio = new Date(entrega.fechaCreacion);
+    const fin = new Date(entrega.fechaActualizacion);
+    const diferenciaMs = fin.getTime() - inicio.getTime();
+    return Math.max(0, Math.floor(diferenciaMs / 60000));
+  }
+
+  // =========================
+  // DETALLES
+  // =========================
 
   verDetallesPedido(pedidoId: string): void {
     this.cargandoDetalles = true;
@@ -160,13 +222,13 @@ export class DeliveryEntregasComponent implements OnInit {
     this.pedidoSeleccionado = null;
   }
 
-  // ==========================================
-  // LÓGICA DE CONFIRMACIÓN DE ENTREGA
-  // ==========================================
+  // =========================
+  // CONFIRMAR ENTREGA
+  // =========================
 
   abrirModalConfirmarEntrega(entrega: Entrega): void {
     console.log('🔵 Abriendo modal para entrega:', entrega);
-    
+
     this.entregaSeleccionada = entrega;
     this.mostrarModalConfirmacion = true;
     this.codigoEntrega = '';
@@ -207,29 +269,27 @@ export class DeliveryEntregasComponent implements OnInit {
       codigoEntrega: this.codigoEntrega.trim(),
       comentarios: this.comentariosEntrega.trim() || ''
     }).subscribe({
-      next: (entregaActualizada) => {
+      next: () => {
         console.log('✅ Entrega confirmada exitosamente');
-        
-        // Actualizar el estado local inmediatamente
+
         const index = this.entregas.findIndex(e => e.id === this.entregaSeleccionada?.id);
         if (index !== -1) {
           this.entregas[index].estado = 'ENTREGADO';
           this.entregas[index].fechaActualizacion = new Date().toISOString();
         }
 
-        // Re-filtrar las entregas
         this.entregasEnCamino = this.entregas.filter(e => e.estado !== 'ENTREGADO');
         this.entregasEntregadas = this.entregas.filter(e => e.estado === 'ENTREGADO');
-        
+
         this.filtroActual = 'entregadas';
         this.successMessage = 'Entrega confirmada correctamente';
         this.cerrarModalConfirmacion();
-        
+
         setTimeout(() => {
           this.cargarEntregas();
           this.successMessage = null;
         }, 1000);
-        
+
         this.loading = false;
       },
       error: (err: any) => {
@@ -241,7 +301,7 @@ export class DeliveryEntregasComponent implements OnInit {
   }
 
   actualizarEstado(
-    entrega: Entrega, 
+    entrega: Entrega,
     nuevoEstado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO' | 'CON_EL_REPARTIDOR'
   ): void {
     if (!confirm(`¿Cambiar estado a ${this.getEstadoTexto(nuevoEstado)}?`)) {
@@ -267,20 +327,18 @@ export class DeliveryEntregasComponent implements OnInit {
     });
   }
 
-  // ==========================================
-  // ✅ NUEVA LÓGICA: RESEÑAS (CALIFICACIONES)
-  // ==========================================
+  // =========================
+  // RESEÑAS
+  // =========================
 
   verMisResenas(): void {
     this.mostrarModalResenas = true;
     this.cargandoResenas = true;
     this.errorMessage = null;
 
-    // Si ya tenemos el repartidorId, consultamos directamente
     if (this.repartidorId) {
       this.cargarDatosResenas(this.repartidorId);
     } else {
-      // Si no, primero obtenemos el ID del repartidor
       this.deliveryService.obtenerRepartidorId(this.usuarioId).subscribe({
         next: (response) => {
           this.repartidorId = response.repartidorId;
@@ -315,12 +373,13 @@ export class DeliveryEntregasComponent implements OnInit {
   }
 
   getEstrellas(calificacion: number): number[] {
-    return Array(5).fill(0).map((_, i) => i < calificacion ? 1 : 0);
+    const entero = Math.round(calificacion);
+    return Array(5).fill(0).map((_, i) => i < entero ? 1 : 0);
   }
 
-  // ==========================================
+  // =========================
   // UTILIDADES
-  // ==========================================
+  // =========================
 
   getEstadoTexto(estado: string): string {
     const estados: { [key: string]: string } = {
