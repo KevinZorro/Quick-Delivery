@@ -188,5 +188,18 @@ public class PedidoController {
         }
     }
 
-    
+/**
+ * Confirmar entrega de un pedido
+ * PATCH /api/pedidos/{id}/confirmar-entrega
+ */
+@PatchMapping("/{id}/confirmar-entrega")
+public ResponseEntity<?> confirmarEntregaPedido(@PathVariable("id") UUID id) {
+    try {
+        Pedido actualizado = pedidoService.confirmarEntregaPedido(id);
+        return ResponseEntity.ok(actualizado);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest()
+                .body("Error al confirmar entrega: " + e.getMessage());
+    }
+}
 }

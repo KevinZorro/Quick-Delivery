@@ -21,6 +21,7 @@ interface PedidoDetallado extends Pedido {
   templateUrl: './cliente-pedidos.component.html'
 })
 export class ClientePedidosComponent implements OnInit {
+
   pedidos: PedidoDetallado[] = [];
   pedidosFiltrados: PedidoDetallado[] = [];
   loading: boolean = true;
@@ -33,15 +34,15 @@ export class ClientePedidosComponent implements OnInit {
   pedidoSeleccionado: PedidoDetallado | null = null;
   loadingDetalles: boolean = false;
 
-  // ⭐ Modal Calificación
+  // Modal Calificación
   mostrarModalCalificacion: boolean = false;
   pedidoParaCalificar: PedidoDetallado | null = null;
-  
+
   // Estado calificación
   calificacionRestaurante: number = 0;
   comentarioRestaurante: string = '';
   enviandoCalificacionRestaurante: boolean = false;
-  
+
   calificacionRepartidor: number = 0;
   comentarioRepartidor: string = '';
   enviandoCalificacionRepartidor: boolean = false;
@@ -69,7 +70,7 @@ export class ClientePedidosComponent implements OnInit {
     this.error = '';
 
     const usuarioId = localStorage.getItem('quick-delivery-userId');
-    
+
     if (!usuarioId) {
       this.error = 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.';
       this.loading = false;
@@ -81,7 +82,7 @@ export class ClientePedidosComponent implements OnInit {
     this.pedidoService.listarPedidosUsuario(usuarioId).subscribe({
       next: (pedidos) => {
         console.log('✅ Pedidos recibidos:', pedidos);
-        
+
         this.pedidos = pedidos.map(pedido => ({
           ...pedido,
           fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
@@ -110,11 +111,11 @@ export class ClientePedidosComponent implements OnInit {
     }
 
     if (this.ordenamiento === 'reciente') {
-      this.pedidosFiltrados.sort((a, b) => 
+      this.pedidosFiltrados.sort((a, b) =>
         new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
       );
     } else if (this.ordenamiento === 'antiguo') {
-      this.pedidosFiltrados.sort((a, b) => 
+      this.pedidosFiltrados.sort((a, b) =>
         new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()
       );
     } else if (this.ordenamiento === 'mayor') {
@@ -138,11 +139,11 @@ export class ClientePedidosComponent implements OnInit {
   verDetallePedido(pedidoId: string): void {
     console.log('🔍 Cargando detalles completos del pedido:', pedidoId);
     this.loadingDetalles = true;
-    
+
     this.pedidoService.obtenerPedido(pedidoId).subscribe({
       next: (pedidoCompleto) => {
         console.log('✅ Pedido completo recibido:', pedidoCompleto);
-        
+
         if (pedidoCompleto.items && pedidoCompleto.items.length > 0) {
           this.cargarInformacionProductos(pedidoCompleto);
         } else {
@@ -152,7 +153,7 @@ export class ClientePedidosComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar detalles del pedido:', error);
         this.loadingDetalles = false;
-        
+
         const pedido = this.pedidos.find(p => p.id === pedidoId);
         if (pedido) {
           this.mostrarPedidoEnModal(pedido);
@@ -165,7 +166,7 @@ export class ClientePedidosComponent implements OnInit {
   private cargarInformacionProductos(pedido: Pedido): void {
     console.log('🛒 Cargando información de productos...');
 
-    const productosObservables = pedido.items!.map(item => 
+    const productosObservables = pedido.items!.map(item =>
       this.restauranteService.getProductosByRestaurante(pedido.restauranteId).pipe(
         map(productos => {
           const producto = productos.find(p => p.id === item.productoId);
@@ -211,11 +212,11 @@ export class ClientePedidosComponent implements OnInit {
       estadoColor: this.obtenerColorEstado(pedido.estado),
       estadoTexto: this.obtenerTextoEstado(pedido.estado)
     };
-    
+
     this.mostrarModal = true;
     this.loadingDetalles = false;
     document.body.style.overflow = 'hidden';
-    
+
     console.log('✅ Modal abierto con pedido:', this.pedidoSeleccionado);
   }
 
@@ -245,18 +246,18 @@ export class ClientePedidosComponent implements OnInit {
     document.body.style.overflow = 'auto';
   }
 
-  setCalificacionRestaurante(stars: number): void { 
-    this.calificacionRestaurante = stars; 
+  setCalificacionRestaurante(stars: number): void {
+    this.calificacionRestaurante = stars;
   }
 
-  setCalificacionRepartidor(stars: number): void { 
-    this.calificacionRepartidor = stars; 
+  setCalificacionRepartidor(stars: number): void {
+    this.calificacionRepartidor = stars;
   }
 
   enviarCalificacionRestaurante(): void {
     if (!this.pedidoParaCalificar || this.calificacionRestaurante === 0) return;
     this.enviandoCalificacionRestaurante = true;
-    
+
     this.pedidoService.calificarRestaurante(
       this.pedidoParaCalificar.id,
       this.calificacionRestaurante,
@@ -301,12 +302,51 @@ export class ClientePedidosComponent implements OnInit {
     });
   }
 
-  // Aquí puedes añadir lógica para cerrar automático el modal si ya se enviaron ambas calificaciones
   checkCerrarModal(): void {
-    // Ejemplo: si ya no hay nada que calificar, cerrar modal
-    if (this.calificacionRestaurante === 0 && this.calificacionRepartidor === 0) {
-      // this.cerrarModalCalificacion();
-    }
+    // Aquí puedes cerrar el modal automáticamente si quieres
+  }
+
+  // 🔑 Obtener código y confirmar entrega
+  obtenerCodigoEntrega(pedidoId: string): void {
+    console.log('🔑 Obtener código de entrega para pedido:', pedidoId);
+
+    this.pedidoService.obtenerCodigoEntrega(pedidoId).subscribe({
+      next: (codigo: string) => {
+        console.log('✅ Código de entrega recibido:', codigo);
+
+        const confirmar = confirm(
+          `Código de entrega: ${codigo}\n\n¿Quieres confirmar la entrega de este pedido?`
+        );
+
+        if (!confirmar) {
+          return;
+        }
+
+        // Confirmar entrega en el backend Cliente
+        this.pedidoService.confirmarEntregaPedido(pedidoId).subscribe({
+          next: (pedidoActualizado) => {
+            alert('Entrega confirmada. ¡Gracias!');
+
+            // Actualizar el pedido en la lista
+            const idx = this.pedidos.findIndex(p => p.id === pedidoId);
+            if (idx !== -1) {
+              this.pedidos[idx].estado = pedidoActualizado.estado;
+              this.pedidos[idx].estadoColor = this.obtenerColorEstado(pedidoActualizado.estado);
+              this.pedidos[idx].estadoTexto = this.obtenerTextoEstado(pedidoActualizado.estado);
+            }
+            this.aplicarFiltros();
+          },
+          error: (err) => {
+            console.error('❌ Error al confirmar entrega de pedido:', err);
+            alert('No se pudo confirmar la entrega. Intenta nuevamente.');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error al obtener código de entrega:', error);
+        alert('No se pudo obtener el código de entrega. Intenta nuevamente.');
+      }
+    });
   }
 
   formatearFecha(fecha: string): string {
@@ -360,7 +400,7 @@ export class ClientePedidosComponent implements OnInit {
     if (isNaN(precio) || precio === null || precio === undefined) {
       return 'Precio no disponible';
     }
-    
+
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -370,22 +410,7 @@ export class ClientePedidosComponent implements OnInit {
 
   calcularCantidadTotal(): number {
     if (!this.pedidoSeleccionado?.items) return 0;
-    
+
     return this.pedidoSeleccionado.items.reduce((total, item) => total + item.cantidad, 0);
-  }
-
-  obtenerCodigoEntrega(pedidoId: string): void {
-    console.log(' Obtener código de entrega para pedido:', pedidoId);
-
-    this.pedidoService.obtenerCodigoEntrega(pedidoId).subscribe({
-      next: (codigo: string) => {
-        console.log(' Código de entrega recibido:', codigo);
-        alert('Tu código de entrega es: ' + codigo);
-      },
-      error: (error) => {
-        console.error('Error al obtener código de entrega:', error);
-        alert('No se pudo obtener el código de entrega. Intenta nuevamente.');
-      }
-    });
   }
 }

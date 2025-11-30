@@ -228,4 +228,20 @@ public class PedidoService {
 
         return pedidoRepository.save(pedido);
     }
+
+    @Transactional
+public Pedido confirmarEntregaPedido(@NonNull UUID pedidoId) {
+    Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+    if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
+        throw new RuntimeException("Solo se pueden confirmar pedidos que están con el repartidor");
+    }
+
+    pedido.setEstado(EstadoPedido.ENTREGADO);
+    System.out.println("✅ Pedido " + pedidoId + " marcado como ENTREGADO");
+
+    return pedidoRepository.save(pedido);
+}
+
 }

@@ -183,4 +183,13 @@ export class PedidoService {
       responseType: 'text' as 'json' // truco típico para texto plano
     });
   }
+  confirmarEntregaPedido(pedidoId: string): Observable<Pedido> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<Pedido>(
+      `${this.baseUrl}/pedidos/${pedidoId}/confirmar-entrega`,
+      null,
+      { headers }
+    );
+  }
+  
 }
