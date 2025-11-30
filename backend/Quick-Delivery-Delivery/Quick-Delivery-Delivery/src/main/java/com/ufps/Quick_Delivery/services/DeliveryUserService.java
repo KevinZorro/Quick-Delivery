@@ -65,6 +65,35 @@ public class DeliveryUserService {
     public DeliveryUserDto save(DeliveryUserDto dto) {
         DeliveryUser entity = toEntity(dto);
         DeliveryUser saved = repository.save(entity);
+
+        // ⭐ Crear dirección inicial en Edge para el repartidor
+        // Esto asegura que la dirección exista cuando se intente actualizar la
+        // ubicación
+        try {
+            // Llamar a actualizarUbicacion con coordenadas vacías para crear la dirección
+            // El método en Edge creará automáticamente la dirección si no existe
+            // Las coordenadas se actualizarán cuando el repartidor actualice su ubicación
+            // real
+            ResponseEntity<Void> response = clienteDireccion.actualizarUbicacion(
+                    saved.getUsuarioId(),
+                    "" // Coordenadas iniciales vacías, se actualizarán cuando el repartidor actualice
+                       // su ubicación
+            );
+
+            if (response != null && response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("✅ Dirección inicial creada para repartidor: " + saved.getUsuarioId());
+            } else {
+                System.err.println("⚠️ No se pudo crear la dirección inicial para repartidor " +
+                        saved.getUsuarioId() + ": Respuesta no exitosa");
+            }
+        } catch (Exception e) {
+            // Si falla la creación de la dirección, loguear pero no fallar la creación del
+            // delivery
+            System.err.println("⚠️ No se pudo crear la dirección inicial para repartidor " +
+                    saved.getUsuarioId() + ": " + e.getMessage());
+            // No lanzar excepción para no fallar la creación del delivery
+        }
+
         return toDto(saved);
     }
 
@@ -111,10 +140,9 @@ public class DeliveryUserService {
     }
 
     public boolean actualizarUbicacion(UUID usuarioId, double latitud, double longitud) {
-    String coordenadas = latitud + "," + longitud;
-    ResponseEntity<Void> response = clienteDireccion.actualizarUbicacion(usuarioId, coordenadas);
-    return response.getStatusCode().is2xxSuccessful();
-}
-
+        String coordenadas = latitud + "," + longitud;
+        ResponseEntity<Void> response = clienteDireccion.actualizarUbicacion(usuarioId, coordenadas);
+        return response.getStatusCode().is2xxSuccessful();
+    }
 
 }

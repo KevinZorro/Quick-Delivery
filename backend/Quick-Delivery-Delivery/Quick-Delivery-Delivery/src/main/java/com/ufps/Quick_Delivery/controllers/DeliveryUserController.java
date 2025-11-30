@@ -289,20 +289,19 @@ public class DeliveryUserController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
     @PostMapping("/{id}/ubicacion")
-public ResponseEntity<Void> actualizarUbicacion(
-    @PathVariable("id") UUID id,
-    @RequestParam("latitud") double latitud,
-    @RequestParam("longitud") double longitud) {
+    public ResponseEntity<Void> actualizarUbicacion(
+            @PathVariable("id") UUID id,
+            @RequestParam("latitud") double latitud,
+            @RequestParam("longitud") double longitud) {
 
-    boolean updated = service.actualizarUbicacion(id, latitud, longitud);
-    if (updated) {
-        return ResponseEntity.ok().build();
-    } else {
-        return ResponseEntity.notFound().build();
+        boolean updated = service.actualizarUbicacion(id, latitud, longitud);
+        if (updated) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-}
-
-
 
 }

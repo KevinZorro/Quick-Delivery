@@ -89,8 +89,10 @@ public class PedidoController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/estado")
-    public ResponseEntity<?> cambiarEstado(@PathVariable("id") UUID id, @RequestParam EstadoPedido estado) {
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<?> cambiarEstado(
+        @PathVariable("id") UUID id, 
+        @RequestParam(name = "estado") EstadoPedido estado) {
         try {
             Pedido actualizado = pedidoService.actualizarEstadoPedido(id, estado);
             return ResponseEntity.ok(actualizado);

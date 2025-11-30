@@ -270,4 +270,9 @@ export class RestauranteMainComponent implements OnInit {
     this.router.navigate(['/restaurante/perfil']);
   }
 
+  // ✅ NUEVO: Navegar a pedidos pendientes
+  verPedidosPendientes(): void {
+    this.router.navigate(['/restaurante/pedidos-pendientes']);
+  }
+
 }

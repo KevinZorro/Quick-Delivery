@@ -100,4 +100,16 @@ export class ProductoService {
       { headers: this.getHeaders() }
     );
   }
+
+  /**
+   * Obtener restaurante por usuarioId
+   * GET /api/restaurante/usuario/{usuarioId}
+   */
+  obtenerRestaurantePorUsuario(usuarioId: string): Observable<{ id: string; usuarioId: string; descripcion: string; categoria: string; calificacionPromedio: number; imagenUrl: string }> {
+    const restaurantesApiUrl = environment.restaurantesApi + '/api/restaurante';
+    return this.http.get<{ id: string; usuarioId: string; descripcion: string; categoria: string; calificacionPromedio: number; imagenUrl: string }>(
+      `${restaurantesApiUrl}/usuario/${usuarioId}`,
+      { headers: this.getHeaders() }
+    );
+  }
 }

@@ -17,19 +17,19 @@ import java.util.UUID;
 @RequestMapping("/api/direcciones")
 @RequiredArgsConstructor
 public class DireccionController {
-    
+
     private final DireccionService direccionService;
-    
+
     @PostMapping
     public ResponseEntity<DireccionResponseDto> crearDireccion(
             @Valid @RequestBody DireccionRequestDto requestDto,
             Authentication authentication) {
-        
+
         UUID usuarioId = UUID.fromString(authentication.getName());
         DireccionResponseDto direccion = direccionService.crearDireccion(requestDto, usuarioId);
         return new ResponseEntity<>(direccion, HttpStatus.CREATED);
     }
-    
+
     // ⭐ Endpoint para obtener MIS direcciones (usuario autenticado)
     @GetMapping("/mis-direcciones")
     public ResponseEntity<List<DireccionResponseDto>> obtenerMisDirecciones(Authentication authentication) {
@@ -37,51 +37,52 @@ public class DireccionController {
         List<DireccionResponseDto> direcciones = direccionService.obtenerDireccionesPorUsuario(usuarioId);
         return ResponseEntity.ok(direcciones);
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<DireccionResponseDto> obtenerDireccionPorId(@PathVariable("id") UUID id) {
         DireccionResponseDto direccion = direccionService.obtenerDireccionPorId(id);
         return ResponseEntity.ok(direccion);
     }
-    
+
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<DireccionResponseDto>> obtenerDireccionesPorUsuario(@PathVariable("usuarioId") UUID usuarioId) {
+    public ResponseEntity<List<DireccionResponseDto>> obtenerDireccionesPorUsuario(
+            @PathVariable("usuarioId") UUID usuarioId) {
         List<DireccionResponseDto> direcciones = direccionService.obtenerDireccionesPorUsuario(usuarioId);
         return ResponseEntity.ok(direcciones);
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<DireccionResponseDto> actualizarDireccion(
             @PathVariable("id") UUID id,
             @Valid @RequestBody DireccionRequestDto requestDto,
             Authentication authentication) {
-        
+
         UUID usuarioId = UUID.fromString(authentication.getName());
         DireccionResponseDto direccion = direccionService.actualizarDireccion(id, requestDto, usuarioId);
         return ResponseEntity.ok(direccion);
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarDireccion(
             @PathVariable("id") UUID id,
             Authentication authentication) {
-        
+
         UUID usuarioId = UUID.fromString(authentication.getName());
         direccionService.eliminarDireccion(id, usuarioId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/ubicacion")
-public ResponseEntity<Void> actualizarUbicacion(
-        @PathVariable("id") UUID id,
-        @RequestParam String coordenadas) {
+    public ResponseEntity<Void> actualizarUbicacion(
+            @PathVariable("id") UUID id,
+            @RequestParam String coordenadas) {
 
-    boolean updated = direccionService.actualizarUbicacion(id, coordenadas);
-    if (updated) {
-        return ResponseEntity.ok().build();
-    } else {
-        return ResponseEntity.notFound().build();
+        boolean updated = direccionService.actualizarUbicacion(id, coordenadas);
+        if (updated) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-}
 
 }

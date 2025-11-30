@@ -17,6 +17,7 @@ import { ResetPasswordComponent } from './features/edge/reset-password.component
 import { ClientePerfilComponent } from './features/cliente/perfil.component';
 import { RestaurantePerfilComponent } from './features/restaurante/perfil.component';
 import { DeliveryPerfilComponent } from './features/delivery/perfil.component';
+import { RestaurantePedidosPendientesComponent } from './features/restaurante/pedidos-pendientes.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -29,6 +30,7 @@ export const routes: Routes = [
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
   { path: 'restaurante/perfil', component: RestaurantePerfilComponent },
+  { path: 'restaurante/pedidos-pendientes', component: RestaurantePedidosPendientesComponent },
   {
     path: 'restaurante/direcciones',
     component: DireccionesRestauranteListaComponent,
