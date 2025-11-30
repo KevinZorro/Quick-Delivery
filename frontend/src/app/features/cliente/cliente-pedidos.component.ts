@@ -29,6 +29,10 @@ export class ClientePedidosComponent implements OnInit {
   filtroEstado: string = 'TODOS';
   ordenamiento: string = 'reciente';
 
+  // Filtros de fecha
+  filtroFechaDesde: string = '';
+  filtroFechaHasta: string = '';
+
   // Modal Detalles
   mostrarModal: boolean = false;
   pedidoSeleccionado: PedidoDetallado | null = null;
@@ -102,6 +106,7 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   aplicarFiltros(): void {
+    // 1) Filtrar por estado
     if (this.filtroEstado === 'TODOS') {
       this.pedidosFiltrados = [...this.pedidos];
     } else {
@@ -110,6 +115,29 @@ export class ClientePedidosComponent implements OnInit {
       );
     }
 
+    // 2) Filtrar por rango de fechas
+    if (this.filtroFechaDesde || this.filtroFechaHasta) {
+      const desde = this.filtroFechaDesde ? new Date(this.filtroFechaDesde) : null;
+      const hasta = this.filtroFechaHasta ? new Date(this.filtroFechaHasta) : null;
+
+      this.pedidosFiltrados = this.pedidosFiltrados.filter(p => {
+        const fecha = new Date(p.fechaCreacion);
+
+        if (desde && fecha < desde) {
+          return false;
+        }
+        if (hasta) {
+          const hastaInclusive = new Date(hasta);
+          hastaInclusive.setDate(hastaInclusive.getDate() + 1);
+          if (fecha >= hastaInclusive) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // 3) Ordenar
     if (this.ordenamiento === 'reciente') {
       this.pedidosFiltrados.sort((a, b) =>
         new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
@@ -228,7 +256,7 @@ export class ClientePedidosComponent implements OnInit {
     document.body.style.overflow = 'auto';
   }
 
-  // ⭐ LÓGICA DE CALIFICACIÓN
+  // Modal calificación
   abrirModalCalificacion(pedido: PedidoDetallado, event: Event): void {
     event.stopPropagation();
     this.pedidoParaCalificar = pedido;
@@ -303,10 +331,10 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   checkCerrarModal(): void {
-    // Aquí puedes cerrar el modal automáticamente si quieres
+    // Lógica opcional para cerrar modal automáticamente
   }
 
-  // 🔑 Obtener código y confirmar entrega
+  // Obtener código y confirmar entrega
   obtenerCodigoEntrega(pedidoId: string): void {
     console.log('🔑 Obtener código de entrega para pedido:', pedidoId);
 
@@ -322,12 +350,10 @@ export class ClientePedidosComponent implements OnInit {
           return;
         }
 
-        // Confirmar entrega en el backend Cliente
         this.pedidoService.confirmarEntregaPedido(pedidoId).subscribe({
           next: (pedidoActualizado) => {
             alert('Entrega confirmada. ¡Gracias!');
 
-            // Actualizar el pedido en la lista
             const idx = this.pedidos.findIndex(p => p.id === pedidoId);
             if (idx !== -1) {
               this.pedidos[idx].estado = pedidoActualizado.estado;
