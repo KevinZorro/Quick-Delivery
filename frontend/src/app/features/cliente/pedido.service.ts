@@ -146,4 +146,41 @@ export class PedidoService {
       { headers }
     );
   }
+
+  // ⭐ Calificar Restaurante
+  calificarRestaurante(pedidoId: string, calificacion: number, comentario: string): Observable<void> {
+    const headers = this.getAuthHeaders();
+    const params = new HttpParams()
+      .set('calificacion', calificacion.toString())
+      .set('comentario', comentario);
+
+    return this.http.post<void>(
+      `${this.baseUrl}/pedidos/${pedidoId}/calificar-restaurante`,
+      null, // Body vacío porque usamos query params
+      { headers, params }
+    );
+  }
+
+  // ⭐ Calificar Repartidor
+  calificarRepartidor(pedidoId: string, calificacion: number, comentario: string): Observable<void> {
+    const headers = this.getAuthHeaders();
+    // Endpoint orquestador que comunica con Delivery
+    return this.http.post<void>(
+      `${this.baseUrl}/pedidos/${pedidoId}/calificar-repartidor?calificacion=${calificacion}&comentario=${encodeURIComponent(comentario)}`,
+      null,
+      { headers }
+    );
+  }
+
+  // ⭐ Obtener código de entrega (texto plano) desde Delivery
+  obtenerCodigoEntrega(pedidoId: string): Observable<string> {
+    const headers = this.getAuthHeaders();
+    const deliveryBaseUrl = environment.deliveryApi + '/api';
+
+    return this.http.get<string>(`${deliveryBaseUrl}/entregas/codigo`, {
+      headers,
+      params: { pedidoId },
+      responseType: 'text' as 'json' // truco típico para texto plano
+    });
+  }
 }

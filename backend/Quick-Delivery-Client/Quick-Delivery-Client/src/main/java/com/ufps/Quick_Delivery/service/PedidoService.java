@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.client.DeliveryClient;
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
@@ -30,8 +30,8 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ProductoClient productoClient; // ⭐ INYECTAR ProductoClient
-    private final DeliveryClient deliveryClient; // ⭐ Cliente Feign hacia Delivery
+    private final ProductoClient productoClient; 
+    private final DeliveryFeignClient deliveryClient; 
 
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
@@ -201,9 +201,7 @@ public class PedidoService {
         return pedidoRepository.findByRepartidorIdOrderByFechaCreacionDesc(repartidorId);
     }
 
-    /**
-     * Asignar repartidor a un pedido
-     */
+    
     @Transactional
     public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
@@ -221,11 +219,11 @@ public class PedidoService {
         pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
         System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
 
-        DeliveryClient.IniciarEntregaRequest req = new DeliveryClient.IniciarEntregaRequest();
+        DeliveryFeignClient.IniciarEntregaRequest req = new DeliveryFeignClient.IniciarEntregaRequest();
         req.setPedidoId(pedidoId);
         req.setRepartidorId(repartidorId);
 
-        DeliveryClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+        DeliveryFeignClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
         System.out.println("📦 Entrega creada en Delivery. Código: " + entrega.getCodigoConfirmacion());
 
         return pedidoRepository.save(pedido);

@@ -2,7 +2,7 @@ package com.ufps.Quick_Delivery.controller;
 
 import com.ufps.Quick_Delivery.dto.AsignarRepartidorResponse;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
-import com.ufps.Quick_Delivery.client.DeliveryClient;
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class PedidoController {
 
     private final PedidoService pedidoService;
-    private final DeliveryClient deliveryClient;
+    private final DeliveryFeignClient deliveryClient;
 
     @PostMapping("/crear-desde-carrito")
     public ResponseEntity<?> crearPedidoDesdeCarrito(
@@ -172,11 +172,11 @@ public class PedidoController {
             Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
 
             // llamada a Delivery para iniciar la entrega y obtener el código
-            DeliveryClient.IniciarEntregaRequest req = new DeliveryClient.IniciarEntregaRequest();
+            DeliveryFeignClient.IniciarEntregaRequest req = new DeliveryFeignClient.IniciarEntregaRequest();
             req.setPedidoId(id);
             req.setRepartidorId(repartidorId);
 
-            DeliveryClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+            DeliveryFeignClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
 
             AsignarRepartidorResponse resp =
                     new AsignarRepartidorResponse(actualizado, entrega.getCodigoConfirmacion());
