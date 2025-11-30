@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';  // Ajusta la ruta según tu proyecto
-import { PLATFORM_ID, Inject } from '@angular/core';
+import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 export interface ItemPedidoRequest {
@@ -47,7 +47,10 @@ export interface Pedido {
 export class PedidoService {
   private baseUrl = environment.clientesApi + '/api';
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     console.log('Base URL para PedidoService:', this.baseUrl);
   }
 
@@ -143,7 +146,8 @@ export class PedidoService {
       { headers }
     );
   }
-   // ⭐ NUEVO MÉTODO: Calificar Restaurante
+
+  // ⭐ Calificar Restaurante
   calificarRestaurante(pedidoId: string, calificacion: number, comentario: string): Observable<void> {
     const headers = this.getAuthHeaders();
     const params = new HttpParams()
@@ -157,14 +161,35 @@ export class PedidoService {
     );
   }
 
-    // ⭐ Calificar Repartidor
+  // ⭐ Calificar Repartidor
   calificarRepartidor(pedidoId: string, calificacion: number, comentario: string): Observable<void> {
     const headers = this.getAuthHeaders();
-    // Se usa endpoint orquestador en Cliente que comunica con Delivery
+    // Endpoint orquestador que comunica con Delivery
     return this.http.post<void>(
       `${this.baseUrl}/pedidos/${pedidoId}/calificar-repartidor?calificacion=${calificacion}&comentario=${encodeURIComponent(comentario)}`,
       null,
       { headers }
     );
   }
+
+  // ⭐ Obtener código de entrega (texto plano) desde Delivery
+  obtenerCodigoEntrega(pedidoId: string): Observable<string> {
+    const headers = this.getAuthHeaders();
+    const deliveryBaseUrl = environment.deliveryApi + '/api';
+
+    return this.http.get<string>(`${deliveryBaseUrl}/entregas/codigo`, {
+      headers,
+      params: { pedidoId },
+      responseType: 'text' as 'json' // truco típico para texto plano
+    });
+  }
+  confirmarEntregaPedido(pedidoId: string): Observable<Pedido> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<Pedido>(
+      `${this.baseUrl}/pedidos/${pedidoId}/confirmar-entrega`,
+      null,
+      { headers }
+    );
+  }
+  
 }

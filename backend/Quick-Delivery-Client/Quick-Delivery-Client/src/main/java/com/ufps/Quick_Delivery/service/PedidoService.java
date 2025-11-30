@@ -1,9 +1,17 @@
 package com.ufps.Quick_Delivery.service;
 
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.model.*;
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
+import com.ufps.Quick_Delivery.model.Cliente;
+import com.ufps.Quick_Delivery.model.EstadoPedido;
+import com.ufps.Quick_Delivery.model.ItemPedido;
+import com.ufps.Quick_Delivery.model.MetodoPago;
+import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
@@ -11,8 +19,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,7 +30,8 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ProductoClient productoClient; // ⭐ INYECTAR ProductoClient
+    private final ProductoClient productoClient; 
+    private final DeliveryFeignClient deliveryClient; 
 
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
@@ -192,26 +201,47 @@ public class PedidoService {
         return pedidoRepository.findByRepartidorIdOrderByFechaCreacionDesc(repartidorId);
     }
 
-    /**
-     * Asignar repartidor a un pedido
-     */
+    
     @Transactional
     public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        
+
         if (pedido.getRepartidorId() != null) {
             throw new RuntimeException("El pedido ya está asignado a otro repartidor");
         }
-        
+
         if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
             throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
         }
-        
+
         pedido.setRepartidorId(repartidorId);
         pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
         System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
-        
+
+        DeliveryFeignClient.IniciarEntregaRequest req = new DeliveryFeignClient.IniciarEntregaRequest();
+        req.setPedidoId(pedidoId);
+        req.setRepartidorId(repartidorId);
+
+        DeliveryFeignClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+        System.out.println("📦 Entrega creada en Delivery. Código: " + entrega.getCodigoConfirmacion());
+
         return pedidoRepository.save(pedido);
     }
+
+    @Transactional
+public Pedido confirmarEntregaPedido(@NonNull UUID pedidoId) {
+    Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+    if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
+        throw new RuntimeException("Solo se pueden confirmar pedidos que están con el repartidor");
+    }
+
+    pedido.setEstado(EstadoPedido.ENTREGADO);
+    System.out.println("✅ Pedido " + pedidoId + " marcado como ENTREGADO");
+
+    return pedidoRepository.save(pedido);
+}
+
 }

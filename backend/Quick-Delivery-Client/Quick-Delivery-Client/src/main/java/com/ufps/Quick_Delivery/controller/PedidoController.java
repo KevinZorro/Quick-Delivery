@@ -1,5 +1,8 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.dto.AsignarRepartidorResponse;
+import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final DeliveryFeignClient deliveryClient;
 
     @PostMapping("/crear-desde-carrito")
     public ResponseEntity<?> crearPedidoDesdeCarrito(
@@ -154,6 +158,7 @@ public class PedidoController {
         System.out.println("🔍 Endpoint: Listar pedidos del repartidor: " + repartidorId);
         return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
     }
+
     /**
      * Asignar repartidor a un pedido
      * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
@@ -163,12 +168,38 @@ public class PedidoController {
             @PathVariable("id") UUID id,
             @RequestParam("repartidorId") UUID repartidorId) {
         try {
+            // lógica de negocio existente en el servicio
             Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
-            return ResponseEntity.ok(actualizado);
+
+            // llamada a Delivery para iniciar la entrega y obtener el código
+            DeliveryFeignClient.IniciarEntregaRequest req = new DeliveryFeignClient.IniciarEntregaRequest();
+            req.setPedidoId(id);
+            req.setRepartidorId(repartidorId);
+
+            DeliveryFeignClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+
+            AsignarRepartidorResponse resp =
+                    new AsignarRepartidorResponse(actualizado, entrega.getCodigoConfirmacion());
+
+            return ResponseEntity.ok(resp);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body("Error al asignar repartidor: " + e.getMessage());
         }
     }
 
+/**
+ * Confirmar entrega de un pedido
+ * PATCH /api/pedidos/{id}/confirmar-entrega
+ */
+@PatchMapping("/{id}/confirmar-entrega")
+public ResponseEntity<?> confirmarEntregaPedido(@PathVariable("id") UUID id) {
+    try {
+        Pedido actualizado = pedidoService.confirmarEntregaPedido(id);
+        return ResponseEntity.ok(actualizado);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest()
+                .body("Error al confirmar entrega: " + e.getMessage());
+    }
+}
 }
