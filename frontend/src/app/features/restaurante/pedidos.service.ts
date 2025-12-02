@@ -34,4 +34,10 @@ export class PedidosService {
   );
 }
 
+
+getRestaurantePorUsuario(usuarioId: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}/usuario/${usuarioId}`);
+}
+
+
 }

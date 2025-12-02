@@ -24,13 +24,27 @@ export class PedidosComponent implements OnInit {
     'ENTREGADO'
   ];
 
-  restauranteId = "1e7290a8-d5b5-4d41-8f44-d225973ad883"; 
-
+usuarioId = localStorage.getItem('quick-delivery-userId') ?? '';
+restauranteId = '';
   constructor(private pedidosService: PedidosService) {}
 
   ngOnInit(): void {
-    this.cargarHistorial();
+    this.obtenerRestauranteDelUsuario();
   }
+
+  obtenerRestauranteDelUsuario() {
+    this.pedidosService.getRestaurantePorUsuario(this.usuarioId).subscribe({
+      next: (restaurante) => {
+        this.restauranteId = restaurante.id;
+        this.cargarHistorial();
+      },
+      error: (err) => {
+        console.error("Error obteniendo restaurante del usuario", err);
+        this.cargando = false;
+        this.mensaje = "No se pudo cargar tu restaurante ❌";
+      }
+    });
+}
 
   cargarHistorial() {
     this.cargando = true;
