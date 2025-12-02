@@ -19,6 +19,9 @@ import { DeliveryMainComponent } from './features/delivery/main.component';
 import { DeliveryEntregasComponent } from './features/delivery/entregas.component';
 import { RecuperarContrasenaComponent } from './features/edge/recuperar-contrasena.component';
 import { ResetPasswordComponent } from './features/edge/reset-password.component';
+import { ClientePerfilComponent } from './features/cliente/perfil.component';
+import { RestaurantePerfilComponent } from './features/restaurante/perfil.component';
+import { DeliveryPerfilComponent } from './features/delivery/perfil.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -30,8 +33,12 @@ export const routes: Routes = [
   
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
+<<<<<<< HEAD
   {path: 'restaurante/pedidos', component: PedidosComponent},
 
+=======
+  { path: 'restaurante/perfil', component: RestaurantePerfilComponent },
+>>>>>>> origin/main
   {
     path: 'restaurante/direcciones',
     component: DireccionesRestauranteListaComponent,
@@ -56,10 +63,12 @@ export const routes: Routes = [
   { path: 'cliente/direcciones/editar/:id', component: DireccionFormComponent },
   { path: 'cliente/direcciones/mapa', component: DireccionFormComponent },
   { path: 'cliente/pedidos', component: ClientePedidosComponent },
+  { path: 'perfil', component: ClientePerfilComponent },
 
   // Rutas de delivery
   { path: 'delivery/main', component: DeliveryMainComponent },
   { path: 'delivery/entregas', component: DeliveryEntregasComponent },
+  { path: 'delivery/perfil', component: DeliveryPerfilComponent },
 
   // Wildcard al FINAL
   { path: '**', redirectTo: 'login' },

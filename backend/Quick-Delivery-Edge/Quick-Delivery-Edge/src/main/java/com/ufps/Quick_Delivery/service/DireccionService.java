@@ -8,6 +8,7 @@ import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.DireccionRepository;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
+import java.util.Optional;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -219,4 +220,35 @@ public class DireccionService {
         dto.setTipoReferencia(direccion.getTipoReferencia());
         return dto;
     }
+
+@Transactional
+public boolean actualizarUbicacion(UUID usuarioId, String coordenadas) {
+
+    Optional<Direccion> direccionOpt = direccionRepository.findFirstByUsuarioId(usuarioId);
+
+    Direccion direccion;
+
+    if (direccionOpt.isEmpty()) {
+        System.out.println("No existe dirección para este delivery: " + usuarioId);
+        direccion = new Direccion();
+        direccion.setUsuario(usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        direccion.setCalle(null);
+        direccion.setReferencia(null);
+        direccion.setCiudad(null);
+        direccion.setBarrio(null);
+        direccion.setTipoReferencia(null);
+        // no setear id porque es autogenerado
+    } else {
+        direccion = direccionOpt.get();
+    }
+
+    direccion.setCoordenadas(coordenadas);
+    direccionRepository.save(direccion);
+
+    return true;
+}
+
+
+
 }

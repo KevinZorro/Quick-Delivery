@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
+import com.ufps.Quick_Delivery.client.IniciarEntregaRequest;
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.mapper.PedidoMapper;
+import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.ItemPedido;
@@ -23,6 +23,8 @@ import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,22 +32,24 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ProductoClient productoClient;
+    private final ProductoClient productoClient; 
+    private final DeliveryFeignClient deliveryClient; 
     private final NotificacionService notificacionService;
-
     // -------------------------------------------------------------------------
     // CREAR PEDIDO DESDE CARRITO
-    // -------------------------------------------------------------------------
+
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
-
         System.out.println("🔍 Iniciando creación de pedido...");
+        System.out.println(request.getTotal() + " " + request.getItems().size());
 
-        // 1. Buscar cliente
+        // 1. Buscar el cliente
         Cliente cliente = clienteRepository.findByUsuarioId(request.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + request.getClienteId()));
 
-        // 2. Crear pedido base
+        System.out.println("✅ Cliente encontrado: " + cliente.getId());
+
+        // 2. Crear el pedido
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
         pedido.setRestauranteId(request.getRestauranteId());
@@ -53,53 +57,72 @@ public class PedidoService {
         pedido.setPreferencias(request.getPreferencias());
         pedido.setEstado(EstadoPedido.INICIADO);
 
-        // Método de pago
+        // ⭐ ASIGNAR MÉTODO DE PAGO desde el request
         if (request.getMetodoPago() != null && !request.getMetodoPago().isEmpty()) {
             try {
-                pedido.setMetodoPago(MetodoPago.valueOf(request.getMetodoPago().toUpperCase()));
-            } catch (Exception e) {
-                throw new RuntimeException("Método de pago inválido");
+                MetodoPago metodoPago = MetodoPago.valueOf(request.getMetodoPago().toUpperCase());
+                pedido.setMetodoPago(metodoPago);
+                System.out.println("💳 Método de pago asignado: " + metodoPago);
+            } catch (IllegalArgumentException e) {
+                System.err.println("⚠️ Método de pago inválido: " + request.getMetodoPago());
+                throw new RuntimeException("Método de pago inválido: " + request.getMetodoPago());
             }
         }
 
-        // 3. Procesar items
-        int totalPedido = 0;
+        // 3. Calcular el total y crear los items
+        int totalPedido = request.getTotal();
+
+        System.out.println("📦 Procesando " + request.getItems().size() + " items...");
 
         for (ItemPedidoDto itemDto : request.getItems()) {
+            try {
+                // ⭐ Consultar el producto desde el microservicio de restaurantes
+                System.out.println("🔍 Consultando producto: " + itemDto.getProductoId());
+                ProductoClient.ProductoResponse producto = productoClient.obtenerProducto(itemDto.getProductoId());
 
-            System.out.println("🔍 Consultando producto: " + itemDto.getProductoId());
-            ProductoClient.ProductoResponse producto = productoClient.obtenerProducto(itemDto.getProductoId());
+                if (producto == null || producto.getPrecio() == null) {
+                    throw new RuntimeException("Producto no encontrado o sin precio: " + itemDto.getProductoId());
+                }
 
-            if (producto == null || producto.getPrecio() == null) {
-                throw new RuntimeException("Producto no encontrado o sin precio: " + itemDto.getProductoId());
+                System.out.println(
+                        "✅ Producto encontrado: " + producto.getNombre() + " - Precio: $" + producto.getPrecio());
+
+                // Validar que el producto esté disponible
+                if (Boolean.FALSE.equals(producto.getDisponible())) {
+                    throw new RuntimeException("El producto no está disponible: " + producto.getNombre());
+                }
+
+                // Crear el item del pedido
+                ItemPedido item = new ItemPedido();
+                item.setProductoId(itemDto.getProductoId());
+                item.setCantidad(itemDto.getCantidad());
+                item.setPrecioUnidad(producto.getPrecio()); // ⭐ Precio real del producto
+                item.setSubtotal(producto.getPrecio() * itemDto.getCantidad()); // ⭐ Cálculo correcto
+
+                System.out.println("   📝 Item: " + producto.getNombre() + " x" + itemDto.getCantidad() + " = $"
+                        + item.getSubtotal());
+
+                pedido.addItem(item);
+                totalPedido = request.getTotal();
+
+            } catch (Exception e) {
+                System.err.println("❌ Error al procesar producto " + itemDto.getProductoId() + ": " + e.getMessage());
+                throw new RuntimeException("Error al procesar el producto: " + e.getMessage());
             }
-
-            System.out.println("✅ Producto encontrado: " + producto.getNombre() +
-                    " - Precio: $" + producto.getPrecio());
-
-            if (Boolean.FALSE.equals(producto.getDisponible())) {
-                throw new RuntimeException("Producto no disponible: " + producto.getNombre());
-            }
-
-            ItemPedido item = new ItemPedido();
-            item.setProductoId(itemDto.getProductoId());
-            item.setCantidad(itemDto.getCantidad());
-            item.setPrecioUnidad(producto.getPrecio());
-            item.setSubtotal(producto.getPrecio() * itemDto.getCantidad());
-
-            System.out.println("   📝 Item: " + producto.getNombre()
-                    + " x" + itemDto.getCantidad()
-                    + " = $" + item.getSubtotal());
-
-            pedido.addItem(item);
-            totalPedido += item.getSubtotal();
         }
 
+        // ⭐ Asignar el total calculado
         pedido.setTotal(totalPedido);
 
-        return pedidoRepository.save(pedido);
-    }
+        System.out.println("💰 Total calculado: $" + totalPedido);
 
+        // 4. Guardar el pedido (esto guardará también los items por cascade)
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
+        System.out.println("✅ Pedido guardado con ID: " + pedidoGuardado.getId());
+
+        return pedidoGuardado;
+    }
     // -------------------------------------------------------------------------
     // CRUD BÁSICO
     // -------------------------------------------------------------------------
@@ -129,10 +152,10 @@ public class PedidoService {
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
         pedido.setEstado(nuevoEstado);
-        System.out.println("📊 Estado del pedido " + pedidoId + " actualizado a: " + nuevoEstado);
 
         Pedido actualizado = pedidoRepository.save(pedido);
 
+        // Notificación al cliente
         notificacionService.notificarCambioEstado(actualizado);
 
         return actualizado;
@@ -149,8 +172,6 @@ public class PedidoService {
 
         pedido.setMetodoPago(metodoPago);
 
-        System.out.println("💳 Método de pago del pedido " + pedidoId + " actualizado a: " + metodoPago);
-
         return pedidoRepository.save(pedido);
     }
 
@@ -160,37 +181,71 @@ public class PedidoService {
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuario(UUID usuarioId) {
 
-        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId);
-
-        List<Pedido> pedidos = pedidoRepository
+        return pedidoRepository
                 .findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
-
-        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
-
-        return pedidos;
     }
 
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuarioYEstado(UUID usuarioId, EstadoPedido estado) {
 
-        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId + " con estado: " + estado);
-
-        List<Pedido> pedidos = pedidoRepository
+        return pedidoRepository
                 .findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(usuarioId, estado);
-
-        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
-
-        return pedidos;
     }
 
     @Transactional(readOnly = true)
     public long contarPedidosPorUsuario(UUID usuarioId) {
+        return pedidoRepository.countByCliente_UsuarioId(usuarioId);
+    }
 
-        long count = pedidoRepository.countByCliente_UsuarioId(usuarioId);
+    // -------------------------------------------------------------------------
+    // HU-21 — PEDIDOS POR REPARTIDOR
+    // -------------------------------------------------------------------------
+    @Transactional(readOnly = true)
+    public List<Pedido> findByRepartidorId(UUID repartidorId) {
+        return pedidoRepository.findByRepartidorIdOrderByFechaCreacionDesc(repartidorId);
+    }
 
-        System.out.println("🔢 Total de pedidos del usuario " + usuarioId + ": " + count);
+   @Transactional
+    public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
 
-        return count;
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (pedido.getRepartidorId() != null) {
+            throw new RuntimeException("El pedido ya está asignado a otro repartidor");
+        }
+
+        if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
+            throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
+        }
+
+        pedido.setRepartidorId(repartidorId);
+        pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
+
+        // Crear entrega en Delivery
+        IniciarEntregaRequest req = new IniciarEntregaRequest();
+        req.setPedidoId(pedidoId);
+        req.setRepartidorId(repartidorId);
+
+        deliveryClient.iniciarEntrega(req);
+
+        return pedidoRepository.save(pedido);
+    }
+
+
+    @Transactional
+    public Pedido confirmarEntregaPedido(@NonNull UUID pedidoId) {
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
+            throw new RuntimeException("Solo se pueden confirmar pedidos que están con el repartidor");
+        }
+
+        pedido.setEstado(EstadoPedido.ENTREGADO);
+
+        return pedidoRepository.save(pedido);
     }
 
     // -------------------------------------------------------------------------
@@ -209,11 +264,7 @@ public class PedidoService {
 
         EstadoPedido estadoEnum = null;
         if (estado != null && !estado.isBlank()) {
-            try {
-                estadoEnum = EstadoPedido.valueOf(estado.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Estado inválido: " + estado);
-            }
+            estadoEnum = EstadoPedido.valueOf(estado.toUpperCase());
         }
 
         return pedidoRepository.filtrarPedidos(

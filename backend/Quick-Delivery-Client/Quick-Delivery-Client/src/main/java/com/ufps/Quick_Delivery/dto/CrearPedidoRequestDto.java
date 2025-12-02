@@ -21,7 +21,7 @@ public class CrearPedidoRequestDto {
     private UUID restauranteId;
 
     @NotNull(message = "El método de pago no puede ser nulo")
-    private String metodoPago;  // ⭐ "EFECTIVO", "TARJETA", "TRANSFERENCIA"
+    private String metodoPago;
 
     @NotNull(message = "Los items del pedido no pueden ser nulos")
     @NotEmpty(message = "Debe haber al menos un item en el pedido")
@@ -30,4 +30,6 @@ public class CrearPedidoRequestDto {
     private UUID direccionEntregaId;
 
     private String preferencias;
+
+    private int total;
 }

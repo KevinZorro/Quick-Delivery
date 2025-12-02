@@ -29,6 +29,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/reportes/**").permitAll()      // Permitir reportes sin token
+                .requestMatchers("/api/restaurantes/**").permitAll()
                 .requestMatchers("api/restaurante/**").permitAll()   // Permitir mock restaurante
                 .requestMatchers("/pedidos/**").permitAll()       // Permitir mock pedidos
                 .requestMatchers("api/productos/**").permitAll()

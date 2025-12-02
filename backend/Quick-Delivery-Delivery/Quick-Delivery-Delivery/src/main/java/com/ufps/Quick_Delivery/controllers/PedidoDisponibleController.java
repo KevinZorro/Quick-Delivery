@@ -15,7 +15,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/delivery/pedidos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Slf4j
 public class PedidoDisponibleController {
 

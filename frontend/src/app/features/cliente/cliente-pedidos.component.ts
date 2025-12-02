@@ -21,6 +21,7 @@ interface PedidoDetallado extends Pedido {
   templateUrl: './cliente-pedidos.component.html'
 })
 export class ClientePedidosComponent implements OnInit {
+
   pedidos: PedidoDetallado[] = [];
   pedidosFiltrados: PedidoDetallado[] = [];
   loading: boolean = true;
@@ -28,9 +29,27 @@ export class ClientePedidosComponent implements OnInit {
   filtroEstado: string = 'TODOS';
   ordenamiento: string = 'reciente';
 
+  // Filtros de fecha
+  filtroFechaDesde: string = '';
+  filtroFechaHasta: string = '';
+
+  // Modal Detalles
   mostrarModal: boolean = false;
   pedidoSeleccionado: PedidoDetallado | null = null;
   loadingDetalles: boolean = false;
+
+  // Modal Calificación
+  mostrarModalCalificacion: boolean = false;
+  pedidoParaCalificar: PedidoDetallado | null = null;
+
+  // Estado calificación
+  calificacionRestaurante: number = 0;
+  comentarioRestaurante: string = '';
+  enviandoCalificacionRestaurante: boolean = false;
+
+  calificacionRepartidor: number = 0;
+  comentarioRepartidor: string = '';
+  enviandoCalificacionRepartidor: boolean = false;
 
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
@@ -55,7 +74,7 @@ export class ClientePedidosComponent implements OnInit {
     this.error = '';
 
     const usuarioId = localStorage.getItem('quick-delivery-userId');
-    
+
     if (!usuarioId) {
       this.error = 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.';
       this.loading = false;
@@ -67,7 +86,7 @@ export class ClientePedidosComponent implements OnInit {
     this.pedidoService.listarPedidosUsuario(usuarioId).subscribe({
       next: (pedidos) => {
         console.log('✅ Pedidos recibidos:', pedidos);
-        
+
         this.pedidos = pedidos.map(pedido => ({
           ...pedido,
           fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
@@ -87,6 +106,7 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   aplicarFiltros(): void {
+    // 1) Filtrar por estado
     if (this.filtroEstado === 'TODOS') {
       this.pedidosFiltrados = [...this.pedidos];
     } else {
@@ -95,12 +115,35 @@ export class ClientePedidosComponent implements OnInit {
       );
     }
 
+    // 2) Filtrar por rango de fechas
+    if (this.filtroFechaDesde || this.filtroFechaHasta) {
+      const desde = this.filtroFechaDesde ? new Date(this.filtroFechaDesde) : null;
+      const hasta = this.filtroFechaHasta ? new Date(this.filtroFechaHasta) : null;
+
+      this.pedidosFiltrados = this.pedidosFiltrados.filter(p => {
+        const fecha = new Date(p.fechaCreacion);
+
+        if (desde && fecha < desde) {
+          return false;
+        }
+        if (hasta) {
+          const hastaInclusive = new Date(hasta);
+          hastaInclusive.setDate(hastaInclusive.getDate() + 1);
+          if (fecha >= hastaInclusive) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // 3) Ordenar
     if (this.ordenamiento === 'reciente') {
-      this.pedidosFiltrados.sort((a, b) => 
+      this.pedidosFiltrados.sort((a, b) =>
         new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
       );
     } else if (this.ordenamiento === 'antiguo') {
-      this.pedidosFiltrados.sort((a, b) => 
+      this.pedidosFiltrados.sort((a, b) =>
         new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()
       );
     } else if (this.ordenamiento === 'mayor') {
@@ -120,28 +163,25 @@ export class ClientePedidosComponent implements OnInit {
     this.aplicarFiltros();
   }
 
-  // ✅ NUEVO: Cargar detalles del pedido con información de productos
+  // Cargar detalles del pedido con información de productos
   verDetallePedido(pedidoId: string): void {
     console.log('🔍 Cargando detalles completos del pedido:', pedidoId);
     this.loadingDetalles = true;
-    
+
     this.pedidoService.obtenerPedido(pedidoId).subscribe({
       next: (pedidoCompleto) => {
         console.log('✅ Pedido completo recibido:', pedidoCompleto);
-        
-        // Si el pedido tiene items, cargar información de productos
+
         if (pedidoCompleto.items && pedidoCompleto.items.length > 0) {
           this.cargarInformacionProductos(pedidoCompleto);
         } else {
-          // Si no hay items, mostrar el pedido sin productos
           this.mostrarPedidoEnModal(pedidoCompleto);
         }
       },
       error: (error) => {
         console.error('❌ Error al cargar detalles del pedido:', error);
         this.loadingDetalles = false;
-        
-        // Fallback: usar el pedido de la lista actual
+
         const pedido = this.pedidos.find(p => p.id === pedidoId);
         if (pedido) {
           this.mostrarPedidoEnModal(pedido);
@@ -150,15 +190,13 @@ export class ClientePedidosComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Cargar información de productos desde el microservicio
+  // Cargar información de productos desde el microservicio
   private cargarInformacionProductos(pedido: Pedido): void {
     console.log('🛒 Cargando información de productos...');
 
-    // Crear array de observables para cada producto
-    const productosObservables = pedido.items!.map(item => 
+    const productosObservables = pedido.items!.map(item =>
       this.restauranteService.getProductosByRestaurante(pedido.restauranteId).pipe(
         map(productos => {
-          // Buscar el producto específico por ID
           const producto = productos.find(p => p.id === item.productoId);
           return { item, producto };
         }),
@@ -169,12 +207,10 @@ export class ClientePedidosComponent implements OnInit {
       )
     );
 
-    // Esperar a que todas las peticiones terminen
     forkJoin(productosObservables).subscribe({
       next: (resultados) => {
         console.log('✅ Información de productos cargada:', resultados);
 
-        // Actualizar items con información de productos
         const itemsConProductos = resultados.map(({ item, producto }) => ({
           ...item,
           nombreProducto: producto?.nombre || 'Producto no disponible',
@@ -182,7 +218,6 @@ export class ClientePedidosComponent implements OnInit {
           imagenProducto: producto?.imagenUrl || ''
         }));
 
-        // Crear pedido actualizado con items completos
         const pedidoActualizado = {
           ...pedido,
           items: itemsConProductos
@@ -197,7 +232,7 @@ export class ClientePedidosComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Mostrar pedido en el modal
+  // Mostrar pedido en el modal
   private mostrarPedidoEnModal(pedido: Pedido): void {
     this.pedidoSeleccionado = {
       ...pedido,
@@ -205,11 +240,11 @@ export class ClientePedidosComponent implements OnInit {
       estadoColor: this.obtenerColorEstado(pedido.estado),
       estadoTexto: this.obtenerTextoEstado(pedido.estado)
     };
-    
+
     this.mostrarModal = true;
     this.loadingDetalles = false;
     document.body.style.overflow = 'hidden';
-    
+
     console.log('✅ Modal abierto con pedido:', this.pedidoSeleccionado);
   }
 
@@ -219,6 +254,125 @@ export class ClientePedidosComponent implements OnInit {
     this.pedidoSeleccionado = null;
     this.loadingDetalles = false;
     document.body.style.overflow = 'auto';
+  }
+
+  // Modal calificación
+  abrirModalCalificacion(pedido: PedidoDetallado, event: Event): void {
+    event.stopPropagation();
+    this.pedidoParaCalificar = pedido;
+    this.calificacionRestaurante = 0;
+    this.comentarioRestaurante = '';
+    this.calificacionRepartidor = 0;
+    this.comentarioRepartidor = '';
+    this.mostrarModalCalificacion = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarModalCalificacion(): void {
+    this.mostrarModalCalificacion = false;
+    this.pedidoParaCalificar = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  setCalificacionRestaurante(stars: number): void {
+    this.calificacionRestaurante = stars;
+  }
+
+  setCalificacionRepartidor(stars: number): void {
+    this.calificacionRepartidor = stars;
+  }
+
+  enviarCalificacionRestaurante(): void {
+    if (!this.pedidoParaCalificar || this.calificacionRestaurante === 0) return;
+    this.enviandoCalificacionRestaurante = true;
+
+    this.pedidoService.calificarRestaurante(
+      this.pedidoParaCalificar.id,
+      this.calificacionRestaurante,
+      this.comentarioRestaurante
+    ).subscribe({
+      next: () => {
+        alert('¡Gracias por calificar al restaurante!');
+        this.calificacionRestaurante = 0;
+        this.comentarioRestaurante = '';
+        this.enviandoCalificacionRestaurante = false;
+        this.checkCerrarModal();
+      },
+      error: (err) => {
+        console.error('Error calificar restaurante:', err);
+        alert('Error al enviar calificación del restaurante.');
+        this.enviandoCalificacionRestaurante = false;
+      }
+    });
+  }
+
+  enviarCalificacionRepartidor(): void {
+    if (!this.pedidoParaCalificar || this.calificacionRepartidor === 0) return;
+    this.enviandoCalificacionRepartidor = true;
+
+    this.pedidoService.calificarRepartidor(
+      this.pedidoParaCalificar.id,
+      this.calificacionRepartidor,
+      this.comentarioRepartidor
+    ).subscribe({
+      next: () => {
+        alert('¡Gracias por calificar al repartidor!');
+        this.calificacionRepartidor = 0;
+        this.comentarioRepartidor = '';
+        this.enviandoCalificacionRepartidor = false;
+        this.checkCerrarModal();
+      },
+      error: (err) => {
+        console.error('Error calificar repartidor:', err);
+        alert('Error al enviar calificación del repartidor.');
+        this.enviandoCalificacionRepartidor = false;
+      }
+    });
+  }
+
+  checkCerrarModal(): void {
+    // Lógica opcional para cerrar modal automáticamente
+  }
+
+  // Obtener código y confirmar entrega
+  obtenerCodigoEntrega(pedidoId: string): void {
+    console.log('🔑 Obtener código de entrega para pedido:', pedidoId);
+
+    this.pedidoService.obtenerCodigoEntrega(pedidoId).subscribe({
+      next: (codigo: string) => {
+        console.log('✅ Código de entrega recibido:', codigo);
+
+        const confirmar = confirm(
+          `Código de entrega: ${codigo}\n\n¿Quieres confirmar la entrega de este pedido?`
+        );
+
+        if (!confirmar) {
+          return;
+        }
+
+        this.pedidoService.confirmarEntregaPedido(pedidoId).subscribe({
+          next: (pedidoActualizado) => {
+            alert('Entrega confirmada. ¡Gracias!');
+
+            const idx = this.pedidos.findIndex(p => p.id === pedidoId);
+            if (idx !== -1) {
+              this.pedidos[idx].estado = pedidoActualizado.estado;
+              this.pedidos[idx].estadoColor = this.obtenerColorEstado(pedidoActualizado.estado);
+              this.pedidos[idx].estadoTexto = this.obtenerTextoEstado(pedidoActualizado.estado);
+            }
+            this.aplicarFiltros();
+          },
+          error: (err) => {
+            console.error('❌ Error al confirmar entrega de pedido:', err);
+            alert('No se pudo confirmar la entrega. Intenta nuevamente.');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error al obtener código de entrega:', error);
+        alert('No se pudo obtener el código de entrega. Intenta nuevamente.');
+      }
+    });
   }
 
   formatearFecha(fecha: string): string {
@@ -269,11 +423,10 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   formatearPrecio(precio: number): string {
-    // ✅ Verificar si es NaN
     if (isNaN(precio) || precio === null || precio === undefined) {
       return 'Precio no disponible';
     }
-    
+
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -283,7 +436,7 @@ export class ClientePedidosComponent implements OnInit {
 
   calcularCantidadTotal(): number {
     if (!this.pedidoSeleccionado?.items) return 0;
-    
+
     return this.pedidoSeleccionado.items.reduce((total, item) => total + item.cantidad, 0);
   }
 }

@@ -70,4 +70,18 @@ public class DireccionController {
         direccionService.eliminarDireccion(id, usuarioId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/ubicacion")
+public ResponseEntity<Void> actualizarUbicacion(
+        @PathVariable("id") UUID id,
+        @RequestParam String coordenadas) {
+
+    boolean updated = direccionService.actualizarUbicacion(id, coordenadas);
+    if (updated) {
+        return ResponseEntity.ok().build();
+    } else {
+        return ResponseEntity.notFound().build();
+    }
+}
+
 }

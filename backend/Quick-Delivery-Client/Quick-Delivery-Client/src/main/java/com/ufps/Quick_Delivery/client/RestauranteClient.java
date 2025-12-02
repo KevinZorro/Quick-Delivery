@@ -5,11 +5,13 @@ import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-
-import com.ufps.Quick_Delivery.dto.RestauranteDto;
+import java.util.UUID;
 
 @FeignClient(name = "restaurante-service", url ="${restaurante-service.url}")
 public interface RestauranteClient {
     @GetMapping("/api/restaurante/{id}")
     RestauranteDto obtenerRestaurantePorId(@PathVariable("id") UUID id);
+
+    @GetMapping("/api/restaurante/usuario/{usuarioId}")
+    RestauranteDto obtenerRestaurantePorUsuarioId(@PathVariable("usuarioId") UUID usuarioId);
 }

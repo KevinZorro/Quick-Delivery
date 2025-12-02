@@ -5,12 +5,12 @@ import com.ufps.Quick_Delivery.dto.IniciarEntregaDto;
 import com.ufps.Quick_Delivery.exceptions.EntregaException;
 import com.ufps.Quick_Delivery.models.Entrega;
 import com.ufps.Quick_Delivery.repository.EntregaRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -64,11 +64,16 @@ public class EntregaService {
         entrega.setDuracionMinutos(minutos);
 
         Entrega entregaGuardada = entregaRepository.save(entrega);
-        
-        System.out.println("💾 Entrega guardada - ID: " + entregaGuardada.getId() + 
-                         " - Estado guardado: " + entregaGuardada.getEstado() + 
-                         " - Duración: " + minutos + " minutos");
+
+        System.out.println("💾 Entrega guardada - ID: " + entregaGuardada.getId() +
+                " - Estado guardado: " + entregaGuardada.getEstado() +
+                " - Duración: " + minutos + " minutos");
 
         return entregaGuardada;
+    }
+
+    // ✅ solo acceso a datos
+    public Optional<Entrega> obtenerPorPedidoId(UUID pedidoId) {
+        return entregaRepository.findByPedidoId(pedidoId);
     }
 }

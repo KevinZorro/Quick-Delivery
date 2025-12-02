@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.ufps.Quick_Delivery.dto.UsuarioResponse;
 
+
+import java.util.UUID;
+
 @FeignClient(name = "usuario-service", url = "http://localhost:8083")
 public interface UsuarioClient {
 
