@@ -17,4 +17,14 @@ public interface UsuarioClient {
     @GetMapping("/api/usuarios/{id}")
     UsuarioResponse obtenerUsuario(@PathVariable("id") UUID usuarioId);
 
+
+
+
+
+
+
+
+
+
+    
 }
