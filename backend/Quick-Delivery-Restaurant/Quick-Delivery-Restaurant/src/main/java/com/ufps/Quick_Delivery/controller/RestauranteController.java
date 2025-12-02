@@ -1,5 +1,7 @@
 package com.ufps.Quick_Delivery.controller;
 
+import com.ufps.Quick_Delivery.client.PedidoClient;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
 import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
 import com.ufps.Quick_Delivery.model.Categoria;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +22,7 @@ import java.util.UUID;
 public class RestauranteController {
 
     private final RestauranteService restauranteService;
+    private final PedidoClient pedidoClient;
 
     @PostMapping
     public ResponseEntity<RestauranteResponseDto> crear(@Valid @RequestBody RestauranteRequestDto requestDto) {
@@ -77,4 +81,44 @@ public class RestauranteController {
         restauranteService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{restauranteId}/pedidos/historial")
+    public ResponseEntity<List<PedidoDto>> obtenerHistorialPedidos(
+    @PathVariable("restauranteId") UUID restauranteId,
+    @RequestParam(value = "fechaInicio", required = false) String fechaInicio,
+    @RequestParam(value = "fechaFin", required = false) String fechaFin,
+    @RequestParam(value = "estado", required = false) String estado,
+    @RequestParam(value = "clienteId", required = false) UUID clienteId
+    ) {
+    List<PedidoDto> historial = pedidoClient.obtenerHistorialPedidos(
+            restauranteId, fechaInicio, fechaFin, estado, clienteId
+    );
+    return ResponseEntity.ok(historial);
+    }
+
+@PutMapping("/pedidos/{pedidoId}/estado")
+public ResponseEntity<?> actualizarEstado(
+        @PathVariable("pedidoId") UUID pedidoId,
+        @RequestParam("nuevoEstado") String nuevoEstado
+) {
+    pedidoClient.actualizarEstadoPedido(pedidoId, nuevoEstado);
+
+    return ResponseEntity.ok(
+        Map.of(
+            "mensaje", "Estado actualizado correctamente",
+            "pedidoId", pedidoId.toString(),
+            "nuevoEstado", nuevoEstado
+        )
+    );
+}
+
+
+
+
+@GetMapping("/{restauranteId}/historial-completo")
+public List<PedidoDto> historialCompleto(@PathVariable("restauranteId") UUID restauranteId) {
+    return restauranteService.listarHistorialCompleto(restauranteId);
+}
+
+
 }

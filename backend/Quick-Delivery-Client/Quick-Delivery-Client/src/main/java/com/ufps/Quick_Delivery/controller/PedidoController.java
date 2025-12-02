@@ -1,15 +1,24 @@
+
 package com.ufps.Quick_Delivery.controller;
 
+
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
+import com.ufps.Quick_Delivery.client.IniciarEntregaRequest;
 import com.ufps.Quick_Delivery.dto.AsignarRepartidorResponse;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
-import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
-import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
+import com.ufps.Quick_Delivery.mapper.PedidoMapper;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.MetodoPago;
 import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.service.PedidoService;
+import com.ufps.Quick_Delivery.client.IniciarEntregaRequest;
+import com.ufps.Quick_Delivery.client.EntregaResponse;
+
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,57 +35,40 @@ public class PedidoController {
 
     private final PedidoService pedidoService;
     private final DeliveryFeignClient deliveryClient;
+    
 
+    // --------------------------------------------------------------------
+    // CREAR PEDIDO DESDE CARRITO
+    // --------------------------------------------------------------------
     @PostMapping("/crear-desde-carrito")
     public ResponseEntity<?> crearPedidoDesdeCarrito(
             @Valid @RequestBody CrearPedidoRequestDto request) {
 
         try {
-            // Log detallado
-            System.out.println("═══════════════════════════════════════");
-            System.out.println("📦 CREANDO PEDIDO");
-            System.out.println("═══════════════════════════════════════");
-            System.out.println("🆔 Cliente ID: " + request.getClienteId());
-            System.out.println("🍽️ Restaurante ID: " + request.getRestauranteId());
-            System.out.println("💳 Método de pago: " + request.getMetodoPago());
-            System.out.println("📝 Cantidad de items: " + request.getItems().size());
-            System.out.println("📍 Total: " + request.getTotal());
-            System.out.println("═══════════════════════════════════════");
+            System.out.println("📦 Creando pedido desde carrito");
 
-            // Validaciones
-            if (request.getRestauranteId() == null) {
-                return ResponseEntity.badRequest()
-                        .body("El ID del restaurante es requerido");
-            }
+            if (request.getRestauranteId() == null)
+                return ResponseEntity.badRequest().body("El ID del restaurante es requerido");
 
-            if (request.getItems() == null || request.getItems().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body("Debe haber al menos un item en el pedido");
-            }
+            if (request.getItems() == null || request.getItems().isEmpty())
+                return ResponseEntity.badRequest().body("Debe haber al menos un item en el pedido");
 
-            // Crear el pedido
             Pedido pedidoCreado = pedidoService.crearPedidoDesdeCarrito(request);
-            System.out.println("✅ Pedido creado exitosamente!");
-            System.out.println("🆔 ID del pedido: " + pedidoCreado.getId());
-            System.out.println("💰 Total: " + pedidoCreado.getTotal());
-            System.out.println("═══════════════════════════════════════");
-
             return ResponseEntity.ok(pedidoCreado);
 
         } catch (IllegalArgumentException e) {
-            System.err.println("❌ Error de validación: " + e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body("Error de validación: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error de validación: " + e.getMessage());
         } catch (RuntimeException e) {
-            System.err.println("❌ Error al crear pedido: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al crear el pedido: " + e.getMessage());
         }
     }
 
+    // --------------------------------------------------------------------
+    // CRUD BÁSICO
+    // --------------------------------------------------------------------
     @GetMapping("/{id}")
-    public ResponseEntity<Pedido> obtenerPedido(@PathVariable("id") UUID id) {
+    public ResponseEntity<Pedido> obtenerPedido(@PathVariable UUID id) {
         return pedidoService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -88,118 +80,114 @@ public class PedidoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarPedido(@PathVariable("id") UUID id) {
+    public ResponseEntity<Void> eliminarPedido(@PathVariable UUID id) {
         pedidoService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
     }
 
+    // --------------------------------------------------------------------
+    // ACTUALIZAR ESTADO Y MÉTODO DE PAGO
+    // --------------------------------------------------------------------
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<?> cambiarEstado(@PathVariable("id") UUID id, @RequestParam EstadoPedido estado) {
+    public ResponseEntity<?> cambiarEstado(@PathVariable UUID id, @RequestParam EstadoPedido estado) {
         try {
-            Pedido actualizado = pedidoService.actualizarEstadoPedido(id, estado);
-            return ResponseEntity.ok(actualizado);
+            return ResponseEntity.ok(pedidoService.actualizarEstadoPedido(id, estado));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body("Error al cambiar estado: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error al cambiar estado: " + e.getMessage());
         }
     }
 
     @PatchMapping("/{id}/metodopago")
-    public ResponseEntity<?> cambiarMetodoPago(@PathVariable("id") UUID id, @RequestParam MetodoPago metodoPago) {
+    public ResponseEntity<?> cambiarMetodoPago(@PathVariable UUID id, @RequestParam MetodoPago metodoPago) {
         try {
-            Pedido actualizado = pedidoService.actualizarMetodoPago(id, metodoPago);
-            return ResponseEntity.ok(actualizado);
+            return ResponseEntity.ok(pedidoService.actualizarMetodoPago(id, metodoPago));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body("Error al cambiar método de pago: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error al cambiar método de pago: " + e.getMessage());
         }
     }
 
-    /**
-     * Listar pedidos de un usuario
-     * GET /api/pedidos/usuario/{usuarioId}
-     */
+    // --------------------------------------------------------------------
+    // HISTORIAL / FILTROS / CONSULTAS
+    // --------------------------------------------------------------------
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<Pedido>> listarPedidosUsuario(@PathVariable("usuarioId") UUID usuarioId) {
-        System.out.println("🔍 Endpoint: Listar pedidos del usuario: " + usuarioId);
-        List<Pedido> pedidos = pedidoService.listarPorUsuario(usuarioId);
-        return ResponseEntity.ok(pedidos);
+    public ResponseEntity<List<Pedido>> listarPedidosUsuario(@PathVariable UUID usuarioId) {
+        return ResponseEntity.ok(pedidoService.listarPorUsuario(usuarioId));
     }
 
-    /**
-     * Listar pedidos de un usuario por estado
-     * GET /api/pedidos/usuario/{usuarioId}/estado/{estado}
-     */
     @GetMapping("/usuario/{usuarioId}/estado/{estado}")
     public ResponseEntity<List<Pedido>> listarPedidosUsuarioPorEstado(
-            @PathVariable("usuarioId") UUID usuarioId,
-            @PathVariable("estado") EstadoPedido estado) {
+            @PathVariable UUID usuarioId, @PathVariable EstadoPedido estado) {
 
-        System.out.println("🔍 Endpoint: Listar pedidos del usuario: " + usuarioId + " con estado: " + estado);
-        List<Pedido> pedidos = pedidoService.listarPorUsuarioYEstado(usuarioId, estado);
-        return ResponseEntity.ok(pedidos);
+        return ResponseEntity.ok(pedidoService.listarPorUsuarioYEstado(usuarioId, estado));
     }
 
-    /**
-     * Contar pedidos de un usuario
-     * GET /api/pedidos/usuario/{usuarioId}/count
-     */
     @GetMapping("/usuario/{usuarioId}/count")
-    public ResponseEntity<Long> contarPedidosUsuario(@PathVariable("usuarioId") UUID usuarioId) {
-        System.out.println("🔢 Endpoint: Contar pedidos del usuario: " + usuarioId);
-        long count = pedidoService.contarPedidosPorUsuario(usuarioId);
-        return ResponseEntity.ok(count);
+    public ResponseEntity<Long> contarPedidosUsuario(@PathVariable UUID usuarioId) {
+        return ResponseEntity.ok(pedidoService.contarPedidosPorUsuario(usuarioId));
     }
 
-    // hu21
-    // HU021 - Listar pedidos por repartidor
+    @GetMapping("/historial")
+    public ResponseEntity<List<PedidoDto>> obtenerHistorial(
+            @RequestParam(required = false) UUID restauranteId,
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) UUID clienteId
+    ) {
+        return ResponseEntity.ok(
+                pedidoService.obtenerHistorial(restauranteId, fechaInicio, fechaFin, estado, clienteId)
+        );
+    }
+
+    @GetMapping("/restaurante/{restauranteId}/historial-completo")
+    public List<PedidoDto> historialCompleto(@PathVariable UUID restauranteId) {
+        return pedidoService.obtenerHistorialConItems(restauranteId);
+    }
+
+    // --------------------------------------------------------------------
+    // ASIGNAR REPARTIDOR - FEIGN DELIVERY
+    // --------------------------------------------------------------------
     @GetMapping("/repartidor/{repartidorId}")
     public ResponseEntity<List<Pedido>> obtenerPorRepartidor(@PathVariable UUID repartidorId) {
-        System.out.println("🔍 Endpoint: Listar pedidos del repartidor: " + repartidorId);
         return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
     }
 
-    /**
-     * Asignar repartidor a un pedido
-     * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
-     */
     @PatchMapping("/{id}/repartidor")
     public ResponseEntity<?> asignarRepartidor(
-            @PathVariable("id") UUID id,
-            @RequestParam("repartidorId") UUID repartidorId) {
+            @PathVariable UUID id,
+            @RequestParam UUID repartidorId) {
+
         try {
-            // lógica de negocio existente en el servicio
             Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
 
-            // llamada a Delivery para iniciar la entrega y obtener el código
-            DeliveryFeignClient.IniciarEntregaRequest req = new DeliveryFeignClient.IniciarEntregaRequest();
+            IniciarEntregaRequest req = new IniciarEntregaRequest();
+
             req.setPedidoId(id);
             req.setRepartidorId(repartidorId);
 
-            DeliveryFeignClient.EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
+            EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
 
-            AsignarRepartidorResponse resp =
-                    new AsignarRepartidorResponse(actualizado, entrega.getCodigoConfirmacion());
 
-            return ResponseEntity.ok(resp);
+            return ResponseEntity.ok(
+                    new AsignarRepartidorResponse(actualizado, entrega.getCodigoConfirmacion())
+            );
+
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body("Error al asignar repartidor: " + e.getMessage());
         }
     }
 
-/**
- * Confirmar entrega de un pedido
- * PATCH /api/pedidos/{id}/confirmar-entrega
- */
-@PatchMapping("/{id}/confirmar-entrega")
-public ResponseEntity<?> confirmarEntregaPedido(@PathVariable("id") UUID id) {
-    try {
-        Pedido actualizado = pedidoService.confirmarEntregaPedido(id);
-        return ResponseEntity.ok(actualizado);
-    } catch (RuntimeException e) {
-        return ResponseEntity.badRequest()
-                .body("Error al confirmar entrega: " + e.getMessage());
+    // --------------------------------------------------------------------
+    // CONFIRMAR ENTREGA
+    // --------------------------------------------------------------------
+    @PatchMapping("/{id}/confirmar-entrega")
+    public ResponseEntity<?> confirmarEntregaPedido(@PathVariable UUID id) {
+        try {
+            return ResponseEntity.ok(pedidoService.confirmarEntregaPedido(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al confirmar entrega: " + e.getMessage());
+        }
     }
-}
 }

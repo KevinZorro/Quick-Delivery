@@ -1,28 +1,33 @@
 package com.ufps.Quick_Delivery.service;
 
-import com.ufps.Quick_Delivery.config.UsuarioClient;
-import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
-import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
-import com.ufps.Quick_Delivery.model.Categoria;
-import com.ufps.Quick_Delivery.model.Restaurante;
-import com.ufps.Quick_Delivery.repository.RestauranteRepository;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ufps.Quick_Delivery.client.PedidoFeignClient;
+import com.ufps.Quick_Delivery.config.UsuarioClient;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
+import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
+import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
+import com.ufps.Quick_Delivery.model.Categoria;
+import com.ufps.Quick_Delivery.model.Restaurante;
+import com.ufps.Quick_Delivery.repository.RestauranteRepository;  // <--- FALTA
+
+import lombok.NonNull; // <--- Asegúrate de que este import sea el correcto
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
+    private final PedidoFeignClient pedidoFeignClient; // <
     private final UsuarioClient usuarioClient;
+
 
     @Transactional
     public RestauranteResponseDto crear(@NonNull RestauranteRequestDto requestDto) {
@@ -134,4 +139,9 @@ public class RestauranteService {
                 .imagenUrl(restaurante.getImagenUrl())
                 .build();
     }
+
+    public List<PedidoDto> listarHistorialCompleto(UUID restauranteId) {
+    return pedidoFeignClient.obtenerHistorialCompleto(restauranteId);
+}
+
 }
