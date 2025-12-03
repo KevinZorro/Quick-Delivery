@@ -15,23 +15,29 @@ import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
 import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
 import com.ufps.Quick_Delivery.model.Categoria;
 import com.ufps.Quick_Delivery.model.Restaurante;
-import com.ufps.Quick_Delivery.repository.RestauranteRepository;  // <--- FALTA
+import com.ufps.Quick_Delivery.repository.RestauranteRepository;
 
-import lombok.NonNull; // <--- Asegúrate de que este import sea el correcto
+import lombok.Builder;
+import lombok.Data;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+
+@Data
+@Builder
 @Service
 @RequiredArgsConstructor
 public class RestauranteService {
 
     private final RestauranteRepository restauranteRepository;
-    private final PedidoFeignClient pedidoFeignClient; // <
+    private final PedidoFeignClient pedidoFeignClient;
     private final UsuarioClient usuarioClient;
+    private final HorarioAtencionService horarioService;
 
 
     @Transactional
     public RestauranteResponseDto crear(@NonNull RestauranteRequestDto requestDto) {
-        // Verificar si ya existe un restaurante para este usuario
+
         if (restauranteRepository.existsByUsuarioId(requestDto.getUsuarioId())) {
             throw new RuntimeException("Ya existe un restaurante para este usuario");
         }
@@ -44,9 +50,10 @@ public class RestauranteService {
                 .calificacionPromedio(0.0)
                 .build();
 
-        Restaurante savedRestaurante = restauranteRepository.save(restaurante);
-        return mapToResponseDto(savedRestaurante);
+        Restaurante saved = restauranteRepository.save(restaurante);
+        return mapToResponseDto(saved);
     }
+
 
     @Transactional(readOnly = true)
     public RestauranteResponseDto obtenerPorId(@NonNull UUID id) {
@@ -65,18 +72,15 @@ public class RestauranteService {
     @Transactional(readOnly = true)
     public List<RestauranteResponseDto> listarTodos() {
         try {
-            // Obtener IDs de usuarios activos con rol RESTAURANTE
             List<UUID> usuariosActivosIds = usuarioClient.obtenerUsuariosActivosPorRol("RESTAURANTE");
-            
-            // Filtrar restaurantes cuyos usuarios estén activos
+
             return restauranteRepository.findAll().stream()
-                    .filter(restaurante -> usuariosActivosIds.contains(restaurante.getUsuarioId()))
+                    .filter(r -> usuariosActivosIds.contains(r.getUsuarioId()))
                     .map(this::mapToResponseDto)
                     .collect(Collectors.toList());
+
         } catch (Exception e) {
-            // En caso de error, retornar lista vacía o loguear el error
             System.err.println("Error al obtener usuarios activos: " + e.getMessage());
-            e.printStackTrace();
             return Collections.emptyList();
         }
     }
@@ -104,8 +108,8 @@ public class RestauranteService {
         restaurante.setCategoria(requestDto.getCategoria());
         restaurante.setImagenUrl(requestDto.getImagenUrl());
 
-        Restaurante updatedRestaurante = restauranteRepository.save(restaurante);
-        return mapToResponseDto(updatedRestaurante);
+        Restaurante updated = restauranteRepository.save(restaurante);
+        return mapToResponseDto(updated);
     }
 
     @Transactional
@@ -129,7 +133,12 @@ public class RestauranteService {
         restauranteRepository.deleteById(id);
     }
 
+
+    // ⭐ versión correcta con DISPONIBILIDAD
     private RestauranteResponseDto mapToResponseDto(Restaurante restaurante) {
+
+        boolean disponible = horarioService.estaDisponible(restaurante.getId());
+
         return RestauranteResponseDto.builder()
                 .id(restaurante.getId())
                 .usuarioId(restaurante.getUsuarioId())
@@ -137,11 +146,11 @@ public class RestauranteService {
                 .categoria(restaurante.getCategoria())
                 .calificacionPromedio(restaurante.getCalificacionPromedio())
                 .imagenUrl(restaurante.getImagenUrl())
+                .disponible(disponible)
                 .build();
     }
 
     public List<PedidoDto> listarHistorialCompleto(UUID restauranteId) {
-    return pedidoFeignClient.obtenerHistorialCompleto(restauranteId);
-}
-
+        return pedidoFeignClient.obtenerHistorialCompleto(restauranteId);
+    }
 }

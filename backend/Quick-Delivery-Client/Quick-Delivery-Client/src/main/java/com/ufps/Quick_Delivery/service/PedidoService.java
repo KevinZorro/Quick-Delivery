@@ -5,14 +5,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
 import com.ufps.Quick_Delivery.client.IniciarEntregaRequest;
 import com.ufps.Quick_Delivery.client.ProductoClient;
+import com.ufps.Quick_Delivery.client.RestauranteHorarioClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.mapper.PedidoMapper;
-import com.ufps.Quick_Delivery.model.*;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.model.EstadoPedido;
 import com.ufps.Quick_Delivery.model.ItemPedido;
@@ -21,10 +24,11 @@ import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -35,10 +39,13 @@ public class PedidoService {
     private final ProductoClient productoClient; 
     private final DeliveryFeignClient deliveryClient; 
     private final NotificacionService notificacionService;
+    private final RestauranteHorarioClient restauranteHorarioClient;
+    
+
     // -------------------------------------------------------------------------
     // CREAR PEDIDO DESDE CARRITO
 
-    @Transactional
+     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
         System.out.println("🔍 Iniciando creación de pedido...");
         System.out.println(request.getTotal() + " " + request.getItems().size());

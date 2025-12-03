@@ -17,4 +17,5 @@ public class RestauranteResponseDto {
     private Categoria categoria;
     private Double calificacionPromedio;
     private String imagenUrl;
+    private Boolean disponible;
 }

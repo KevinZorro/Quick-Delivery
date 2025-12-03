@@ -20,6 +20,13 @@ public interface PedidoFeignClient {
     @GetMapping("/api/pedidos/restaurante/{restauranteId}/historial-completo")
     List<PedidoDto> obtenerHistorialCompleto(@PathVariable("restauranteId") UUID restauranteId);
 
+    @FeignClient(name = "restaurante-service", url = "${restaurante-service.url}")
+    public interface RestauranteHorarioClient {
+
+        @GetMapping("/api/restaurantes/horarios/disponibilidad/{restauranteId}")
+        boolean estaDisponible(@PathVariable UUID restauranteId);
+    }
+
 }
 
 
