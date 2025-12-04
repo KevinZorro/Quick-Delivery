@@ -221,37 +221,14 @@ public class PedidoService {
         if (pedido.getRepartidorId() != null) {
             throw new RuntimeException("El pedido ya está asignado a otro repartidor");
         }
-
-        if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
-            throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
+        
+        if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
+            throw new RuntimeException("El pedido debe estar en estado CON_EL_REPARTIDOR para asignar repartidor");
         }
 
         pedido.setRepartidorId(repartidorId);
-        pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
-
-        // Crear entrega en Delivery
-        IniciarEntregaRequest req = new IniciarEntregaRequest();
-        req.setPedidoId(pedidoId);
-        req.setRepartidorId(repartidorId);
-
-        deliveryClient.iniciarEntrega(req);
-
-        return pedidoRepository.save(pedido);
-    }
-
-
-    @Transactional
-    public Pedido confirmarEntregaPedido(@NonNull UUID pedidoId) {
-
-        Pedido pedido = pedidoRepository.findById(pedidoId)
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-
-        if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
-            throw new RuntimeException("Solo se pueden confirmar pedidos que están con el repartidor");
-        }
-
-        pedido.setEstado(EstadoPedido.ENTREGADO);
-
+        System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
+        
         return pedidoRepository.save(pedido);
     }
 
@@ -289,5 +266,20 @@ public class PedidoService {
                 .stream()
                 .map(PedidoMapper::toDto)
                 .toList();
+    }
+
+        @Transactional
+    public Pedido confirmarEntregaPedido(@NonNull UUID pedidoId) {
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
+            throw new RuntimeException("Solo se pueden confirmar pedidos que están con el repartidor");
+        }
+
+        pedido.setEstado(EstadoPedido.ENTREGADO);
+
+        return pedidoRepository.save(pedido);
     }
 }

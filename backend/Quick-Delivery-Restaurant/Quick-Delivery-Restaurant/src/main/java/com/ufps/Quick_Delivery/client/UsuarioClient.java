@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.config;
+package com.ufps.Quick_Delivery.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

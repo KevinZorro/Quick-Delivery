@@ -31,6 +31,23 @@ export interface ItemPedidoDisponible {
   subtotal: number;
 }
 
+// ✅ NUEVAS INTERFACES PARA RESEÑAS
+export interface Opinion {
+  id: string;
+  repartidorId: string;
+  clienteId: string;
+  pedidoId: string;
+  calificacion: number;
+  comentario: string;
+  fechaCreacion: string;
+}
+
+
+export interface ResenasResponse {
+  opiniones: Opinion[];
+  promedio: number;
+}
+
 export interface NotificacionPedido {
   id: string;
   pedidoId: string;
@@ -124,25 +141,14 @@ export interface Producto {
   fechaActualizacion: string;
 }
 
-// ✅ NUEVAS INTERFACES PARA RESEÑAS
-export interface Opinion {
-  id: string;
-  repartidorId: string;
-  clienteId: string;
-  pedidoId: string;
-  calificacion: number;
-  comentario: string;
-  fechaCreacion: string;
+export interface TrackingData {
+  repartidorLat: number;
+  repartidorLng: number;
+  clienteLat: number;
+  clienteLng: number;
 }
 
-export interface ResenasResponse {
-  opiniones: Opinion[];
-  promedio: number;
-}
 
-// ==========================================
-// SERVICE
-// ==========================================
 
 @Injectable({
   providedIn: 'root'
@@ -171,6 +177,15 @@ export class DeliveryService {
     });
   }
 
+    obtenerPedidosEnCurso(usuarioId: string): Observable<PedidoDisponible[]> {
+  const headers = this.getAuthHeaders();
+  return this.http.get<PedidoDisponible[]>(
+    `${this.baseUrl}/pedidos/en-curso?usuarioId=${usuarioId}`,
+    { headers }
+  );
+}
+
+
   obtenerPedidosDisponibles(usuarioId: string): Observable<PedidoDisponible[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<PedidoDisponible[]>(
@@ -179,17 +194,18 @@ export class DeliveryService {
     );
   }
 
-  aceptarPedido(pedidoId: string, usuarioId: string): Observable<void> {
-    const headers = this.getAuthHeaders();
-    return this.http.post<void>(
-      `${this.baseUrl}/pedidos/${pedidoId}/aceptar?usuarioId=${usuarioId}`,
-      null,
-      { headers }
-    );
-  }
+aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
+  const headers = this.getAuthHeaders();
+  return this.http.put<void>(
+    `${this.baseUrl}/pedidos/${pedidoId}/aceptar?usuarioId=${usuarioId}`,
+    null,
+    { headers }
+  );
+}
 
   actualizarUbicacion(usuarioId: string, latitud: number, longitud: number, rangoKm?: number): Observable<any> {
     const headers = this.getAuthHeaders();
+    console.log('Actualizando ubicación:', { usuarioId, latitud, longitud });
     let url = `${this.baseUrl}/${usuarioId}/ubicacion?latitud=${latitud}&longitud=${longitud}`;
 
     return this.http.post<any>(url, null, { headers });
@@ -205,6 +221,7 @@ export class DeliveryService {
     );
   }
 
+
   aceptarNotificacion(usuarioId: string, notificacionId: string, comentario?: string): Observable<Entrega> {
     const headers = this.getAuthHeaders();
     return this.http.post<Entrega>(
@@ -213,6 +230,7 @@ export class DeliveryService {
       { headers }
     );
   }
+
 
   // Entregas
   listarEntregas(usuarioId: string): Observable<Entrega[]> {
@@ -242,6 +260,14 @@ export class DeliveryService {
       { headers }
     );
   }
+
+obtenerTrackingData(pedidoId: string): Observable<TrackingData> {
+  const headers = this.getAuthHeaders();
+  return this.http.get<TrackingData>(
+    `${environment.deliveryApi}/api/tracking/pedido/${pedidoId}/tracking-data`,
+    { headers }
+  );
+}
 
   // Confirmar entrega con código y comentarios
   confirmarEntrega(dto: { pedidoId: string, codigoEntrega: string, comentarios?: string }): Observable<Entrega> {

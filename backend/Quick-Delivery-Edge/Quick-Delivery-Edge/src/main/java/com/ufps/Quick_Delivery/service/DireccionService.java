@@ -28,6 +28,18 @@ public class DireccionService {
     private final DireccionRepository direccionRepository;
     private final UsuarioRepository usuarioRepository;
     private final GoogleMapsService googleMapsService; // ⭐ NUEVO
+
+    /**
+ * Obtiene la dirección con coordenadas MÁS RECIENTE del usuario
+ * Para tracking GPS del repartidor
+ */
+public DireccionResponseDto obtenerDireccionActualUsuario(UUID usuarioId) {
+    return direccionRepository.findDireccionRecienteConCoordenadasByUsuarioId(usuarioId)
+        .map(this::convertirAResponseDto)  // ✅ CAMBIADO: era convertToDto
+        .orElse(null);
+}
+
+
     
     @Transactional
     public DireccionResponseDto crearDireccion(DireccionRequestDto requestDto,@NonNull UUID usuarioId) {

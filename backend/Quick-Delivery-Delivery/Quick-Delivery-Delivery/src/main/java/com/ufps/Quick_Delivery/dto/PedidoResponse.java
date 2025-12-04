@@ -1,7 +1,9 @@
-package com.ufps.Quick_Delivery.client;
+// src/main/java/com/ufps/Quick_Delivery/client/dto/PedidoResponse.java
+package com.ufps.Quick_Delivery.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -22,4 +24,3 @@ public class PedidoResponse {
     private String preferencias;
     private List<ItemPedidoResponse> items;
 }
-

@@ -30,6 +30,10 @@
         </button>
 
         <button (click)="verHistorialPedidos()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2">
+                  <button
+          (click)="verHistorialPedidos()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
+        >
           <span>🧾</span>
           <span class="hidden sm:inline">Pedidos</span>
         </button>
@@ -45,10 +49,23 @@
           Cerrar Sesión
         </button>
 
+
+          <!-- Cerrar sesión -->
+          <button
+            (click)="cerrarSesion()"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-</header>
+  </header>
+        
+
+      </div>
+
+
 
 
 
@@ -332,6 +349,3 @@
       </div>
     </div>
   </div>
-</div>
-
-

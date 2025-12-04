@@ -1,7 +1,9 @@
-package com.ufps.Quick_Delivery.client;
+// src/main/java/com/ufps/Quick_Delivery/client/dto/ItemPedidoResponse.java
+package com.ufps.Quick_Delivery.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+
 import java.util.UUID;
 
 @Data
@@ -13,4 +15,3 @@ public class ItemPedidoResponse {
     private Integer precioUnidad;
     private Integer subtotal;
 }
-

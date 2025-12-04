@@ -1,14 +1,17 @@
 package com.ufps.Quick_Delivery.controllers;
 
-import com.ufps.Quick_Delivery.client.ClienteClient;
-import com.ufps.Quick_Delivery.client.ClienteDireccion;
-import com.ufps.Quick_Delivery.client.ClientePedido;
-import com.ufps.Quick_Delivery.client.ClienteProducto;
+import com.ufps.Quick_Delivery.Client.*;
+import com.ufps.Quick_Delivery.dto.ClienteContactoResponse;
+import com.ufps.Quick_Delivery.dto.DireccionResponse;
+import com.ufps.Quick_Delivery.dto.PedidoResponse;
+import com.ufps.Quick_Delivery.dto.ProductoResponse;
 import com.ufps.Quick_Delivery.dto.DeliveryUserDto;
 import com.ufps.Quick_Delivery.dto.PedidoCompletoResponse;
 import com.ufps.Quick_Delivery.models.Entrega;
 import com.ufps.Quick_Delivery.repository.EntregaRepository;
 import com.ufps.Quick_Delivery.services.DeliveryUserService;
+import com.ufps.Quick_Delivery.services.TrackingService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +30,12 @@ public class DeliveryUserController {
 
     private final DeliveryUserService service;
     private final ClienteClient clienteClient;
-    private final ClientePedido clientePedido;
-    private final ClienteDireccion clienteDireccion;
-    private final ClienteProducto clienteProducto;
-    private final EntregaRepository entregaRepository; // ✅ AGREGADO
+    private final RestauranteClient restauranteClient;
+    private final EdgeClient edgeClient;
+    private final EntregaRepository entregaRepository;
+    private final TrackingService trackingService;
+
+    // ----------------- CRUD BÁSICO -----------------
 
     @GetMapping
     public ResponseEntity<List<DeliveryUserDto>> getAll() {
@@ -63,86 +68,74 @@ public class DeliveryUserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/ganancias")
-    public ResponseEntity<Double> getGanancias(@PathVariable UUID id) {
-        return service.findById(id)
-                .map(dto -> ResponseEntity.ok(dto.getGanancias()))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/{id}/ganancias")
-    public ResponseEntity<Void> registrarGanancia(@PathVariable UUID id, @RequestParam double valorVenta) {
-        service.registrarGanancia(id, valorVenta);
-        return ResponseEntity.ok().build();
-    }
+    // ----------------- CLIENTE -----------------
 
     @GetMapping("/{clienteId}/contacto")
-    public ResponseEntity<ClienteClient.ClienteContactoResponse> obtenerContactoCliente(
+    public ResponseEntity<ClienteContactoResponse> obtenerContactoCliente(
             @PathVariable("clienteId") UUID clienteId) {
         try {
-            ClienteClient.ClienteContactoResponse contacto = clienteClient.obtenerContactoCliente(clienteId);
-            return ResponseEntity.ok(contacto);
+            return ResponseEntity.ok(clienteClient.obtenerContactoCliente(clienteId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
-    @GetMapping("cliente/pedido/{pedidoId}")
-    public ResponseEntity<ClientePedido.PedidoResponse> obtenerPedido(@PathVariable("pedidoId") UUID pedidoId) {
+    // ----------------- PEDIDOS -----------------
 
-        ClientePedido.PedidoResponse pedido = clientePedido.obtenerPedidoPorId(pedidoId);
+    @GetMapping("cliente/pedido/{pedidoId}")
+    public ResponseEntity<PedidoResponse> obtenerPedido(@PathVariable("pedidoId") UUID pedidoId) {
+        PedidoResponse pedido = clienteClient.obtenerPedidoPorId(pedidoId);
         if (pedido == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(pedido);
     }
 
-    @GetMapping("/direccion/{direccionId}")
-    public ResponseEntity<ClienteDireccion.DireccionResponse> obtenerDireccion(
-            @PathVariable("direccionId") UUID direccionId) {
+    // ----------------- DIRECCIONES -----------------
 
+    @GetMapping("/direccion/{direccionId}")
+    public ResponseEntity<DireccionResponse> obtenerDireccion(@PathVariable("direccionId") UUID direccionId) {
         try {
-            ClienteDireccion.DireccionResponse direccion = clienteDireccion.obtenerDireccionPorId(direccionId);
-            if (direccion == null) {
-                return ResponseEntity.notFound().build();
-            }
+            DireccionResponse direccion = edgeClient.obtenerDireccionPorId(direccionId);
+            if (direccion == null) return ResponseEntity.notFound().build();
             return ResponseEntity.ok(direccion);
         } catch (Exception e) {
             return ResponseEntity.status(502).build();
         }
     }
 
-    @GetMapping("/producto/{productoId}")
-    public ResponseEntity<ClienteProducto.ProductoResponse> obtenerProducto(
-            @PathVariable("productoId") UUID productoId) {
+    // ----------------- PRODUCTOS -----------------
 
+    @GetMapping("/producto/{productoId}")
+    public ResponseEntity<ProductoResponse> obtenerProducto(@PathVariable("productoId") UUID productoId) {
         try {
-            ClienteProducto.ProductoResponse producto = clienteProducto.obtenerProductoPorId(productoId);
-            if (producto == null) {
-                return ResponseEntity.notFound().build();
-            }
+            ProductoResponse producto = restauranteClient.obtenerProductoPorId(productoId);
+            if (producto == null) return ResponseEntity.notFound().build();
             return ResponseEntity.ok(producto);
         } catch (Exception e) {
             return ResponseEntity.status(502).build();
         }
     }
 
+    // ----------------- PEDIDO COMPLETO -----------------
+
     @GetMapping("/pedido/completo/{pedidoId}")
     public ResponseEntity<PedidoCompletoResponse> obtenerPedidoCompleto(@PathVariable("pedidoId") UUID pedidoId) {
+
         try {
-            ClientePedido.PedidoResponse pedido = clientePedido.obtenerPedidoPorId(pedidoId);
-            if (pedido == null)
-                return ResponseEntity.notFound().build();
+            PedidoResponse pedido = clienteClient.obtenerPedidoPorId(pedidoId);
+            if (pedido == null) return ResponseEntity.notFound().build();
 
-            ClienteClient.ClienteContactoResponse cliente = clienteClient
-                    .obtenerContactoCliente(pedido.getCliente().getId());
+            ClienteContactoResponse cliente =
+                    clienteClient.obtenerContactoCliente(pedido.getClienteId());
 
-            ClienteDireccion.DireccionResponse direccion = clienteDireccion
-                    .obtenerDireccionPorId(pedido.getDireccionEntregaId());
+            DireccionResponse direccion =
+                    edgeClient.obtenerDireccionPorId(pedido.getDireccionEntregaId());
 
-            List<ClienteProducto.ProductoResponse> productos = pedido.getItems().stream()
-                    .map(item -> clienteProducto.obtenerProductoPorId(item.getProductoId()))
-                    .toList();
+            List<ProductoResponse> productos =
+                    pedido.getItems().stream()
+                            .map(item -> restauranteClient.obtenerProductoPorId(item.getProductoId()))
+                            .toList();
 
             PedidoCompletoResponse respuesta = new PedidoCompletoResponse();
             respuesta.setPedido(pedido);
@@ -158,10 +151,8 @@ public class DeliveryUserController {
         }
     }
 
-    /**
-     * ✅ HU021: Repartidor consulta historial de entregas - ACTUALIZADO
-     * Ahora devuelve las entregas desde la tabla entregas (con estado real)
-     */
+    // ----------------- HISTORIAL DE ENTREGAS -----------------
+
     @GetMapping("/historial")
     public ResponseEntity<List<Map<String, Object>>> obtenerHistorialEntregas(
             @RequestParam("usuarioId") UUID usuarioId,
@@ -170,46 +161,29 @@ public class DeliveryUserController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
 
         try {
-            System.out.println("📋 Obteniendo historial para repartidor usuarioId: " + usuarioId);
-
-            // 1. Buscar deliveryId a partir del usuarioId
             UUID deliveryId = service.findDeliveryIdByUsuarioId(usuarioId)
-                    .orElseThrow(() -> new RuntimeException("Repartidor no encontrado para el usuario"));
+                    .orElseThrow(() -> new RuntimeException("Repartidor no encontrado"));
 
-            System.out.println("✅ Delivery ID encontrado: " + deliveryId);
-
-            // 2. Obtener ENTREGAS (no pedidos) desde la tabla entregas
             List<Entrega> entregas = entregaRepository.findByRepartidorId(deliveryId);
 
-            System.out.println("✅ Entregas encontradas: " + entregas.size());
-
-            // 3. Para cada entrega, obtener información del pedido
             List<Map<String, Object>> historial = entregas.stream()
                     .map(entrega -> {
                         Map<String, Object> info = new HashMap<>();
-
-                        System.out.println("  📦 Procesando entrega ID: " + entrega.getId() +
-                                " - Estado: " + entrega.getEstado() +
-                                " - Pedido: " + entrega.getPedidoId());
-
                         try {
-                            // Obtener datos del pedido desde el microservicio
-                            ClientePedido.PedidoResponse pedido = clientePedido
+                            PedidoResponse pedido = clienteClient
                                     .obtenerPedidoPorId(entrega.getPedidoId());
 
-                            // ✅ Construir la respuesta con el estado REAL de la tabla entregas
                             info.put("id", entrega.getId());
                             info.put("pedidoId", entrega.getPedidoId());
-                            info.put("estado", entrega.getEstado()); // ✅ Estado de la tabla entregas
+                            info.put("estado", entrega.getEstado());
                             info.put("codigoEntrega", entrega.getCodigoConfirmacion());
                             info.put("comentario", entrega.getComentariosEntrega());
                             info.put("fechaCreacion", entrega.getHoraInicio());
                             info.put("fechaActualizacion", entrega.getHoraFin());
                             info.put("duracionMinutos", entrega.getDuracionMinutos());
 
-                            // Agregar datos del pedido
                             if (pedido != null) {
-                                info.put("clienteId", pedido.getCliente().getId());
+                                info.put("clienteId", pedido.getClienteId());
                                 info.put("restauranteId", pedido.getRestauranteId());
                                 info.put("total", pedido.getTotal());
                                 info.put("metodoPago", pedido.getMetodoPago());
@@ -217,92 +191,29 @@ public class DeliveryUserController {
                                 info.put("direccionEntregaId", pedido.getDireccionEntregaId());
                             }
 
-                        } catch (Exception e) {
-                            System.out.println("⚠️ Error al obtener datos del pedido: " + e.getMessage());
-                            // Si falla obtener el pedido, al menos devolver datos básicos de la entrega
-                            info.put("id", entrega.getId());
-                            info.put("pedidoId", entrega.getPedidoId());
-                            info.put("estado", entrega.getEstado());
-                            info.put("codigoEntrega", entrega.getCodigoConfirmacion());
-                            info.put("fechaCreacion", entrega.getHoraInicio());
-                            info.put("fechaActualizacion", entrega.getHoraFin());
-                        }
+                        } catch (Exception ignored) {}
 
                         return info;
                     })
                     .collect(Collectors.toList());
 
-            // 4. Aplicar filtros
-            if (estado != null && !estado.isEmpty()) {
-                historial = historial.stream()
-                        .filter(h -> estado.equalsIgnoreCase((String) h.get("estado")))
-                        .collect(Collectors.toList());
-            }
-
-            if (fechaInicio != null) {
-                historial = historial.stream()
-                        .filter(h -> {
-                            Object fecha = h.get("fechaCreacion");
-                            if (fecha instanceof java.time.LocalDateTime) {
-                                LocalDate fechaEntrega = ((java.time.LocalDateTime) fecha).toLocalDate();
-                                return fechaEntrega.isEqual(fechaInicio) || fechaEntrega.isAfter(fechaInicio);
-                            }
-                            return true;
-                        })
-                        .collect(Collectors.toList());
-            }
-
-            if (fechaFin != null) {
-                historial = historial.stream()
-                        .filter(h -> {
-                            Object fecha = h.get("fechaCreacion");
-                            if (fecha instanceof java.time.LocalDateTime) {
-                                LocalDate fechaEntrega = ((java.time.LocalDateTime) fecha).toLocalDate();
-                                return fechaEntrega.isEqual(fechaFin) || fechaEntrega.isBefore(fechaFin);
-                            }
-                            return true;
-                        })
-                        .collect(Collectors.toList());
-            }
-
-            System.out.println("✅ Devolviendo " + historial.size() + " entregas después de filtros");
-
             return ResponseEntity.ok(historial);
 
-        } catch (RuntimeException e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            System.out.println("❌ Error inesperado: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(502).build();
         }
     }
 
-    @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<Map<String, UUID>> getRepartidorIdByUsuarioId(@PathVariable UUID usuarioId) {
-        return service.findDeliveryIdByUsuarioId(usuarioId)
-                .map(id -> {
-                    Map<String, UUID> response = new HashMap<>();
-                    response.put("repartidorId", id);
-                    return ResponseEntity.ok(response);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
+    // ----------------- UBICACIÓN -----------------
+
     @PostMapping("/{id}/ubicacion")
-public ResponseEntity<Void> actualizarUbicacion(
-    @PathVariable("id") UUID id,
-    @RequestParam("latitud") double latitud,
-    @RequestParam("longitud") double longitud) {
+    public ResponseEntity<Void> actualizarUbicacion(
+            @PathVariable("id") UUID id,
+            @RequestParam("latitud") double latitud,
+            @RequestParam("longitud") double longitud) {
 
-    boolean updated = service.actualizarUbicacion(id, latitud, longitud);
-    if (updated) {
-        return ResponseEntity.ok().build();
-    } else {
-        return ResponseEntity.notFound().build();
+        boolean updated = service.actualizarUbicacion(id, latitud, longitud);
+        return updated ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
-}
-
-
 
 }

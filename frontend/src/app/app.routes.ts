@@ -22,6 +22,7 @@ import { ResetPasswordComponent } from './features/edge/reset-password.component
 import { ClientePerfilComponent } from './features/cliente/perfil.component';
 import { RestaurantePerfilComponent } from './features/restaurante/perfil.component';
 import { DeliveryPerfilComponent } from './features/delivery/perfil.component';
+import { TrackingMapaComponent } from './features/delivery/tracking-mapa.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -70,6 +71,7 @@ export const routes: Routes = [
   { path: 'delivery/main', component: DeliveryMainComponent },
   { path: 'delivery/entregas', component: DeliveryEntregasComponent },
   { path: 'delivery/perfil', component: DeliveryPerfilComponent },
+  { path: 'delivery/tracking/:pedidoId', component: TrackingMapaComponent },
 
   // Wildcard al FINAL
   { path: '**', redirectTo: 'login' },
