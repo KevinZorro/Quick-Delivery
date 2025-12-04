@@ -1,22 +1,23 @@
-<div class="p-6 max-w-4xl mx-auto">
+<div class="p-6 max-w-4xl mx-auto font-poppins">
 
+  <!--Linea visual YAA-->
   <h2 class="text-3xl font-bold text-gray-800 mb-6">📦 Historial de pedidos</h2>
 
   <!-- Cargando -->
-  <div *ngIf="cargando" class="flex items-center gap-2 text-purple-600">
-    <span class="animate-spin border-2 border-purple-600 border-t-transparent rounded-full w-5 h-5"></span>
+  <div *ngIf="cargando" class="flex items-center gap-2 text-red-500">
+    <span class="animate-spin border-2 border-red-500 border-t-transparent rounded-full w-5 h-5"></span>
     Cargando pedidos...
   </div>
 
   <!-- Sin pedidos -->
   <div *ngIf="!cargando && pedidos.length === 0"
-       class="bg-yellow-100 text-yellow-800 p-4 rounded-lg shadow-sm border-l-4 border-yellow-500 text-center">
+       class="bg-amber-100 text-amber-800 p-4 rounded-lg shadow-sm border-l-4 border-amber-500 text-center">
     No hay pedidos aún.
   </div>
 
   <!-- Mensaje -->
   <div *ngIf="mensaje"
-       class="bg-green-100 text-green-700 p-3 rounded-xl mb-4 text-center font-medium shadow">
+       class="bg-rose-100 text-rose-700 p-3 rounded-xl mb-4 text-center font-medium shadow">
     {{ mensaje }}
   </div>
 
@@ -27,17 +28,17 @@
     <!-- Encabezado -->
     <div class="flex justify-between items-center">
       <h3 class="text-xl font-semibold text-gray-800">
-        🧾 Pedido <span class="text-purple-600">#{{ pedido.id.slice(0, 8) }}</span>
+        🧾 Pedido <span class="text-red-500">#{{ pedido.id.slice(0, 8) }}</span>
       </h3>
 
       <!-- Estado actual con colores -->
       <span
         class="px-3 py-1 rounded-full text-sm font-semibold border"
         [ngClass]="{
-          'bg-yellow-100 text-yellow-800 border-yellow-300': pedido.estado === 'INICIADO',
-          'bg-blue-100 text-blue-800 border-blue-300': pedido.estado === 'EN_COCINA',
-          'bg-purple-100 text-purple-800 border-purple-300': pedido.estado === 'CON_EL_REPARTIDOR',
-          'bg-green-100 text-green-800 border-green-300': pedido.estado === 'ENTREGADO'
+          'bg-amber-100 text-amber-800 border-amber-300': pedido.estado === 'INICIADO',
+          'bg-orange-100 text-orange-800 border-orange-300': pedido.estado === 'EN_COCINA',
+          'bg-red-100 text-red-800 border-red-300': pedido.estado === 'CON_EL_REPARTIDOR',
+          'bg-yellow-100 text-yellow-800 border-yellow-300': pedido.estado === 'ENTREGADO'
         }">
         {{ pedido.estado }}
       </span>
@@ -48,7 +49,7 @@
 
       <div class="p-3 bg-gray-50 rounded-lg border">
         <p class="text-sm text-gray-500">Total</p>
-        <p class="text-lg font-bold text-green-600">
+        <p class="text-lg font-bold text-red-500">
           {{ pedido.total | currency:'COP' }}
         </p>
       </div>
@@ -75,13 +76,11 @@
 
       <div class="flex gap-3 items-center">
         <select
-  aria-label="Cambiar estado del pedido"
-  (change)="cambiarEstado(pedido.id, $any($event.target).value)"
-  class="border rounded-lg px-3 py-2 bg-gray-50 text-gray-800 shadow-sm"
-  [disabled]="cargandoCambio === pedido.id"
->
-
-
+          aria-label="Cambiar estado del pedido"
+          (change)="cambiarEstado(pedido.id, $any($event.target).value)"
+          class="border rounded-lg px-3 py-2 bg-gray-50 text-gray-800 shadow-sm"
+          [disabled]="cargandoCambio === pedido.id"
+        >
           <option disabled selected>Selecciona estado...</option>
 
           <option *ngFor="let estado of estados" [value]="estado">
@@ -89,7 +88,7 @@
           </option>
         </select>
 
-        <span *ngIf="cargandoCambio === pedido.id" class="text-sm text-purple-600">
+        <span *ngIf="cargandoCambio === pedido.id" class="text-sm text-red-500">
           Actualizando...
         </span>
       </div>
