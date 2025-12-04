@@ -4,6 +4,9 @@ import { Observable } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 
+// ==========================================
+// INTERFACES
+// ==========================================
 
 export interface PedidoDisponible {
   id: string;
@@ -20,7 +23,6 @@ export interface PedidoDisponible {
   items: ItemPedidoDisponible[];
 }
 
-
 export interface ItemPedidoDisponible {
   id: string;
   productoId: string;
@@ -28,7 +30,6 @@ export interface ItemPedidoDisponible {
   precioUnidad: number;
   subtotal: number;
 }
-
 
 export interface NotificacionPedido {
   id: string;
@@ -44,13 +45,12 @@ export interface NotificacionPedido {
   tiempoEstimado: string;
 }
 
-
 export interface Entrega {
   id: string;
   clienteId: string;
   codigoEntrega: string;
   comentario?: string;
-  estado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO' | 'CON_EL_REPARTIDOR'; // ✅ ACTUALIZADO
+  estado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO' | 'CON_EL_REPARTIDOR';
   pedidoId: string;
   repartidorId: string;
   fechaCreacion: string;
@@ -67,7 +67,6 @@ export interface Entrega {
   items?: ItemPedido[];
 }
 
-
 export interface ItemPedido {
   id: string;
   productoId: string;
@@ -75,7 +74,6 @@ export interface ItemPedido {
   precioUnidad: number;
   subtotal: number;
 }
-
 
 export interface PedidoCompleto {
   pedido: {
@@ -113,7 +111,6 @@ export interface PedidoCompleto {
   productos: Producto[];
 }
 
-
 export interface Producto {
   id: string;
   restauranteId: string;
@@ -133,6 +130,25 @@ export interface TrackingData {
   clienteLat: number;
   clienteLng: number;
 }
+// ✅ NUEVAS INTERFACES PARA RESEÑAS
+export interface Opinion {
+  id: string;
+  repartidorId: string;
+  clienteId: string;
+  pedidoId: string;
+  calificacion: number;
+  comentario: string;
+  fechaCreacion: string;
+}
+
+export interface ResenasResponse {
+  opiniones: Opinion[];
+  promedio: number;
+}
+
+// ==========================================
+// SERVICE
+// ==========================================
 
 @Injectable({
   providedIn: 'root'
@@ -140,12 +156,10 @@ export interface TrackingData {
 export class DeliveryService {
   private baseUrl = environment.deliveryApi + '/api/delivery';
 
-
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
-
 
   private getAuthHeaders(): HttpHeaders {
     let token = '';
@@ -189,15 +203,13 @@ aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
   );
 }
 
-
-actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Observable<any> {
+  actualizarUbicacion(usuarioId: string, latitud: number, longitud: number, rangoKm?: number): Observable<any> {
     const headers = this.getAuthHeaders();
     console.log('Actualizando ubicación:', { usuarioId, latitud, longitud });
     let url = `${this.baseUrl}/${usuarioId}/ubicacion?latitud=${latitud}&longitud=${longitud}`;
 
     return this.http.post<any>(url, null, { headers });
 }
-
 
 
   // Notificaciones
@@ -208,7 +220,6 @@ actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Obser
   //    { headers }
   //  );
   //}
-
 
   aceptarNotificacion(usuarioId: string, notificacionId: string, comentario?: string): Observable<Entrega> {
     const headers = this.getAuthHeaders();
@@ -231,10 +242,9 @@ actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Obser
     );
   }
 
-
   actualizarEstadoEntrega(
     entregaId: string, 
-    estado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO' | 'CON_EL_REPARTIDOR' // ✅ ACTUALIZADO
+    estado: 'EN_CAMINO_RECOGIDO' | 'EN_CAMINO_HACIA_CLIENTE' | 'ENTREGADO' | 'CON_EL_REPARTIDOR'
   ): Observable<Entrega> {
     const headers = this.getAuthHeaders();
     return this.http.patch<Entrega>(
@@ -243,7 +253,6 @@ actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Obser
       { headers }
     );
   }
-
 
   obtenerPedidoCompleto(pedidoId: string): Observable<PedidoCompleto> {
     const headers = this.getAuthHeaders();
@@ -267,6 +276,24 @@ obtenerTrackingData(pedidoId: string): Observable<TrackingData> {
     return this.http.post<Entrega>(
       `${environment.deliveryApi}/api/entregas/confirmar`,
       dto,
+      { headers }
+    );
+  }
+
+  // ✅ NUEVO: Obtener ID del repartidor usando el ID de usuario
+  obtenerRepartidorId(usuarioId: string): Observable<{ repartidorId: string }> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<{ repartidorId: string }>(
+      `${this.baseUrl}/usuario/${usuarioId}`,
+      { headers }
+    );
+  }
+
+  // ✅ NUEVO: Obtener calificaciones usando el ID del repartidor
+  obtenerResenas(repartidorId: string): Observable<ResenasResponse> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<ResenasResponse>(
+      `${this.baseUrl}/${repartidorId}/calificaciones`,
       { headers }
     );
   }

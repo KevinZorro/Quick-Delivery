@@ -1,9 +1,23 @@
 package com.ufps.Quick_Delivery.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
+import com.ufps.Quick_Delivery.client.IniciarEntregaRequest;
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
+import com.ufps.Quick_Delivery.mapper.PedidoMapper;
 import com.ufps.Quick_Delivery.model.*;
+import com.ufps.Quick_Delivery.model.Cliente;
+import com.ufps.Quick_Delivery.model.EstadoPedido;
+import com.ufps.Quick_Delivery.model.ItemPedido;
+import com.ufps.Quick_Delivery.model.MetodoPago;
+import com.ufps.Quick_Delivery.model.Pedido;
 import com.ufps.Quick_Delivery.repository.ClienteRepository;
 import com.ufps.Quick_Delivery.repository.PedidoRepository;
 
@@ -11,10 +25,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +32,11 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ProductoClient productoClient; // ⭐ INYECTAR ProductoClient
+    private final ProductoClient productoClient; 
+    private final DeliveryFeignClient deliveryClient; 
+    private final NotificacionService notificacionService;
+    // -------------------------------------------------------------------------
+    // CREAR PEDIDO DESDE CARRITO
 
     @Transactional
     public Pedido crearPedidoDesdeCarrito(CrearPedidoRequestDto request) {
@@ -109,7 +123,9 @@ public class PedidoService {
 
         return pedidoGuardado;
     }
-
+    // -------------------------------------------------------------------------
+    // CRUD BÁSICO
+    // -------------------------------------------------------------------------
     public Optional<Pedido> buscarPorId(@NonNull UUID id) {
         return pedidoRepository.findById(id);
     }
@@ -126,80 +142,75 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    // -------------------------------------------------------------------------
+    // ACTUALIZAR ESTADO + NOTIFICACIÓN
+    // -------------------------------------------------------------------------
     @Transactional
     public Pedido actualizarEstadoPedido(@NonNull UUID pedidoId, EstadoPedido nuevoEstado) {
+
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
         pedido.setEstado(nuevoEstado);
-        System.out.println("📊 Estado del pedido " + pedidoId + " actualizado a: " + nuevoEstado);
 
-        return pedidoRepository.save(pedido);
+        Pedido actualizado = pedidoRepository.save(pedido);
+
+        // Notificación al cliente
+        notificacionService.notificarCambioEstado(actualizado);
+
+        return actualizado;
     }
 
+    // -------------------------------------------------------------------------
+    // ACTUALIZAR MÉTODO DE PAGO
+    // -------------------------------------------------------------------------
     @Transactional
     public Pedido actualizarMetodoPago(@NonNull UUID pedidoId, MetodoPago metodoPago) {
+
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
         pedido.setMetodoPago(metodoPago);
-        System.out.println("💳 Método de pago del pedido " + pedidoId + " actualizado a: " + metodoPago);
 
         return pedidoRepository.save(pedido);
     }
 
-    /**
-     * Listar todos los pedidos de un usuario
-     */
+    // -------------------------------------------------------------------------
+    // HISTORIAL PARA CLIENTE
+    // -------------------------------------------------------------------------
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuario(UUID usuarioId) {
-        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId);
 
-        List<Pedido> pedidos = pedidoRepository.findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
-
-        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
-        return pedidos;
+        return pedidoRepository
+                .findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
     }
 
-    /**
-     * Listar pedidos de un usuario por estado
-     */
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuarioYEstado(UUID usuarioId, EstadoPedido estado) {
-        System.out.println("📦 Buscando pedidos del usuario: " + usuarioId + " con estado: " + estado);
 
-        List<Pedido> pedidos = pedidoRepository.findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(usuarioId,
-                estado);
-
-        System.out.println("✅ Se encontraron " + pedidos.size() + " pedidos");
-        return pedidos;
+        return pedidoRepository
+                .findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(usuarioId, estado);
     }
 
-    /**
-     * Contar pedidos de un usuario
-     */
     @Transactional(readOnly = true)
     public long contarPedidosPorUsuario(UUID usuarioId) {
-        long count = pedidoRepository.countByCliente_UsuarioId(usuarioId);
-        System.out.println("🔢 Total de pedidos del usuario " + usuarioId + ": " + count);
-        return count;
+        return pedidoRepository.countByCliente_UsuarioId(usuarioId);
     }
 
-    // hu21
+    // -------------------------------------------------------------------------
+    // HU-21 — PEDIDOS POR REPARTIDOR
+    // -------------------------------------------------------------------------
     @Transactional(readOnly = true)
     public List<Pedido> findByRepartidorId(UUID repartidorId) {
-        System.out.println("📦 Buscando pedidos del repartidor: " + repartidorId);
         return pedidoRepository.findByRepartidorIdOrderByFechaCreacionDesc(repartidorId);
     }
 
-    /**
-     * Asignar repartidor a un pedido
-     */
-    @Transactional
+   @Transactional
     public Pedido asignarRepartidor(@NonNull UUID pedidoId, UUID repartidorId) {
+
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        
+
         if (pedido.getRepartidorId() != null) {
             throw new RuntimeException("El pedido ya está asignado a otro repartidor");
         }
@@ -207,10 +218,46 @@ public class PedidoService {
         if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
             throw new RuntimeException("El pedido debe estar en estado CON_EL_REPARTIDOR para asignar repartidor");
         }
-        
+
         pedido.setRepartidorId(repartidorId);
         System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
         
         return pedidoRepository.save(pedido);
+    }
+
+    // -------------------------------------------------------------------------
+    // HISTORIAL PARA RESTAURANTE
+    // -------------------------------------------------------------------------
+    public List<PedidoDto> obtenerHistorial(
+            UUID restauranteId,
+            String fechaInicio,
+            String fechaFin,
+            String estado,
+            UUID clienteId
+    ) {
+
+        LocalDateTime inicio = fechaInicio != null ? LocalDateTime.parse(fechaInicio) : null;
+        LocalDateTime fin = fechaFin != null ? LocalDateTime.parse(fechaFin) : null;
+
+        EstadoPedido estadoEnum = null;
+        if (estado != null && !estado.isBlank()) {
+            estadoEnum = EstadoPedido.valueOf(estado.toUpperCase());
+        }
+
+        return pedidoRepository.filtrarPedidos(
+                        restauranteId, inicio, fin, estadoEnum, clienteId)
+                .stream()
+                .map(PedidoMapper::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PedidoDto> obtenerHistorialConItems(UUID restauranteId) {
+
+        return pedidoRepository
+                .findHistorialByRestauranteIdConItems(restauranteId)
+                .stream()
+                .map(PedidoMapper::toDto)
+                .toList();
     }
 }

@@ -1,8 +1,13 @@
+
 package com.ufps.Quick_Delivery.controller;
 
+
 import com.ufps.Quick_Delivery.dto.UsuarioResponse;
+import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.model.Cliente;
 import com.ufps.Quick_Delivery.service.ClienteService;
+import com.ufps.Quick_Delivery.service.PedidoService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +24,7 @@ import java.util.UUID;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final PedidoService pedidoService;
 
     @PostMapping
     public ResponseEntity<Cliente> crearCliente(@Valid @RequestBody Cliente cliente) {
@@ -53,9 +59,19 @@ public class ClienteController {
 
     @GetMapping("/{clienteId}/contacto")
     public ResponseEntity<UsuarioResponse> obtenerContactoCliente(@PathVariable UUID clienteId) {
-    UsuarioResponse contacto = clienteService.obtenerContactoCliente(clienteId);
-    return ResponseEntity.ok(contacto);
-}
+        UsuarioResponse contacto = clienteService.obtenerContactoCliente(clienteId);
+        return ResponseEntity.ok(contacto);
+    }
 
-
+    // ⭐ Nuevo endpoint mergeado correctamente
+    @GetMapping("/{restauranteId}/historial")
+    public List<PedidoDto> obtenerHistorial(
+            @PathVariable UUID restauranteId,
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) UUID clienteId
+    ) {
+        return pedidoService.obtenerHistorial(restauranteId, fechaInicio, fechaFin, estado, clienteId);
+    }
 }

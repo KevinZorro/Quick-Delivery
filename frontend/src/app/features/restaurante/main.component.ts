@@ -270,4 +270,9 @@ export class RestauranteMainComponent implements OnInit {
     this.router.navigate(['/restaurante/perfil']);
   }
 
+
+verHistorialPedidos(): void {
+  this.router.navigate(['/restaurante/pedidos']);
+}
+
 }

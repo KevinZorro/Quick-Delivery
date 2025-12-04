@@ -10,6 +10,11 @@ import { DireccionesRestauranteListaComponent } from './features/restaurante/dir
 import { DireccionRestauranteFormComponent } from './features/restaurante/direcciones-restaurante-form.component';
 import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
+import { PedidosComponent } from './features/restaurante/pedidos.component';
+
+
+
+
 import { DeliveryMainComponent } from './features/delivery/main.component';
 import { DeliveryEntregasComponent } from './features/delivery/entregas.component';
 import { RecuperarContrasenaComponent } from './features/edge/recuperar-contrasena.component';
@@ -29,7 +34,12 @@ export const routes: Routes = [
   
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
+<<<<<<< HEAD
+  {path: 'restaurante/pedidos', component: PedidosComponent},
+
+=======
   { path: 'restaurante/perfil', component: RestaurantePerfilComponent },
+>>>>>>> origin/main
   {
     path: 'restaurante/direcciones',
     component: DireccionesRestauranteListaComponent,
@@ -45,7 +55,7 @@ export const routes: Routes = [
   { path: 'restaurante/direcciones/mapa', component: DireccionFormComponent },
   // Dashboard de reportes del restaurante
   { path: 'dashboard-reportes', component: DashboardReportesComponent },
-
+  
   // Rutas de cliente
   { path: 'main', component: MainComponent },
   { path: 'restaurante/:id', component: RestauranteDetalleComponent },
