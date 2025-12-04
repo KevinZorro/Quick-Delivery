@@ -24,37 +24,32 @@ export class PedidosComponent implements OnInit {
     'ENTREGADO'
   ];
 
-  // Ya NO usamos el usuario ni buscamos el restaurante
+  // 👉 USAR SOLO ESTE ID – no depende del usuario
   restauranteId = "1e7290a8-d5b5-4d41-8f44-d225973ad883";
 
   constructor(private pedidosService: PedidosService) {}
 
   ngOnInit(): void {
+    // 👉 Ya NO se usa getRestaurantePorUsuario
     this.cargarHistorial();
   }
 
-  // ----------------------------------------------------
-  //  CARGAR HISTORIAL DIRECTAMENTE POR EL RESTAURANTE
-  // ----------------------------------------------------
   cargarHistorial() {
     this.cargando = true;
 
     this.pedidosService.getHistorial(this.restauranteId).subscribe({
-      next: data => {
+      next: (data) => {
         this.pedidos = data;
         this.cargando = false;
       },
-      error: err => {
-        console.error(err);
-        this.cargando = false;
+      error: (err) => {
+        console.error("Error cargando historial:", err);
         this.mensaje = "Error cargando pedidos ❌";
+        this.cargando = false;
       }
     });
   }
 
-  // ----------------------------------------------------
-  //  CAMBIAR ESTADO DE PEDIDO
-  // ----------------------------------------------------
   cambiarEstado(pedidoId: string, nuevoEstado: string) {
     this.cargandoCambio = pedidoId;
 

@@ -34,23 +34,39 @@ public class HorarioAtencionService {
     private final HorarioAtencionRepository horarioRepo;
     private final InterrupcionEspecialRepository interrupcionRepo;
     private final HorarioAtencionRepository horarioAtencionRepository;
+    
 
 
     // CRUD Horarios
-    public HorarioAtencion guardarHorario(HorarioAtencionDto dto) {
+        public HorarioAtencion guardarHorario(HorarioAtencionDto dto) {
+
+        System.out.println("========== GUARDAR HORARIO (SERVICE) ==========");
+        System.out.println("➡ RestauranteId recibido en DTO: " + dto.getRestauranteId());
+        System.out.println("➡ Dia: " + dto.getDiaSemana());
+        System.out.println("➡ Apertura: " + dto.getHoraApertura());
+        System.out.println("➡ Cierre: " + dto.getHoraCierre());
+
         Restaurante restaurante = restauranteRepository.findById(dto.getRestauranteId())
-                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+                .orElseThrow(() -> {
+                    System.out.println("❌ Restaurante NO encontrado con ID: " + dto.getRestauranteId());
+                    return new RuntimeException("Restaurante no encontrado");
+                });
 
         HorarioAtencion horario = HorarioAtencion.builder()
-                .id(dto.getId())
                 .diaSemana(dto.getDiaSemana())
                 .horaApertura(dto.getHoraApertura())
                 .horaCierre(dto.getHoraCierre())
                 .restaurante(restaurante)
                 .build();
 
-        return horarioRepo.save(horario);
+        HorarioAtencion guardado = horarioRepo.save(horario);
+
+        System.out.println("✔ Horario guardado con ID: " + guardado.getId());
+        System.out.println("==============================================");
+
+        return guardado;
     }
+
 
     public List<HorarioAtencion> listarHorarios(UUID restauranteId) {
         return horarioRepo.findByRestauranteId(restauranteId);
@@ -150,7 +166,5 @@ public class HorarioAtencionService {
 
         return horarioAtencionRepository.save(horario);
     }
-
-
 
 }

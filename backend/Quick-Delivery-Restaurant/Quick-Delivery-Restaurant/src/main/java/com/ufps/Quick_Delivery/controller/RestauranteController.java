@@ -134,16 +134,37 @@ public ResponseEntity<?> actualizarEstado(
         return restauranteService.listarHistorialCompleto(restauranteId);
     }
 
+    
     @PostMapping("/{restauranteId}/horarios")
-    public ResponseEntity<HorarioAtencion> crearHorario(
+    public ResponseEntity<?> crearHorario(
             @PathVariable UUID restauranteId,
             @RequestBody HorarioAtencionDto dto) {
 
-        dto.setRestauranteId(restauranteId);
-        HorarioAtencion nuevo = restauranteService.getHorarioService().guardarHorario(dto);
+        System.out.println("========== CREAR HORARIO ==========");
+        System.out.println("➡ RestauranteId recibido en URL: " + restauranteId);
+        System.out.println("➡ DTO recibido: " + dto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
+        try {
+            dto.setRestauranteId(restauranteId);
+
+            HorarioAtencion nuevo = restauranteService
+                    .getHorarioService()
+                    .guardarHorario(dto);
+
+            System.out.println("✔ Horario creado con éxito: " + nuevo.getId());
+            System.out.println("====================================");
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
+
+        } catch (Exception e) {
+            System.out.println("❌ ERROR al crear horario: " + e.getMessage());
+            e.printStackTrace();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al crear horario: " + e.getMessage());
+        }
     }
+
 
     @GetMapping("/{restauranteId}/horarios")
     public ResponseEntity<List<HorarioAtencion>> listarHorarios(

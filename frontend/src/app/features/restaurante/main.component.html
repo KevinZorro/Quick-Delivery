@@ -2,89 +2,54 @@
 
   <!-- Header -->
   <header class="bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-white">
-      <div class="flex justify-between items-center">
-        <div>
-          <p class="text-sm font-semibold">Panel de Restaurante</p>
-          <h1 class="text-2xl opacity-90 mt-1">{{ restauranteNombre }}</h1>
-        </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-white">
+    <div class="flex justify-between items-center">
 
-        <!-- Botones de navegación y cerrar sesión -->
-        <div class="flex items-center gap-3">
-          <!-- Reportes -->
-          <button
-            (click)="verReportes()"
-            class="px-4 py-2 bg-amber-400 text-white rounded-lg hover:bg-amber-500 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
-          >
-            <span>📊</span>
-            <span class="hidden sm:inline">Reportes</span>
-          </button>
-
-          <button
-  (click)="irAPromociones()"
-  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
->
-  <span>🎁</span>
-  <span class="hidden sm:inline">Promociones</span>
-</button>
-
-
-          <!-- Direcciones -->
-          <button
-            (click)="verDirecciones()"
-            class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
-          >
-            <span>📍</span>
-            <span class="hidden sm:inline">Mis Direcciones</span>
-          </button>
-
-          <!-- Perfil -->
-          <button
-            (click)="verPerfil()"
-            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
-          >
-            <span>👤</span>
-            <span class="hidden sm:inline">Mi Perfil</span>
-          </button>
-
-          <!-- Cerrar sesión -->
-          <button
-            (click)="cerrarSesion()"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
-          >
-            Cerrar Sesión
-          </button>
-        </div>
+      <!-- Info restaurante -->
+      <div>
+        <p class="text-sm font-semibold">Panel de Restaurante</p>
+        <h1 class="text-2xl opacity-90 mt-1">{{ restauranteNombre }}</h1>
       </div>
-    </div>
-  </header>
-        <button
-          (click)="verDirecciones()"
-          class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
-        >
+
+      <!-- Botones -->
+      <div class="flex items-center gap-3">
+
+        <button (click)="verReportes()" class="px-4 py-2 bg-amber-400 text-white rounded-lg hover:bg-amber-500 transition-colors duration-200 text-sm font-medium flex items-center gap-2">
+          <span>📊</span>
+          <span class="hidden sm:inline">Reportes</span>
+        </button>
+
+        <button (click)="irAPromociones()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 text-sm font-medium flex items-center gap-2">
+          <span>🎁</span>
+          <span class="hidden sm:inline">Promociones</span>
+        </button>
+
+        <button (click)="verDirecciones()" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2">
           <span>📍</span>
           <span class="hidden sm:inline">Mis Direcciones</span>
         </button>
-        
-        <button
-          (click)="verHistorialPedidos()"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2"
-        >
+
+        <button (click)="verHistorialPedidos()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium flex items-center gap-2">
           <span>🧾</span>
           <span class="hidden sm:inline">Pedidos</span>
         </button>
 
+        <button 
+            (click)="verHorarios()" 
+            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm font-medium">
+            Gestionar Horarios
+          </button>
 
-        <button
-          (click)="cerrarSesion()"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium"
-        >
+
+        <button (click)="cerrarSesion()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-medium">
           Cerrar Sesión
         </button>
+
       </div>
     </div>
   </div>
 </header>
+
 
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
