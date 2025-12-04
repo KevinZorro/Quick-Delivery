@@ -177,6 +177,14 @@ export class DeliveryService {
     });
   }
 
+    obtenerPedidosEnCurso(usuarioId: string): Observable<PedidoDisponible[]> {
+  const headers = this.getAuthHeaders();
+  return this.http.get<PedidoDisponible[]>(
+    `${this.baseUrl}/pedidos/en-curso?usuarioId=${usuarioId}`,
+    { headers }
+  );
+}
+
 
   obtenerPedidosDisponibles(usuarioId: string): Observable<PedidoDisponible[]> {
     const headers = this.getAuthHeaders();

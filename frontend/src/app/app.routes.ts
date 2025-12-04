@@ -34,12 +34,9 @@ export const routes: Routes = [
   
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
-<<<<<<< HEAD
   {path: 'restaurante/pedidos', component: PedidosComponent},
 
-=======
   { path: 'restaurante/perfil', component: RestaurantePerfilComponent },
->>>>>>> origin/main
   {
     path: 'restaurante/direcciones',
     component: DireccionesRestauranteListaComponent,
