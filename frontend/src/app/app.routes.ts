@@ -23,6 +23,7 @@ import { ClientePerfilComponent } from './features/cliente/perfil.component';
 import { RestaurantePerfilComponent } from './features/restaurante/perfil.component';
 import { DeliveryPerfilComponent } from './features/delivery/perfil.component';
 import { TrackingMapaComponent } from './features/delivery/tracking-mapa.component';
+import { HorariosComponent } from './features/restaurante/horarios.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -36,7 +37,7 @@ export const routes: Routes = [
   { path: 'restaurante/main', component: RestauranteMainComponent },
   {path: 'restaurante/pedidos', component: PedidosComponent},
 
-  { path: 'restaurante/horarios', component: PedidosComponent },
+  { path: 'restaurante/horarios', component: HorariosComponent },
 
 
 

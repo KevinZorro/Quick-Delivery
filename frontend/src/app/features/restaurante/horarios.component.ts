@@ -10,7 +10,7 @@ import { PedidosService, PedidoDto } from './pedidos.service';
   imports: [CommonModule],
   templateUrl: './pedidos.component.html'
 })
-export class PedidosComponent implements OnInit {
+export class HorariosComponent implements OnInit {
 
   pedidos: PedidoDto[] = [];
   cargando = true;
