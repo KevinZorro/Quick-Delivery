@@ -11,9 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.ArrayList;
 
 import java.util.List;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -22,6 +27,24 @@ import java.util.UUID;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+
+       /**
+     * Asignar repartidor a un pedido
+     * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
+     */
+    @PutMapping("/{id}/repartidor")
+    public ResponseEntity<?> asignarRepartidor(
+            @PathVariable("id") UUID id,
+            @RequestParam("repartidorId") UUID repartidorId) {
+        try {
+            System.out.println("🔄 Asignando repartidor " + repartidorId + " al pedido " + id);
+            Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al asignar repartidor: " + e.getMessage());
+        }
+    }
 
     @PostMapping("/crear-desde-carrito")
     public ResponseEntity<?> crearPedidoDesdeCarrito(
@@ -154,21 +177,6 @@ public class PedidoController {
         System.out.println("🔍 Endpoint: Listar pedidos del repartidor: " + repartidorId);
         return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
     }
-    /**
-     * Asignar repartidor a un pedido
-     * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
-     */
-    @PatchMapping("/{id}/repartidor")
-    public ResponseEntity<?> asignarRepartidor(
-            @PathVariable("id") UUID id,
-            @RequestParam("repartidorId") UUID repartidorId) {
-        try {
-            Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
-            return ResponseEntity.ok(actualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body("Error al asignar repartidor: " + e.getMessage());
-        }
-    }
+ 
 
 }

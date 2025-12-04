@@ -204,12 +204,11 @@ public class PedidoService {
             throw new RuntimeException("El pedido ya está asignado a otro repartidor");
         }
         
-        if (!pedido.getEstado().equals(EstadoPedido.EN_COCINA)) {
-            throw new RuntimeException("El pedido debe estar en estado EN_COCINA para asignar repartidor");
+        if (!pedido.getEstado().equals(EstadoPedido.CON_EL_REPARTIDOR)) {
+            throw new RuntimeException("El pedido debe estar en estado CON_EL_REPARTIDOR para asignar repartidor");
         }
         
         pedido.setRepartidorId(repartidorId);
-        pedido.setEstado(EstadoPedido.CON_EL_REPARTIDOR);
         System.out.println("🚚 Repartidor " + repartidorId + " asignado al pedido " + pedidoId);
         
         return pedidoRepository.save(pedido);

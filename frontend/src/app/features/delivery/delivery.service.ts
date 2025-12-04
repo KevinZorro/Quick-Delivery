@@ -127,6 +127,12 @@ export interface Producto {
   fechaActualizacion: string;
 }
 
+export interface TrackingData {
+  repartidorLat: number;
+  repartidorLng: number;
+  clienteLat: number;
+  clienteLng: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -157,6 +163,13 @@ export class DeliveryService {
     });
   }
 
+  obtenerPedidosEnCurso(usuarioId: string): Observable<PedidoDisponible[]> {
+  const headers = this.getAuthHeaders();
+  return this.http.get<PedidoDisponible[]>(
+    `${this.baseUrl}/pedidos/en-curso?usuarioId=${usuarioId}`,
+    { headers }
+  );
+}
 
   obtenerPedidosDisponibles(usuarioId: string): Observable<PedidoDisponible[]> {
     const headers = this.getAuthHeaders();
@@ -167,18 +180,19 @@ export class DeliveryService {
   }
 
 
-  aceptarPedido(pedidoId: string, usuarioId: string): Observable<void> {
-    const headers = this.getAuthHeaders();
-    return this.http.post<void>(
-      `${this.baseUrl}/pedidos/${pedidoId}/aceptar?usuarioId=${usuarioId}`,
-      null,
-      { headers }
-    );
-  }
+aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
+  const headers = this.getAuthHeaders();
+  return this.http.put<void>(
+    `${this.baseUrl}/pedidos/${pedidoId}/aceptar?usuarioId=${usuarioId}`,
+    null,
+    { headers }
+  );
+}
 
 
 actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Observable<any> {
     const headers = this.getAuthHeaders();
+    console.log('Actualizando ubicación:', { usuarioId, latitud, longitud });
     let url = `${this.baseUrl}/${usuarioId}/ubicacion?latitud=${latitud}&longitud=${longitud}`;
 
     return this.http.post<any>(url, null, { headers });
@@ -187,13 +201,13 @@ actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Obser
 
 
   // Notificaciones
-  obtenerNotificacionesDisponibles(usuarioId: string): Observable<NotificacionPedido[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<NotificacionPedido[]>(
-      `${this.baseUrl}/notificaciones/disponibles?usuarioId=${usuarioId}`,
-      { headers }
-    );
-  }
+  //obtenerNotificacionesDisponibles(usuarioId: string): Observable<NotificacionPedido[]> {
+  //  const headers = this.getAuthHeaders();
+  //  return this.http.get<NotificacionPedido[]>(
+  //    `${this.baseUrl}/notificaciones/disponibles?usuarioId=${usuarioId}`,
+  //    { headers }
+  //  );
+  //}
 
 
   aceptarNotificacion(usuarioId: string, notificacionId: string, comentario?: string): Observable<Entrega> {
@@ -204,6 +218,8 @@ actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Obser
       { headers }
     );
   }
+
+  
 
 
   // Entregas
@@ -236,6 +252,14 @@ actualizarUbicacion(usuarioId: string, latitud: number, longitud: number): Obser
       { headers }
     );
   }
+
+obtenerTrackingData(pedidoId: string): Observable<TrackingData> {
+  const headers = this.getAuthHeaders();
+  return this.http.get<TrackingData>(
+    `${environment.deliveryApi}/api/tracking/pedido/${pedidoId}/tracking-data`,
+    { headers }
+  );
+}
 
   // ✅ NUEVO: Confirmar entrega con código y comentarios
   confirmarEntrega(dto: { pedidoId: string, codigoEntrega: string, comentarios?: string }): Observable<Entrega> {

@@ -7,5 +7,6 @@ public enum EstadoPedido {
     INICIADO,
     EN_COCINA,
     CON_EL_REPARTIDOR,
-    ENTREGADO
+    ENTREGADO,
+    RECHAZADO_POR_RESTAURANTE
 }

@@ -219,6 +219,7 @@
             <p class="text-sm opacity-90 mt-1">#{{ pedidoSeleccionado.pedido.id.substring(0, 8) }}</p>
           </div>
           <button
+          title="x"
             (click)="cerrarDetalles()"
             class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors duration-200"
           >
@@ -274,6 +275,7 @@
           <div class="space-y-3">
             <div *ngFor="let producto of pedidoSeleccionado.productos" class="bg-white p-3 rounded border border-orange-200 flex gap-3">
               <img 
+              title="z"
                 [src]="producto.imagenUrl" 
                 [alt]="producto.nombre"
                 class="w-20 h-20 object-cover rounded"
@@ -322,6 +324,7 @@
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold text-gray-900">Confirmar Entrega</h2>
         <button
+          title="x"
           (click)="cerrarModalConfirmacion()"
           class="text-gray-400 hover:text-gray-600 transition-colors"
         >
