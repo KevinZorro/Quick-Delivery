@@ -15,8 +15,8 @@ import java.util.UUID;
 @Slf4j
 public class TrackingService {
 
-    private final RestauranteClient restauranteClient; // trae pedidos
-    private final EdgeClient edgeClient;               // trae direcciones
+    private final RestauranteClient restauranteClient;
+    private final EdgeClient edgeClient;
     private final DeliveryUserRepository deliveryUserRepository;
     private final ClienteClient clienteclient;
 

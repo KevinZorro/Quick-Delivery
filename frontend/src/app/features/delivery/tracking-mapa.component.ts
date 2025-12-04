@@ -16,7 +16,10 @@ export class TrackingMapaComponent implements OnInit, OnDestroy, AfterViewInit {
   pedidoId: string = '';
   usuarioId: string = '';
   intervalId: any = null;
-  watchId: number | null = null;   // 🆕 PARA TRACKING EN TIEMPO REAL
+  watchId: number | null = null;
+  seguirRepartidor: boolean = true;
+lastRepartidorPos: any = null;
+rutaActiva: any = null;
 
   map: any;
   directionsService: any;
@@ -74,6 +77,11 @@ export class TrackingMapaComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log("🛑 Tracking de posición detenido");
     }
   }
+
+  toggleSeguirRepartidor() {
+  this.seguirRepartidor = !this.seguirRepartidor;
+}
+
 
   // ============================================================
   // 🛰️ TRACKING EN TIEMPO REAL DEL REPARTIDOR
@@ -136,16 +144,17 @@ export class TrackingMapaComponent implements OnInit, OnDestroy, AfterViewInit {
         console.log(`   ➤ Repartidor: ${data.repartidorLat}, ${data.repartidorLng}`);
         console.log(`   ➤ Cliente: ${data.clienteLat}, ${data.clienteLng}`);
 
-        // Mover marcadores
-        this.repartidorMarker.setPosition({
-          lat: data.repartidorLat,
-          lng: data.repartidorLng
-        });
+// Movimiento suave del marcador
+this.animarMovimiento(
+  this.repartidorMarker,
+  this.lastRepartidorPos || this.repartidorMarker.getPosition(),
+  new google.maps.LatLng(this.trackingData.repartidorLat, this.trackingData.repartidorLng)
+);
 
-        this.clienteMarker.setPosition({
-          lat: data.clienteLat,
-          lng: data.clienteLng
-        });
+this.lastRepartidorPos = new google.maps.LatLng(
+  this.trackingData.repartidorLat,
+  this.trackingData.repartidorLng
+);
 
         this.calcularRuta();
       },
@@ -254,6 +263,11 @@ calcularRuta(): void {
   const currentCenter = this.map.getCenter();
   const currentZoom = this.map.getZoom();
 
+  // Si ya hay una ruta dibujada, la removemos
+if (this.directionsRenderer) {
+  this.directionsRenderer.setMap(null);
+}
+
 
   this.directionsService = new google.maps.DirectionsService();
   this.directionsRenderer = new google.maps.DirectionsRenderer({
@@ -312,4 +326,31 @@ calcularRuta(): void {
   volver(): void {
     this.router.navigate(['/delivery']);
   }
+
+  animarMovimiento(marker: any, from: any, to: any) {
+  const frames = 30; // más frames = más suave
+  let count = 0;
+
+  const latDelta = (to.lat() - from.lat()) / frames;
+  const lngDelta = (to.lng() - from.lng()) / frames;
+
+  const mover = () => {
+    count++;
+    const lat = from.lat() + latDelta * count;
+    const lng = from.lng() + lngDelta * count;
+
+    marker.setPosition(new google.maps.LatLng(lat, lng));
+
+    if (this.seguirRepartidor) {
+      this.map.panTo(marker.getPosition());
+    }
+
+    if (count < frames) {
+      requestAnimationFrame(mover);
+    }
+  };
+
+  mover();
+}
+
 }
