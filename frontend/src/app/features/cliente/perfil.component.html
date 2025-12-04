@@ -1,27 +1,30 @@
-<div class="min-h-screen bg-gray-50 font-poppins">
+<div class="min-h-screen bg-white font-poppins"> 
   <app-header></app-header>
-
+<!-- Linea visual YAA-->
   <main class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
     <div class="bg-white rounded-lg shadow-md p-6">
+
+      <!-- Título principal -->
       <h1 class="text-3xl font-bold text-gray-900 mb-6">Mi Perfil</h1>
 
       <!-- Sección de Foto de Perfil -->
       <div class="mb-8 border-t border-gray-200 pt-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Foto de Perfil</h2>
 
-        <!-- Mensajes de éxito/error -->
+        <!-- Mensaje de Error -->
         <div
           *ngIf="errorMessage"
-          class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg"
+          class="mb-4 p-4 bg-rose-50 border border-rose-200 rounded-lg"
         >
-          <p class="text-red-800 text-sm">{{ errorMessage }}</p>
+          <p class="text-rose-700 text-sm">{{ errorMessage }}</p>
         </div>
 
+        <!-- Mensaje de Éxito -->
         <div
           *ngIf="successMessage"
-          class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+          class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg"
         >
-          <p class="text-green-800 text-sm">{{ successMessage }}</p>
+          <p class="text-amber-700 text-sm">{{ successMessage }}</p>
         </div>
 
         <!-- Foto actual -->
@@ -29,6 +32,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Foto Actual
           </label>
+
           <div class="flex items-center gap-4">
             <div
               class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center"
@@ -55,11 +59,12 @@
                 />
               </svg>
             </div>
+
             <button
               *ngIf="fotoPerfil"
               (click)="eliminarFotoPerfil()"
               [disabled]="loading"
-              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Eliminar Foto
             </button>
@@ -69,20 +74,20 @@
         <!-- Formulario para actualizar foto -->
         <div class="space-y-4">
           <div>
-            <label
-              for="fotoUrl"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
+            <label for="fotoUrl" class="block text-sm font-medium text-gray-700 mb-2">
               URL de la Foto
             </label>
+
             <input
               type="text"
               id="fotoUrl"
               [(ngModel)]="nuevaFotoUrl"
               placeholder="https://ejemplo.com/foto.jpg"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                    focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
               [disabled]="loading"
             />
+
             <p class="mt-1 text-xs text-gray-500">
               Formatos permitidos: .jpg, .jpeg, .png, .gif, .webp o base64
             </p>
@@ -91,7 +96,8 @@
           <button
             (click)="actualizarFotoPerfil()"
             [disabled]="loading || !nuevaFotoUrl || nuevaFotoUrl.trim() === ''"
-            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 
+                  transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span *ngIf="!loading">Actualizar Foto</span>
             <span *ngIf="loading">Actualizando...</span>
@@ -104,26 +110,21 @@
         <h2 class="text-xl font-semibold text-gray-800 mb-4">
           Información Personal
         </h2>
+
         <div class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700"
-              >Nombre</label
-            >
+            <label class="block text-sm font-medium text-gray-700">Nombre</label>
             <p class="mt-1 text-gray-900">{{ userName }}</p>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700"
-              >Correo</label
-            >
+            <label class="block text-sm font-medium text-gray-700">Correo</label>
             <p class="mt-1 text-gray-900">{{ userEmail || "No disponible" }}</p>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700"
-              >Teléfono</label
-            >
-            <p class="mt-1 text-gray-900">
-              {{ userTelefono || "No disponible" }}
-            </p>
+            <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+            <p class="mt-1 text-gray-900">{{ userTelefono || "No disponible" }}</p>
           </div>
         </div>
       </div>
