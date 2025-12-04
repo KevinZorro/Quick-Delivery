@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ufps.Quick_Delivery.dto.PedidoDisponibleDto;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,18 @@ import java.util.UUID;
 public class PedidoDisponibleController {
 
     private final PedidoDisponibleService pedidoDisponibleService;
+
+    @GetMapping("/en-curso")
+    public ResponseEntity<List<PedidoDisponibleDto>> obtenerPedidosEnCurso(
+            @RequestParam("usuarioId") UUID usuarioId) { // ⭐ Recibe usuarioId
+        try {
+            List<PedidoDisponibleDto> pedidos = pedidoDisponibleService.obtenerPedidosEnCursoPorUsuarioId(usuarioId);
+            return ResponseEntity.ok(pedidos);
+        } catch (Exception e) {
+            log.error("Error obteniendo pedidos en curso: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @GetMapping("/disponibles")
     public ResponseEntity<?> obtenerPedidosDisponibles(
@@ -49,7 +62,7 @@ public class PedidoDisponibleController {
      * Aceptar un pedido (asignación manual)
      * POST /api/delivery/pedidos/{pedidoId}/aceptar?usuarioId={usuarioId}
      */
-    @PostMapping("/{pedidoId}/aceptar")
+    @PutMapping("/{pedidoId}/aceptar")
     public ResponseEntity<?> aceptarPedido(
             @PathVariable("pedidoId") UUID pedidoId,
             @RequestParam("usuarioId") UUID usuarioId) {
@@ -62,4 +75,3 @@ public class PedidoDisponibleController {
         }
     }
 }
-

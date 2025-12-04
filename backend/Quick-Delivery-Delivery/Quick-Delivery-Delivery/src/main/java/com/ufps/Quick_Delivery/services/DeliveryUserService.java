@@ -1,15 +1,14 @@
 package com.ufps.Quick_Delivery.services;
 
+import com.ufps.Quick_Delivery.Client.EdgeClient;
 import com.ufps.Quick_Delivery.dto.DeliveryUserDto;
 import com.ufps.Quick_Delivery.models.DeliveryUser;
 import com.ufps.Quick_Delivery.repository.DeliveryUserRepository;
-import com.ufps.Quick_Delivery.client.ClienteDireccion;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 public class DeliveryUserService {
 
     private final DeliveryUserRepository repository;
-    private final ClienteDireccion clienteDireccion;
+    private final EdgeClient edgeClient;
 
     // Convertir entidad a DTO
     private DeliveryUserDto toDto(DeliveryUser entity) {
@@ -110,11 +109,19 @@ public class DeliveryUserService {
                 .map(DeliveryUser::getId);
     }
 
-    public boolean actualizarUbicacion(UUID usuarioId, double latitud, double longitud) {
-    String coordenadas = latitud + "," + longitud;
-    ResponseEntity<Void> response = clienteDireccion.actualizarUbicacion(usuarioId, coordenadas);
-    return response.getStatusCode().is2xxSuccessful();
-}
-
-
+    /**
+     * Actualiza la ubicación en el microservicio de direcciones (edge).
+     * Nota: el id que se pasa se utiliza tal como lo hacía la versión anterior.
+     * Devuelve true si la llamada al servicio remoto fue exitosa (2xx), false en caso contrario.
+     */
+    public boolean actualizarUbicacion(UUID id, double latitud, double longitud) {
+        String coordenadas = latitud + "," + longitud;
+        try {
+            ResponseEntity<Void> response = edgeClient.actualizarUbicacion(id, coordenadas);
+            return response != null && response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            // Loguea si quieres: log.warn("Error al actualizar ubicacion: {}", e.getMessage());
+            return false;
+        }
+    }
 }

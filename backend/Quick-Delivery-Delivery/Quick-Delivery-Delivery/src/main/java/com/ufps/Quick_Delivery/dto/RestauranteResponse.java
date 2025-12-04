@@ -1,7 +1,9 @@
-package com.ufps.Quick_Delivery.client;
+// src/main/java/com/ufps/Quick_Delivery/client/dto/RestauranteResponse.java
+package com.ufps.Quick_Delivery.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+
 import java.util.UUID;
 
 @Data
@@ -14,4 +16,3 @@ public class RestauranteResponse {
     private Double calificacionPromedio;
     private String imagenUrl;
 }
-

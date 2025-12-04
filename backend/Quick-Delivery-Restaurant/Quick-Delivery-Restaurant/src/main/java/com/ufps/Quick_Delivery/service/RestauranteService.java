@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ufps.Quick_Delivery.client.PedidoFeignClient;
-import com.ufps.Quick_Delivery.config.UsuarioClient;
+import com.ufps.Quick_Delivery.client.UsuarioClient;
 import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
 import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
