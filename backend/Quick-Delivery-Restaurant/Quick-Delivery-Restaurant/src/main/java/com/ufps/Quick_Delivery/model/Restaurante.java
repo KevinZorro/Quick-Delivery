@@ -26,4 +26,7 @@ public class Restaurante {
     private Double calificacionPromedio;
 
     private String imagenUrl;
+
+    @Transient
+    private Boolean disponible; // Se calcula, no se persiste
 }

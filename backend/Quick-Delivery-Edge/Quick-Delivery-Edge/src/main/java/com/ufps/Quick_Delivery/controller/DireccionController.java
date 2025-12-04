@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.ufps.Quick_Delivery.dto.UsuarioUbicacionResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +30,26 @@ public class DireccionController {
         DireccionResponseDto direccion = direccionService.crearDireccion(requestDto, usuarioId);
         return new ResponseEntity<>(direccion, HttpStatus.CREATED);
     }
+
+    /**
+ * ⭐ NUEVO - Para tracking en tiempo real del repartidor
+ * Devuelve la ubicación GPS actual del usuario (última dirección con coordenadas)
+ */
+@GetMapping("/usuario/{usuarioId}/ubicacion-actual")
+public ResponseEntity<UsuarioUbicacionResponse> obtenerUbicacionActualUsuario(
+        @PathVariable("usuarioId") UUID usuarioId) {
+    
+    DireccionResponseDto direccionActual = direccionService.obtenerDireccionActualUsuario(usuarioId);
+    
+    if (direccionActual == null || direccionActual.getCoordenadas() == null) {
+        return ResponseEntity.notFound().build();
+    }
+    
+    return ResponseEntity.ok(new UsuarioUbicacionResponse(
+        direccionActual.getCoordenadas() // "4.123,-74.456"
+    ));
+}
+
     
     // ⭐ Endpoint para obtener MIS direcciones (usuario autenticado)
     @GetMapping("/mis-direcciones")

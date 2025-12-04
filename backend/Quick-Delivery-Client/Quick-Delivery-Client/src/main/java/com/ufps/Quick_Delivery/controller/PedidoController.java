@@ -23,9 +23,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.ArrayList;
 
 import java.util.List;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -36,6 +41,24 @@ public class PedidoController {
     private final PedidoService pedidoService;
     private final DeliveryFeignClient deliveryClient;
     
+       /**
+     * Asignar repartidor a un pedido
+     * PATCH /api/pedidos/{id}/repartidor?repartidorId={repartidorId}
+     */
+    @PutMapping("/{id}/repartidor")
+    public ResponseEntity<?> asignarRepartidor(
+            @PathVariable("id") UUID id,
+            @RequestParam("repartidorId") UUID repartidorId) {
+        try {
+            System.out.println("🔄 Asignando repartidor " + repartidorId + " al pedido " + id);
+            Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al asignar repartidor: " + e.getMessage());
+        }
+    }
+
 
     // --------------------------------------------------------------------
     // CREAR PEDIDO DESDE CARRITO
@@ -151,32 +174,7 @@ public class PedidoController {
     public ResponseEntity<List<Pedido>> obtenerPorRepartidor(@PathVariable UUID repartidorId) {
         return ResponseEntity.ok(pedidoService.findByRepartidorId(repartidorId));
     }
-
-    @PatchMapping("/{id}/repartidor")
-    public ResponseEntity<?> asignarRepartidor(
-            @PathVariable UUID id,
-            @RequestParam UUID repartidorId) {
-
-        try {
-            Pedido actualizado = pedidoService.asignarRepartidor(id, repartidorId);
-
-            IniciarEntregaRequest req = new IniciarEntregaRequest();
-
-            req.setPedidoId(id);
-            req.setRepartidorId(repartidorId);
-
-            EntregaResponse entrega = deliveryClient.iniciarEntrega(req);
-
-
-            return ResponseEntity.ok(
-                    new AsignarRepartidorResponse(actualizado, entrega.getCodigoConfirmacion())
-            );
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body("Error al asignar repartidor: " + e.getMessage());
-        }
-    }
+ 
 
     // --------------------------------------------------------------------
     // CONFIRMAR ENTREGA

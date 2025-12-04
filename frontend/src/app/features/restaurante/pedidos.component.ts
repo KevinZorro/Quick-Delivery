@@ -1,8 +1,8 @@
 // src/app/features/pedidos/pedidos.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PedidosService, PedidoDto } from './pedidos.service';
-
 
 @Component({
   selector: 'app-pedidos',
@@ -24,30 +24,21 @@ export class PedidosComponent implements OnInit {
     'ENTREGADO'
   ];
 
-usuarioId = localStorage.getItem('quick-delivery-userId') ?? '';
-restauranteId = '';
+  // Ya NO usamos el usuario ni buscamos el restaurante
+  restauranteId = "1e7290a8-d5b5-4d41-8f44-d225973ad883";
+
   constructor(private pedidosService: PedidosService) {}
 
   ngOnInit(): void {
-    this.obtenerRestauranteDelUsuario();
+    this.cargarHistorial();
   }
 
-  obtenerRestauranteDelUsuario() {
-    this.pedidosService.getRestaurantePorUsuario(this.usuarioId).subscribe({
-      next: (restaurante) => {
-        this.restauranteId = restaurante.id;
-        this.cargarHistorial();
-      },
-      error: (err) => {
-        console.error("Error obteniendo restaurante del usuario", err);
-        this.cargando = false;
-        this.mensaje = "No se pudo cargar tu restaurante ❌";
-      }
-    });
-}
-
+  // ----------------------------------------------------
+  //  CARGAR HISTORIAL DIRECTAMENTE POR EL RESTAURANTE
+  // ----------------------------------------------------
   cargarHistorial() {
     this.cargando = true;
+
     this.pedidosService.getHistorial(this.restauranteId).subscribe({
       next: data => {
         this.pedidos = data;
@@ -56,10 +47,14 @@ restauranteId = '';
       error: err => {
         console.error(err);
         this.cargando = false;
+        this.mensaje = "Error cargando pedidos ❌";
       }
     });
   }
 
+  // ----------------------------------------------------
+  //  CAMBIAR ESTADO DE PEDIDO
+  // ----------------------------------------------------
   cambiarEstado(pedidoId: string, nuevoEstado: string) {
     this.cargandoCambio = pedidoId;
 

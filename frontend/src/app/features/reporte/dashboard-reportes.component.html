@@ -26,74 +26,81 @@
   <div *ngIf="loading" class="text-gray-600 text-lg">Cargando reportes...</div>
   <div *ngIf="errorMessage" class="text-rose-600 font-semibold text-lg">{{ errorMessage }}</div>
 
-  <!-- Data -->
-  <div *ngIf="reporte" class="space-y-8">
+<!-- Data -->
+<div *ngIf="reporte" class="space-y-8">
 
-    <!-- Resumen Cards -->
-    <div class="grid md:grid-cols-2 gap-6">
-      <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition">
-        <h3 class="font-semibold text-gray-700 text-lg">🛒 Total Pedidos</h3>
-        <p class="text-3xl font-bold mt-2 text-amber-600">{{ reporte?.totalPedidos }}</p>
-      </div>
-
-      <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition">
-        <h3 class="font-semibold text-gray-700 text-lg">💰 Ingresos Totales</h3>
-        <p class="text-3xl font-bold mt-2 text-rose-500">${{ reporte?.ingresosTotales }}</p>
-      </div>
+  <!-- Resumen Cards -->
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition">
+      <h3 class="font-semibold text-gray-700 text-lg">🛒 Total Pedidos</h3>
+      <p class="text-3xl font-bold mt-2 text-amber-600">{{ reporte.totalPedidos }}</p>
     </div>
 
-    <!-- Estado Pedidos -->
-    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-      <h3 class="font-semibold text-xl text-gray-800 mb-3">📦 Estado de Pedidos</h3>
-      <div class="grid grid-cols-2 gap-4 text-lg">
-        <div class="font-medium text-amber-600">✅ Completados: {{ reporte?.estadoPedidos?.completados }}</div>
-        <div class="font-medium text-rose-500">⌛ En curso: {{ reporte?.estadoPedidos?.enCurso }}</div>
-      </div>
+    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition">
+      <h3 class="font-semibold text-gray-700 text-lg">💰 Ingresos Totales</h3>
+      <p class="text-3xl font-bold mt-2 text-rose-500">${{ reporte.ingresosTotales }}</p>
     </div>
-
-    <!-- Ingresos por categoría -->
-    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-      <h3 class="font-semibold text-xl text-gray-800 mb-3">🍽️ Ingresos por Categoría</h3>
-      <ul class="space-y-2">
-        <li *ngFor="let cat of reporte?.ingresosPorCategoria | keyvalue" class="flex justify-between text-lg">
-          <span class="font-medium text-gray-700">{{ cat.key }}</span>
-          <span class="font-bold text-amber-600">${{ cat.value }}</span>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Más vendidos -->
-    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-      <h3 class="font-semibold text-xl text-gray-800 mb-3">🔥 Platos Más Vendidos</h3>
-      <ul class="space-y-2 text-lg">
-        <li *ngFor="let plato of reporte?.platosMasVendidos" class="flex justify-between">
-          <span class="text-gray-700">{{ plato.nombre }}</span>
-          <strong class="text-amber-700">{{ plato.cantidadVendida }} vendidos</strong>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Top 10 productos -->
-    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-      <h3 class="font-semibold text-xl text-gray-800 mb-3">🏆 Top 10 Productos</h3>
-      <ul class="space-y-2 text-lg">
-        <li *ngFor="let plato of reporte?.top10Productos" class="flex justify-between">
-          <span class="text-gray-700">{{ plato.nombre }}</span>
-          <strong class="text-rose-600">{{ plato.cantidadVendida }}</strong>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Productos con pocas ventas -->
-    <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-      <h3 class="font-semibold text-xl text-gray-800 mb-3">⚠️ Productos con Bajas Ventas</h3>
-      <ul class="space-y-2 text-lg">
-        <li *ngFor="let plato of reporte?.productosBajasVentas" class="flex justify-between">
-          <span class="text-gray-700">{{ plato.nombre }}</span>
-          <strong class="text-red-500">{{ plato.cantidadVendida }}</strong>
-        </li>
-      </ul>
-    </div>
-
   </div>
+
+<!-- Estado Pedidos -->
+<div class="bg-white rounded-xl p-6 shadow-md border border-gray-200" *ngIf="reporte">
+  <h3 class="font-semibold text-xl text-gray-800 mb-3">📦 Estado de Pedidos</h3>
+
+  <div class="grid grid-cols-2 gap-4 text-lg">
+    <div class="font-medium text-amber-600">
+      ✅ Completados: {{ reporte?.estadoPedidos?.completados ?? 0 }}
+    </div>
+
+    <div class="font-medium text-rose-500">
+      ⌛ En curso: {{ reporte?.estadoPedidos?.enCurso ?? 0 }}
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- Ingresos por categoría -->
+  <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+    <h3 class="font-semibold text-xl text-gray-800 mb-3">🍽️ Ingresos por Categoría</h3>
+    <ul class="space-y-2">
+      <li *ngFor="let cat of reporte.ingresosPorCategoria | keyvalue" class="flex justify-between text-lg">
+        <span class="font-medium text-gray-700">{{ cat.key }}</span>
+        <span class="font-bold text-amber-600">${{ cat.value }}</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Más vendidos -->
+  <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+    <h3 class="font-semibold text-xl text-gray-800 mb-3">🔥 Platos Más Vendidos</h3>
+    <ul class="space-y-2 text-lg">
+      <li *ngFor="let plato of reporte.platosMasVendidos" class="flex justify-between">
+        <span class="text-gray-700">{{ plato.nombre }}</span>
+        <strong class="text-amber-700">{{ plato.cantidadVendida }} vendidos</strong>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Top 10 productos -->
+  <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+    <h3 class="font-semibold text-xl text-gray-800 mb-3">🏆 Top 10 Productos</h3>
+    <ul class="space-y-2 text-lg">
+      <li *ngFor="let plato of reporte.top10Productos" class="flex justify-between">
+        <span class="text-gray-700">{{ plato.nombre }}</span>
+        <strong class="text-rose-600">{{ plato.cantidadVendida }}</strong>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Productos con pocas ventas -->
+  <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+    <h3 class="font-semibold text-xl text-gray-800 mb-3">⚠️ Productos con Bajas Ventas</h3>
+    <ul class="space-y-2 text-lg">
+      <li *ngFor="let plato of reporte.productosBajasVentas" class="flex justify-between">
+        <span class="text-gray-700">{{ plato.nombre }}</span>
+        <strong class="text-red-500">{{ plato.cantidadVendida }}</strong>
+      </li>
+    </ul>
+  </div>
+
 </div>
