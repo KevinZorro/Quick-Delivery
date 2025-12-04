@@ -31,6 +31,23 @@ export interface ItemPedidoDisponible {
   subtotal: number;
 }
 
+// ✅ NUEVAS INTERFACES PARA RESEÑAS
+export interface Opinion {
+  id: string;
+  repartidorId: string;
+  clienteId: string;
+  pedidoId: string;
+  calificacion: number;
+  comentario: string;
+  fechaCreacion: string;
+}
+
+
+export interface ResenasResponse {
+  opiniones: Opinion[];
+  promedio: number;
+}
+
 export interface NotificacionPedido {
   id: string;
   pedidoId: string;
@@ -130,25 +147,8 @@ export interface TrackingData {
   clienteLat: number;
   clienteLng: number;
 }
-// ✅ NUEVAS INTERFACES PARA RESEÑAS
-export interface Opinion {
-  id: string;
-  repartidorId: string;
-  clienteId: string;
-  pedidoId: string;
-  calificacion: number;
-  comentario: string;
-  fechaCreacion: string;
-}
 
-export interface ResenasResponse {
-  opiniones: Opinion[];
-  promedio: number;
-}
 
-// ==========================================
-// SERVICE
-// ==========================================
 
 @Injectable({
   providedIn: 'root'
@@ -177,13 +177,6 @@ export class DeliveryService {
     });
   }
 
-  obtenerPedidosEnCurso(usuarioId: string): Observable<PedidoDisponible[]> {
-  const headers = this.getAuthHeaders();
-  return this.http.get<PedidoDisponible[]>(
-    `${this.baseUrl}/pedidos/en-curso?usuarioId=${usuarioId}`,
-    { headers }
-  );
-}
 
   obtenerPedidosDisponibles(usuarioId: string): Observable<PedidoDisponible[]> {
     const headers = this.getAuthHeaders();
@@ -192,7 +185,6 @@ export class DeliveryService {
       { headers }
     );
   }
-
 
 aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
   const headers = this.getAuthHeaders();
@@ -213,13 +205,14 @@ aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
 
 
   // Notificaciones
-  //obtenerNotificacionesDisponibles(usuarioId: string): Observable<NotificacionPedido[]> {
-  //  const headers = this.getAuthHeaders();
-  //  return this.http.get<NotificacionPedido[]>(
-  //    `${this.baseUrl}/notificaciones/disponibles?usuarioId=${usuarioId}`,
-  //    { headers }
-  //  );
-  //}
+  obtenerNotificacionesDisponibles(usuarioId: string): Observable<NotificacionPedido[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<NotificacionPedido[]>(
+      `${this.baseUrl}/notificaciones/disponibles?usuarioId=${usuarioId}`,
+      { headers }
+    );
+  }
+
 
   aceptarNotificacion(usuarioId: string, notificacionId: string, comentario?: string): Observable<Entrega> {
     const headers = this.getAuthHeaders();
@@ -229,8 +222,6 @@ aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
       { headers }
     );
   }
-
-  
 
 
   // Entregas
@@ -270,7 +261,7 @@ obtenerTrackingData(pedidoId: string): Observable<TrackingData> {
   );
 }
 
-  // ✅ NUEVO: Confirmar entrega con código y comentarios
+  // Confirmar entrega con código y comentarios
   confirmarEntrega(dto: { pedidoId: string, codigoEntrega: string, comentarios?: string }): Observable<Entrega> {
     const headers = this.getAuthHeaders();
     return this.http.post<Entrega>(
