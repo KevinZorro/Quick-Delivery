@@ -275,4 +275,10 @@ verHistorialPedidos(): void {
   this.router.navigate(['/restaurante/pedidos']);
 }
 
+
+verHorarios(): void {
+  this.router.navigate(['/restaurante/horarios']);
+}
+
+
 }

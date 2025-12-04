@@ -9,17 +9,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.ufps.Quick_Delivery.dto.PedidoDto;
 
-@FeignClient(name = "pedido-service", url = "${cliente-service.url}")
+@FeignClient(name = "pedido-service", url = "${pedido-service.url}")
 public interface PedidoFeignClient {
 
-    // 👉 Usado por ReporteService (NO LO TOQUES)
     @GetMapping("/api/pedidos")
     List<PedidoDto> obtenerPedidos();
 
-    // 👉 Nuevo método solo para historial
     @GetMapping("/api/pedidos/restaurante/{restauranteId}/historial-completo")
     List<PedidoDto> obtenerHistorialCompleto(@PathVariable("restauranteId") UUID restauranteId);
-
 }
+
 
 
