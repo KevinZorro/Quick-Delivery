@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { RestauranteService, Restaurante } from './restaurante.service';
 import { AuthService } from '../edge/auth.service';
 import { HeaderComponent } from './header.component';
+import { CuponGlobalService, CuponGlobal } from './cupon-global.service';
 
 @Component({
   selector: 'app-main',
   standalone: true,
-    imports: [CommonModule, HeaderComponent],
+  imports: [CommonModule, HeaderComponent],
   templateUrl: './main.component.html'
 })
 export class MainComponent implements OnInit {
@@ -16,16 +17,29 @@ export class MainComponent implements OnInit {
   loading = true;
   errorMessage: string | null = null;
   userName: string = '';
+  cuponesDisponibles: CuponGlobal[] = [];
 
   constructor(
     private restauranteService: RestauranteService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    public cuponGlobalService: CuponGlobalService
   ) {}
 
   ngOnInit(): void {
     this.loadRestaurantes();
-    // Aquí puedes decodificar el token para obtener el nombre del usuario si lo necesitas
+    this.loadCupones();
+  }
+
+  loadCupones(): void {
+    const clienteId = this.authService.getUserId();
+    if (!clienteId) return;
+    this.cuponGlobalService.obtenerDisponibles(clienteId).subscribe({
+      next: (cupones) => {
+        this.cuponesDisponibles = cupones.filter(c => c.aplicable);
+      },
+      error: () => {} // silencioso si Edge no está disponible
+    });
   }
 
   loadRestaurantes(): void {
