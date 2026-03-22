@@ -6,6 +6,8 @@ import com.ufps.Quick_Delivery.model.CuponGlobal;
 import com.ufps.Quick_Delivery.service.CuponGlobalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +21,12 @@ public class CuponGlobalController {
 
     private final CuponGlobalService cuponGlobalService;
 
+    private boolean esAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
     // Cupones disponibles para un cliente (con flag aplicable)
     @GetMapping("/disponibles")
     public ResponseEntity<List<CuponGlobalDto>> disponibles(
@@ -26,15 +34,17 @@ public class CuponGlobalController {
         return ResponseEntity.ok(cuponGlobalService.listarDisponibles(clienteId));
     }
 
-    // Listar todos (admin)
+    // Listar todos (solo admin)
     @GetMapping
-    public ResponseEntity<List<CuponGlobal>> listarTodos() {
+    public ResponseEntity<?> listarTodos() {
+        if (!esAdmin()) return ResponseEntity.status(403).body(Map.of("error", "Acceso denegado"));
         return ResponseEntity.ok(cuponGlobalService.listarTodos());
     }
 
-    // Crear cupón (admin)
+    // Crear cupón (solo admin)
     @PostMapping
-    public ResponseEntity<CuponGlobal> crear(@RequestBody CuponGlobal cupon) {
+    public ResponseEntity<?> crear(@RequestBody CuponGlobal cupon) {
+        if (!esAdmin()) return ResponseEntity.status(403).body(Map.of("error", "Acceso denegado"));
         return ResponseEntity.ok(cuponGlobalService.crear(cupon));
     }
 
@@ -49,9 +59,10 @@ public class CuponGlobalController {
         }
     }
 
-    // Eliminar cupón (admin)
+    // Eliminar cupón (solo admin)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
+    public ResponseEntity<?> eliminar(@PathVariable UUID id) {
+        if (!esAdmin()) return ResponseEntity.status(403).body(Map.of("error", "Acceso denegado"));
         cuponGlobalService.eliminar(id);
         return ResponseEntity.noContent().build();
     }

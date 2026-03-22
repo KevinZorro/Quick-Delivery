@@ -107,6 +107,10 @@ export class AuthService {
     return this.getUserRole() === 'REPARTIDOR';
   }
 
+  isAdmin(): boolean {
+    return this.getUserRole() === 'ADMIN';
+  }
+
   getCurrentUser(): {
     userId: string | null;
     nombre: string | null;

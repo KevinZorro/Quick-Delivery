@@ -5,6 +5,7 @@ import com.ufps.Quick_Delivery.dto.LoginRequestDto;
 import com.ufps.Quick_Delivery.dto.LoginResponseDto;
 import com.ufps.Quick_Delivery.dto.UsuarioDto;
 import com.ufps.Quick_Delivery.model.PasswordResetToken;
+import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -129,6 +130,28 @@ public void enviarTokenRecuperacion(String correo) {
         "Recupera tu contraseña",
         "Haz clic aquí para restablecer tu contraseña: " + link
     );
+}
+
+// Clave maestra para crear el primer administrador
+private static final String CLAVE_MAESTRA = "QD-ADMIN-2024";
+
+@Transactional
+public Usuario crearAdmin(String clave, String nombre, String correo, String telefono, String contrasena) {
+    if (!CLAVE_MAESTRA.equals(clave)) {
+        throw new RuntimeException("Clave maestra incorrecta");
+    }
+    if (usuarioRepository.existsByCorreo(correo)) {
+        throw new RuntimeException("El correo ya está registrado");
+    }
+    Usuario admin = new Usuario();
+    admin.setNombre(nombre);
+    admin.setCorreo(correo);
+    admin.setTelefono(telefono);
+    admin.setContraseña(passwordEncoder.encode(contrasena));
+    admin.setRol(Rol.ADMIN);
+    admin.setActivo(true);
+    admin.setFecharegistro(LocalDateTime.now());
+    return usuarioRepository.save(admin);
 }
 
 public boolean validarToken(String token) {
