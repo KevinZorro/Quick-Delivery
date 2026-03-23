@@ -76,6 +76,27 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/crear-admin")
+    public ResponseEntity<?> crearAdmin(
+            @RequestParam String clave,
+            @RequestBody Map<String, String> body) {
+        try {
+            var admin = authService.crearAdmin(
+                clave,
+                body.get("nombre"),
+                body.get("correo"),
+                body.get("telefono"),
+                body.get("contrasena")
+            );
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Administrador creado correctamente",
+                "correo", admin.getCorreo()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, Object>> cambiarContrasena(@RequestBody CambiarContrasenaRequest request) {
         Map<String, Object> response = new HashMap<>();

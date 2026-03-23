@@ -23,6 +23,7 @@ import { ClientePerfilComponent } from './features/cliente/perfil.component';
 import { RestaurantePerfilComponent } from './features/restaurante/perfil.component';
 import { DeliveryPerfilComponent } from './features/delivery/perfil.component';
 import { TrackingMapaComponent } from './features/delivery/tracking-mapa.component';
+import { AdminComponent } from './features/admin/admin.component';
 export const routes: Routes = [
   // Rutas públicas
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -72,6 +73,9 @@ export const routes: Routes = [
   { path: 'delivery/entregas', component: DeliveryEntregasComponent },
   { path: 'delivery/perfil', component: DeliveryPerfilComponent },
   { path: 'delivery/tracking/:pedidoId', component: TrackingMapaComponent },
+
+  // Panel de administración
+  { path: 'admin', component: AdminComponent },
 
   // Wildcard al FINAL
   { path: '**', redirectTo: 'login' },

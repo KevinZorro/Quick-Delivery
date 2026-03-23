@@ -32,4 +32,7 @@ public class CrearPedidoRequestDto {
     private String preferencias;
 
     private int total;
+
+    // Cupón global opcional (manejado por Edge)
+    private UUID cuponGlobalId;
 }

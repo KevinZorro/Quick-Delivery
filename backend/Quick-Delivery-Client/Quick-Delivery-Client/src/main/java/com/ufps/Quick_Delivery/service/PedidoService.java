@@ -8,10 +8,12 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ufps.Quick_Delivery.client.CuponGlobalClient;
 import com.ufps.Quick_Delivery.client.DeliveryFeignClient;
 import com.ufps.Quick_Delivery.client.IniciarEntregaRequest;
 import com.ufps.Quick_Delivery.client.ProductoClient;
 import com.ufps.Quick_Delivery.client.RestauranteHorarioClient;
+import com.ufps.Quick_Delivery.dto.AplicarCuponGlobalRequest;
 import com.ufps.Quick_Delivery.dto.CrearPedidoRequestDto;
 import com.ufps.Quick_Delivery.dto.ItemPedidoDto;
 import com.ufps.Quick_Delivery.dto.PedidoDto;
@@ -36,10 +38,11 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
-    private final ProductoClient productoClient; 
-    private final DeliveryFeignClient deliveryClient; 
+    private final ProductoClient productoClient;
+    private final DeliveryFeignClient deliveryClient;
     private final NotificacionService notificacionService;
     private final RestauranteHorarioClient restauranteHorarioClient;
+    private final CuponGlobalClient cuponGlobalClient;
     
 
     // -------------------------------------------------------------------------
@@ -127,6 +130,21 @@ public class PedidoService {
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
         System.out.println("✅ Pedido guardado con ID: " + pedidoGuardado.getId());
+
+        // 5. Registrar uso de cupón global en Edge si se aplicó uno
+        if (request.getCuponGlobalId() != null) {
+            try {
+                cuponGlobalClient.aplicarCupon(new AplicarCuponGlobalRequest(
+                        request.getCuponGlobalId(),
+                        request.getClienteId(),
+                        pedidoGuardado.getId()
+                ));
+                System.out.println("🎟️ Cupón global registrado: " + request.getCuponGlobalId());
+            } catch (Exception e) {
+                // No se cancela el pedido si falla el registro del cupón
+                System.err.println("⚠️ Error al registrar cupón global: " + e.getMessage());
+            }
+        }
 
         return pedidoGuardado;
     }

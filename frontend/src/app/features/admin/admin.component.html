@@ -1,0 +1,281 @@
+<div class="min-h-screen bg-gray-100">
+
+  <!-- Header -->
+  <header class="bg-orange-500 shadow-md">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center">
+          <span class="text-orange-500 font-bold text-lg">Q</span>
+        </div>
+        <div>
+          <h1 class="text-white font-bold text-lg leading-tight">Quick Delivery</h1>
+          <p class="text-orange-100 text-xs">Panel de Administración</p>
+        </div>
+      </div>
+      <button
+        (click)="cerrarSesion()"
+        class="text-white border border-white/40 px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 transition">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- Alerta éxito -->
+    <div *ngIf="exito" class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+      {{ exito }}
+    </div>
+
+    <!-- Alerta error global -->
+    <div *ngIf="error && !mostrarModal" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      {{ error }}
+    </div>
+
+    <!-- Sección cupones -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200">
+
+      <!-- Encabezado sección -->
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-gray-800 font-bold text-xl">Cupones globales</h2>
+          <p class="text-gray-400 text-sm mt-0.5">
+            Los clientes ven estos cupones al hacer un pedido.
+            Los de tipo <strong>Primera compra</strong> se desactivan automáticamente para cada cliente una vez usados.
+          </p>
+        </div>
+        <button
+          (click)="abrirModal()"
+          class="bg-orange-500 hover:bg-orange-600 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition shadow-sm">
+          + Nuevo cupón
+        </button>
+      </div>
+
+      <!-- Cargando -->
+      <div *ngIf="cargando" class="px-6 py-12 text-center text-gray-400">
+        Cargando cupones...
+      </div>
+
+      <!-- Sin cupones -->
+      <div *ngIf="!cargando && cupones.length === 0" class="px-6 py-12 text-center">
+        <p class="text-gray-400 text-base">No hay cupones creados.</p>
+        <p class="text-gray-300 text-sm mt-1">Crea el primero con el botón de arriba.</p>
+      </div>
+
+      <!-- Tabla cupones -->
+      <div *ngIf="!cargando && cupones.length > 0" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+              <th class="px-6 py-3 text-left font-medium">Nombre</th>
+              <th class="px-6 py-3 text-left font-medium">Tipo</th>
+              <th class="px-6 py-3 text-left font-medium">Descuento</th>
+              <th class="px-6 py-3 text-left font-medium">Usos / Máximo</th>
+              <th class="px-6 py-3 text-left font-medium">Vigencia</th>
+              <th class="px-6 py-3 text-left font-medium">Estado</th>
+              <th class="px-6 py-3 text-left font-medium">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let c of cupones" class="hover:bg-gray-50 transition">
+
+              <!-- Nombre + descripción -->
+              <td class="px-6 py-4">
+                <p class="font-semibold text-gray-800">{{ c.nombre }}</p>
+                <p class="text-gray-400 text-xs mt-0.5 max-w-xs truncate">{{ c.descripcion }}</p>
+              </td>
+
+              <!-- Tipo -->
+              <td class="px-6 py-4">
+                <span class="px-2.5 py-1 rounded-full text-xs font-medium" [ngClass]="colorTipo(c.tipo)">
+                  {{ etiquetaTipo(c.tipo) }}
+                </span>
+              </td>
+
+              <!-- Descuento -->
+              <td class="px-6 py-4 text-gray-700">
+                <span *ngIf="c.tipo === 'DESCUENTO_ENVIO'">-${{ c.descuentoEnvio }} en envío</span>
+                <span *ngIf="c.tipo !== 'DESCUENTO_ENVIO'">{{ c.descuentoPorcentaje }}% off</span>
+              </td>
+
+              <!-- Usos / Máximo -->
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-gray-800">{{ usosTexto(c) }}</span>
+                  <div *ngIf="c.usoMaximoTotal > 0" class="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all"
+                      [ngClass]="estaAgotado(c) ? 'bg-red-400' : 'bg-orange-400'"
+                      [style.width.%]="(c.usosActuales / c.usoMaximoTotal) * 100">
+                    </div>
+                  </div>
+                </div>
+                <p *ngIf="c.usoMaximoTotal === 0" class="text-xs text-gray-400">Sin límite</p>
+              </td>
+
+              <!-- Vigencia -->
+              <td class="px-6 py-4 text-gray-500 text-xs">
+                <span *ngIf="c.fechaExpiracion">Hasta {{ c.fechaExpiracion }}</span>
+                <span *ngIf="!c.fechaExpiracion" class="text-gray-400">Sin vencimiento</span>
+              </td>
+
+              <!-- Estado -->
+              <td class="px-6 py-4">
+                <span *ngIf="c.activo && !estaAgotado(c)"
+                  class="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  Activo
+                </span>
+                <span *ngIf="estaAgotado(c)"
+                  class="px-2.5 py-1 bg-red-100 text-red-600 rounded-full text-xs font-medium">
+                  Agotado
+                </span>
+                <span *ngIf="!c.activo && !estaAgotado(c)"
+                  class="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
+                  Inactivo
+                </span>
+              </td>
+
+              <!-- Acciones -->
+              <td class="px-6 py-4">
+                <button
+                  (click)="eliminarCupon(c.id, c.nombre)"
+                  class="text-red-500 hover:text-red-700 text-xs font-medium transition">
+                  Eliminar
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- fin card -->
+  </main>
+
+</div>
+
+<!-- ===== MODAL CREAR CUPÓN ===== -->
+<div *ngIf="mostrarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+
+    <!-- Modal header -->
+    <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-bold text-gray-800 text-lg">Nuevo cupón</h3>
+      <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    </div>
+
+    <!-- Error en modal -->
+    <div *ngIf="error" class="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+      {{ error }}
+    </div>
+
+    <form [formGroup]="cuponForm" (ngSubmit)="guardarCupon()" class="px-6 py-5 space-y-4">
+
+      <!-- Nombre -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del cupón *</label>
+        <input
+          formControlName="nombre"
+          type="text"
+          placeholder="Ej: BIENVENIDO10"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
+        <textarea
+          formControlName="descripcion"
+          rows="2"
+          placeholder="Describe qué ofrece este cupón"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"></textarea>
+      </div>
+
+      <!-- Tipo -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
+        <select
+          formControlName="tipo"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white">
+          <option value="DESCUENTO_PORCENTAJE">Descuento porcentaje — aplica % sobre el total</option>
+          <option value="DESCUENTO_ENVIO">Descuento envío — rebaja monto fijo del envío</option>
+          <option value="PRIMERA_COMPRA">Primera compra — solo para clientes nuevos, un uso por cliente</option>
+        </select>
+        <!-- Nota primera compra -->
+        <p *ngIf="tipoSeleccionado === 'PRIMERA_COMPRA'" class="text-xs text-purple-600 mt-1">
+          Este cupón se desactiva automáticamente para cada cliente una vez que lo usa.
+        </p>
+      </div>
+
+      <!-- Descuento porcentaje (visible si tipo ≠ DESCUENTO_ENVIO) -->
+      <div *ngIf="tipoSeleccionado !== 'DESCUENTO_ENVIO'">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Porcentaje de descuento *</label>
+        <div class="relative">
+          <input
+            formControlName="descuentoPorcentaje"
+            type="number" min="0" max="100"
+            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10" />
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+        </div>
+      </div>
+
+      <!-- Descuento envío (visible si tipo = DESCUENTO_ENVIO) -->
+      <div *ngIf="tipoSeleccionado === 'DESCUENTO_ENVIO'">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Monto descuento en envío *</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+          <input
+            formControlName="descuentoEnvio"
+            type="number" min="0"
+            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pl-8" />
+        </div>
+      </div>
+
+      <!-- Máximo de usos -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Máximo de usos totales</label>
+        <input
+          formControlName="usoMaximoTotal"
+          type="number" min="0"
+          class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+        <p class="text-xs text-gray-400 mt-1">Escribe <strong>0</strong> para usos ilimitados.</p>
+      </div>
+
+      <!-- Fechas -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha inicio</label>
+          <input
+            formControlName="fechaInicio"
+            type="date"
+            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha expiración</label>
+          <input
+            formControlName="fechaExpiracion"
+            type="date"
+            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+          <p class="text-xs text-gray-400 mt-1">Déjalo vacío para sin vencimiento.</p>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex gap-3 pt-2">
+        <button
+          type="button"
+          (click)="cerrarModal()"
+          class="flex-1 border border-gray-300 text-gray-700 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="cuponForm.invalid || guardando"
+          class="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl py-2.5 text-sm font-medium transition">
+          {{ guardando ? 'Creando...' : 'Crear cupón' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

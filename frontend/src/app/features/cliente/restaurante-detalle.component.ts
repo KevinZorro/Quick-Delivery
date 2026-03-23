@@ -8,6 +8,7 @@ import { DireccionService, Direccion } from './direccion.service';
 import { FormsModule } from '@angular/forms';
 import { PromocionService } from '../restaurante/promocion.service';
 import { PromocionResponse } from '../restaurante/promocion.types';
+import { CuponGlobalService, CuponGlobal } from './cupon-global.service';
 
 @Component({
   selector: 'app-restaurante-detalle',
@@ -27,6 +28,11 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   mensajeCodigo: string | null = null;
   mensajeCodigoValido = false;
   descuento: number = 0;
+
+  // Cupones globales
+  cuponesGlobales: CuponGlobal[] = [];
+  cuponGlobalSeleccionado: CuponGlobal | null = null;
+  descuentoCuponGlobal: number = 0;
 
   cantidades: { [productoId: string]: number } = {};
   preferencias: { [productoId: string]: string } = {};
@@ -62,7 +68,8 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
     private carritoService: CarritoService,
     private pedidoService: PedidoService,
     private direccionService: DireccionService,
-    private promocionService: PromocionService
+    private promocionService: PromocionService,
+    public cuponGlobalService: CuponGlobalService
   ) {}
 
   ngOnInit(): void {
@@ -146,7 +153,35 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   }
 
   actualizarTotal() {
-    this.totalFinal = this.totalBase * (1 - this.descuento / 100);
+    const descuentoRestaurante = this.totalBase * (this.descuento / 100);
+    this.totalFinal = this.totalBase - descuentoRestaurante - this.descuentoCuponGlobal;
+    if (this.totalFinal < 0) this.totalFinal = 0;
+  }
+
+  cargarCuponesGlobales(): void {
+    const clienteId = localStorage.getItem('quick-delivery-userId');
+    if (!clienteId) return;
+    this.cuponGlobalService.obtenerDisponibles(clienteId).subscribe({
+      next: (cupones) => {
+        this.cuponesGlobales = cupones.filter(c => c.aplicable);
+        // Auto-aplicar el mejor cupón disponible
+        const mejor = this.cuponGlobalService.seleccionarMejor(this.cuponesGlobales);
+        if (mejor) this.aplicarCuponGlobal(mejor);
+      },
+      error: () => {}
+    });
+  }
+
+  aplicarCuponGlobal(cupon: CuponGlobal): void {
+    this.cuponGlobalSeleccionado = cupon;
+    this.descuentoCuponGlobal = this.cuponGlobalService.calcularDescuento(cupon, this.totalBase);
+    this.actualizarTotal();
+  }
+
+  quitarCuponGlobal(): void {
+    this.cuponGlobalSeleccionado = null;
+    this.descuentoCuponGlobal = 0;
+    this.actualizarTotal();
   }
 
   loadRestauranteData(): void {
@@ -276,6 +311,7 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
     this.metodoPagoSeleccionado = '';
     this.preferenciasPago = '';
     this.direccionSeleccionada = '';
+    this.cargarCuponesGlobales();
   }
 
   cerrarModalPago(): void {
@@ -320,6 +356,7 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
         cantidad: item.cantidad
       })),
       codigoPromocion: this.codigoPromocion,
+      cuponGlobalId: this.cuponGlobalSeleccionado?.id ?? null,
       total: this.totalFinal
     };
 

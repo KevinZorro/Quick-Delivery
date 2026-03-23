@@ -82,6 +82,9 @@ export class LoginComponent implements OnInit {
         } else if (rolNormalizado === 'REPARTIDOR' || rolNormalizado === 'DOMICILIARIO') {
           console.log('🚚 Redirigiendo a /delivery/main');
           this.router.navigate(['/delivery/main']);
+        } else if (rolNormalizado === 'ADMIN') {
+          console.log('🛡️ Redirigiendo a /admin');
+          this.router.navigate(['/admin']);
         } else {
           console.warn('⚠️ Rol desconocido:', res.rol, '- Redirigiendo a /');
           this.router.navigate(['/']);
