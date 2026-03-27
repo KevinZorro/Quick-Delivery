@@ -201,7 +201,7 @@ public class PedidoDisponibleService {
                 if (pedido == null)
                         throw new RuntimeException("Pedido no encontrado");
                 log.info("Pedido {} encontrado: estado={}", pedidoId, pedido.getEstado());
-                clienteclient.asignarRepartidor(pedidoId, usuarioId);
+                clienteclient.asignarRepartidor(pedidoId, deliveryUser.getId());
 
                 log.info("Pedido {} aceptado por {}", pedidoId, usuarioId);
         }

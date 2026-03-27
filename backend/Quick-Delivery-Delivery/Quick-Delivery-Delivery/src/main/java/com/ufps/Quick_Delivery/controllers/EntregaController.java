@@ -42,4 +42,13 @@ public class EntregaController {
                 .map(entrega -> ResponseEntity.ok(entrega.getCodigoConfirmacion()))
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<Entrega> actualizarEstado(
+            @PathVariable("id") UUID id,
+            @RequestParam("estado") String estado) {
+        return service.actualizarEstado(id, estado)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

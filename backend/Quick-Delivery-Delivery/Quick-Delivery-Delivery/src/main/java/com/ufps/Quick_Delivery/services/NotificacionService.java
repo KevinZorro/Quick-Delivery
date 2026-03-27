@@ -122,7 +122,7 @@ public class NotificacionService {
 
         // 3. Obtener notificaciones sin procesar
         List<PedidoNotificacion> notificaciones = this.obtenerTodas().stream()
-                .filter(n -> n != null) // suponiendo que procesado indica tomados
+                .filter(n -> n != null && !Boolean.TRUE.equals(n.getProcesado()))
                 .collect(Collectors.toList());
         log.info("Encontradas {} notificaciones sin procesar", notificaciones.size());
 

@@ -263,6 +263,9 @@ this.deliveryService.obtenerPedidosDisponibles(this.usuarioId).subscribe({
 
   verEntregas(): void {
     this.router.navigate(['/delivery/entregas']);
+  }
+
+  verTracking(): void {
     this.irTracking();
   }
 
