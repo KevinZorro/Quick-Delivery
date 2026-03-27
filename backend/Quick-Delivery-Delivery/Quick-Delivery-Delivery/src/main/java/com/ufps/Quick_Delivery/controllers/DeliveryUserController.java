@@ -166,6 +166,23 @@ public class DeliveryUserController {
 
             List<Entrega> entregas = entregaRepository.findByRepartidorId(deliveryId);
 
+            // Aplicar filtros
+            if (estado != null && !estado.isEmpty()) {
+                entregas = entregas.stream()
+                        .filter(e -> estado.equalsIgnoreCase(e.getEstado()))
+                        .collect(Collectors.toList());
+            }
+            if (fechaInicio != null) {
+                entregas = entregas.stream()
+                        .filter(e -> e.getHoraInicio() != null && !e.getHoraInicio().toLocalDate().isBefore(fechaInicio))
+                        .collect(Collectors.toList());
+            }
+            if (fechaFin != null) {
+                entregas = entregas.stream()
+                        .filter(e -> e.getHoraInicio() != null && !e.getHoraInicio().toLocalDate().isAfter(fechaFin))
+                        .collect(Collectors.toList());
+            }
+
             List<Map<String, Object>> historial = entregas.stream()
                     .map(entrega -> {
                         Map<String, Object> info = new HashMap<>();
@@ -202,6 +219,19 @@ public class DeliveryUserController {
         } catch (Exception e) {
             return ResponseEntity.status(502).build();
         }
+    }
+
+    // ----------------- REPARTIDOR ID POR USUARIO -----------------
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<Map<String, String>> obtenerRepartidorIdPorUsuario(@PathVariable("usuarioId") UUID usuarioId) {
+        return service.findDeliveryIdByUsuarioId(usuarioId)
+                .map(deliveryId -> {
+                    Map<String, String> response = new HashMap<>();
+                    response.put("repartidorId", deliveryId.toString());
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // ----------------- UBICACIÓN -----------------

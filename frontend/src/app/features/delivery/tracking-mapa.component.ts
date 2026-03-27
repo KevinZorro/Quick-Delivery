@@ -324,7 +324,7 @@ if (this.directionsRenderer) {
   }
 
   volver(): void {
-    this.router.navigate(['/delivery']);
+    this.router.navigate(['/delivery/main']);
   }
 
   animarMovimiento(marker: any, from: any, to: any) {

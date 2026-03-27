@@ -2,10 +2,12 @@
 package com.ufps.Quick_Delivery.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -23,4 +25,12 @@ public class PedidoResponse {
     private LocalDateTime fechaActualizacion;
     private String preferencias;
     private List<ItemPedidoResponse> items;
+
+    // El Cliente service retorna "cliente" como objeto anidado, no "clienteId"
+    @JsonProperty("cliente")
+    private void deserializeCliente(Map<String, Object> cliente) {
+        if (cliente != null && cliente.get("id") != null) {
+            this.clienteId = UUID.fromString(cliente.get("id").toString());
+        }
+    }
 }

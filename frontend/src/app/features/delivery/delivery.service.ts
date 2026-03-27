@@ -247,7 +247,7 @@ aceptarPedido(usuarioId: string, pedidoId: string): Observable<void> {
   ): Observable<Entrega> {
     const headers = this.getAuthHeaders();
     return this.http.patch<Entrega>(
-      `${this.baseUrl}/entregas/${entregaId}/estado?estado=${estado}`,
+      `${environment.deliveryApi}/api/entregas/${entregaId}/estado?estado=${estado}`,
       null,
       { headers }
     );

@@ -76,4 +76,11 @@ public class EntregaService {
     public Optional<Entrega> obtenerPorPedidoId(UUID pedidoId) {
         return entregaRepository.findByPedidoId(pedidoId);
     }
+
+    public Optional<Entrega> actualizarEstado(UUID entregaId, String nuevoEstado) {
+        return entregaRepository.findById(entregaId).map(entrega -> {
+            entrega.setEstado(nuevoEstado);
+            return entregaRepository.save(entrega);
+        });
+    }
 }
