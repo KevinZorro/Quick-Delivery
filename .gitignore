@@ -1,0 +1,17 @@
+# Documentos y archivos locales
+*.docx
+*.pdf
+*.py
+*.xlsx
+
+# Configuración local de Claude
+.claude/settings.local.json
+
+# Entornos y secretos
+.env
+.env.*
+
+# Carpetas generadas
+node_modules/
+dist/
+build/

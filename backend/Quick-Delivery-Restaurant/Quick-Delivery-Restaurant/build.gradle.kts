@@ -68,6 +68,10 @@ dependencyManagement {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	testLogging {
+		events("passed", "failed", "skipped")
+		showStandardStreams = true
+	}
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.run.BootRun> {
