@@ -38,7 +38,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web-services")
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
     implementation("org.springframework.cloud:spring-cloud-starter-config")
-    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
         // Google Maps Services
