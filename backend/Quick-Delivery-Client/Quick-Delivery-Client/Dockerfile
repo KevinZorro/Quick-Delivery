@@ -2,7 +2,7 @@
 FROM gradle:8.10.0-jdk21 AS build
 WORKDIR /app
 COPY . .
-RUN ./gradlew clean bootJar --no-daemon
+RUN gradle clean bootJar --no-daemon
 
 # Etapa 2: crear una imagen liviana para ejecutar la app
 FROM eclipse-temurin:21-jdk
