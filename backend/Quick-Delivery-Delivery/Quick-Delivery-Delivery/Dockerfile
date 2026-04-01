@@ -8,5 +8,6 @@ RUN gradle clean bootJar --no-daemon
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
+ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]
