@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  clientesApi: 'https://clientes-service-192433559355.southamerica-east1.run.app',
-  restaurantesApi: 'https://restaurantes-service-192433559355.southamerica-east1.run.app',
-  deliveryApi: 'https://delivery-service-192433559355.southamerica-east1.run.app',
-  edgeApi: 'https://edge-service-192433559355.southamerica-east1.run.app'
+  clientesApi: 'https://quick-delivery-client.onrender.com',
+  restaurantesApi: 'https://quick-delivery-4z55.onrender.com',
+  deliveryApi: 'https://quick-delivery-zu0h.onrender.com',
+  edgeApi: 'https://quick-delivery-edge.onrender.com'
 };
