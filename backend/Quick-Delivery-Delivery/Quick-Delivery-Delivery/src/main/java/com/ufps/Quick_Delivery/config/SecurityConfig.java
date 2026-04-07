@@ -2,58 +2,41 @@ package com.ufps.Quick_Delivery.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
-import java.util.Arrays;
-import java.util.List;
+import com.ufps.Quick_Delivery.security.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            // ✅ IMPORTANTE: Aplicar la configuración CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Permitir acceso libre a todas las rutas
-            .authorizeHttpRequests(authz -> authz
-                .anyRequest().permitAll()
-            )
-            // Deshabilitar CSRF
-            .csrf(csrf -> csrf.disable());
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(withDefaults())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
+            .requestMatchers("/h2-console/**").permitAll()
+            .requestMatchers("/clientes/**").permitAll()
+            .requestMatchers("/api/pedidos/**").permitAll()
+            .anyRequest().permitAll()
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .headers(headers -> headers.frameOptions(Customizer.withDefaults()));
 
-        return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // ✅ Usar allowedOriginPatterns en lugar de allowedOrigins
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "https://quick-delivery-84dfb.web.app",
-            "https://quick-delivery-84dfb.firebaseapp.com",
-            "http://localhost:4200",
-            "http://127.0.0.1:4200",
-            "http://localhost:55000",
-            "http://127.0.0.1:55000",
-            "http://localhost:4300",
-            "http://127.0.0.1:4300"
-        ));
-        
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+    return http.build();
+}
 }
