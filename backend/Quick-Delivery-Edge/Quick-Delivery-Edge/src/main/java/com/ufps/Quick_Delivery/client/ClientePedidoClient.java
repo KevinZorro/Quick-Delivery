@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "cliente-pedido-service", url = "${cliente-service.url}")
+@FeignClient(name = "cliente-pedido-service", url = "${client-service.url}")
 public interface ClientePedidoClient {
 
     @GetMapping("/api/pedidos/usuario/{usuarioId}/count")
