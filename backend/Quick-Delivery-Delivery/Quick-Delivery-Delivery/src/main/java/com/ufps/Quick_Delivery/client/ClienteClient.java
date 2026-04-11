@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "cliente-service", url = "http://localhost:8080")
+@FeignClient(name = "client-service", url = "${client-service.url}")
 public interface ClienteClient {
 
     @GetMapping("/clientes/{clienteId}/contacto")
