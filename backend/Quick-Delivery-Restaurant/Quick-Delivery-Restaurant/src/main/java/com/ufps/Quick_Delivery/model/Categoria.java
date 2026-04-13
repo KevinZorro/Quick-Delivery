@@ -10,5 +10,5 @@ public enum Categoria {
     PARRILLA,
     BEBIDAS,
     VEGETARIANA,
-    OTRO
+    OTROS
 }
