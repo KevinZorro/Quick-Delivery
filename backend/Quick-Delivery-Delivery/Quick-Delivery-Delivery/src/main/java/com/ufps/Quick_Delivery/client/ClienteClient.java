@@ -1,4 +1,4 @@
-package com.ufps.Quick_Delivery.Client;
+package com.ufps.Quick_Delivery.client;
 
 import com.ufps.Quick_Delivery.dto.ClienteContactoResponse;
 import com.ufps.Quick_Delivery.dto.PedidoResponse;
