@@ -1,8 +1,8 @@
 package com.ufps.Quick_Delivery.services;
 
-import com.ufps.Quick_Delivery.Client.EdgeClient;
-import com.ufps.Quick_Delivery.Client.RestauranteClient;
-import com.ufps.Quick_Delivery.Client.ClienteClient;
+import com.ufps.Quick_Delivery.client.EdgeClient;
+import com.ufps.Quick_Delivery.client.RestauranteClient;
+import com.ufps.Quick_Delivery.client.ClienteClient;
 
 import com.ufps.Quick_Delivery.dto.DireccionResponse;
 import com.ufps.Quick_Delivery.dto.DistanceMatrixRequest;

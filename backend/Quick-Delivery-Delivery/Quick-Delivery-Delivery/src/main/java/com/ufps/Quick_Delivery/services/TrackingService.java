@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.services;
 
-import com.ufps.Quick_Delivery.Client.*;
+import com.ufps.Quick_Delivery.client.*;
 import com.ufps.Quick_Delivery.dto.TrackingDataResponse;
 import com.ufps.Quick_Delivery.models.DeliveryUser;
 import com.ufps.Quick_Delivery.repository.DeliveryUserRepository;

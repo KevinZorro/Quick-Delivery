@@ -1,6 +1,6 @@
 package com.ufps.Quick_Delivery.services;
 
-import com.ufps.Quick_Delivery.Client.EdgeClient;
+import com.ufps.Quick_Delivery.client.EdgeClient;
 import com.ufps.Quick_Delivery.dto.DeliveryUserDto;
 import com.ufps.Quick_Delivery.models.DeliveryUser;
 import com.ufps.Quick_Delivery.repository.DeliveryUserRepository;
