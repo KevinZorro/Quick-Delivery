@@ -49,10 +49,13 @@
         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
       />
       <p
-        *ngIf="direccionForm.get('calle')?.invalid && direccionForm.get('calle')?.touched"
+        *ngIf="direccionForm.get('calle')?.touched && direccionForm.get('calle')?.errors"
         class="text-rose-500 text-sm mt-1"
       >
-        La calle es obligatoria
+        <span *ngIf="direccionForm.get('calle')?.hasError('required')">La calle es obligatoria.</span>
+        <span *ngIf="direccionForm.get('calle')?.hasError('minlength')">La calle debe tener al menos 3 caracteres.</span>
+        <span *ngIf="direccionForm.get('calle')?.hasError('maxlength')">La calle no puede exceder 100 caracteres.</span>
+        <span *ngIf="direccionForm.get('calle')?.hasError('pattern')">La calle contiene caracteres inválidos. Usa letras, números, espacios, guiones, puntos y #.</span>
       </p>
     </div>
 
@@ -68,10 +71,13 @@
         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
       />
       <p
-        *ngIf="direccionForm.get('ciudad')?.invalid && direccionForm.get('ciudad')?.touched"
+        *ngIf="direccionForm.get('ciudad')?.touched && direccionForm.get('ciudad')?.errors"
         class="text-rose-500 text-sm mt-1"
       >
-        La ciudad es obligatoria
+        <span *ngIf="direccionForm.get('ciudad')?.hasError('required')">La ciudad es obligatoria.</span>
+        <span *ngIf="direccionForm.get('ciudad')?.hasError('minlength')">La ciudad debe tener al menos 3 caracteres.</span>
+        <span *ngIf="direccionForm.get('ciudad')?.hasError('maxlength')">La ciudad no puede exceder 100 caracteres.</span>
+        <span *ngIf="direccionForm.get('ciudad')?.hasError('pattern')">La ciudad solo puede contener letras y espacios.</span>
       </p>
     </div>
 
@@ -87,10 +93,13 @@
         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
       />
       <p
-        *ngIf="direccionForm.get('barrio')?.invalid && direccionForm.get('barrio')?.touched"
+        *ngIf="direccionForm.get('barrio')?.touched && direccionForm.get('barrio')?.errors"
         class="text-rose-500 text-sm mt-1"
       >
-        El barrio es obligatorio
+        <span *ngIf="direccionForm.get('barrio')?.hasError('required')">El barrio es obligatorio.</span>
+        <span *ngIf="direccionForm.get('barrio')?.hasError('minlength')">El barrio debe tener al menos 3 caracteres.</span>
+        <span *ngIf="direccionForm.get('barrio')?.hasError('maxlength')">El barrio no puede exceder 100 caracteres.</span>
+        <span *ngIf="direccionForm.get('barrio')?.hasError('pattern')">El barrio solo puede contener letras y espacios.</span>
       </p>
     </div>
 

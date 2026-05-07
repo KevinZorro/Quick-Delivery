@@ -6,6 +6,7 @@ import com.ufps.Quick_Delivery.dto.GeocodingResponseDto;
 import com.ufps.Quick_Delivery.model.Direccion;
 import com.ufps.Quick_Delivery.model.Rol;
 import com.ufps.Quick_Delivery.model.Usuario;
+import com.ufps.Quick_Delivery.exception.BadRequestException;
 import com.ufps.Quick_Delivery.repository.DireccionRepository;
 import com.ufps.Quick_Delivery.repository.UsuarioRepository;
 import java.util.Optional;
@@ -43,6 +44,8 @@ public DireccionResponseDto obtenerDireccionActualUsuario(UUID usuarioId) {
     
     @Transactional
     public DireccionResponseDto crearDireccion(DireccionRequestDto requestDto,@NonNull UUID usuarioId) {
+        validarDireccionRequest(requestDto);
+
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
@@ -113,6 +116,8 @@ public DireccionResponseDto obtenerDireccionActualUsuario(UUID usuarioId) {
     
     @Transactional
     public DireccionResponseDto actualizarDireccion(@NonNull UUID id, DireccionRequestDto requestDto,@NonNull UUID usuarioId) {
+        validarDireccionRequest(requestDto);
+
         Direccion direccion = direccionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
         
@@ -231,6 +236,21 @@ public DireccionResponseDto obtenerDireccionActualUsuario(UUID usuarioId) {
         dto.setCoordenadas(direccion.getCoordenadas());
         dto.setTipoReferencia(direccion.getTipoReferencia());
         return dto;
+    }
+
+    private void validarDireccionRequest(DireccionRequestDto requestDto) {
+        if (requestDto.getCalle() == null
+                || !requestDto.getCalle().matches("^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\\s\\-\\.#]{3,100}$")) {
+            throw new BadRequestException("La calle es inválida. Solo se permiten letras, números, espacios, guiones, puntos y almohadillas.");
+        }
+        if (requestDto.getCiudad() == null
+                || !requestDto.getCiudad().matches("^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\\s]{3,100}$")) {
+            throw new BadRequestException("La ciudad es inválida. Solo se permiten letras y espacios.");
+        }
+        if (requestDto.getBarrio() == null
+                || !requestDto.getBarrio().matches("^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\\s]{3,100}$")) {
+            throw new BadRequestException("El barrio es inválido. Solo se permiten letras y espacios.");
+        }
     }
 
 @Transactional

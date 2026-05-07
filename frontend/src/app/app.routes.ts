@@ -11,6 +11,7 @@ import { DireccionRestauranteFormComponent } from './features/restaurante/direcc
 import { ClientePedidosComponent } from './features/cliente/cliente-pedidos.component';
 import { DashboardReportesComponent } from './features/reporte/dashboard-reportes.component';
 import { PedidosComponent } from './features/restaurante/pedidos.component';
+import { HorariosComponent } from './features/restaurante/horarios.component';
 
 
 
@@ -35,9 +36,8 @@ export const routes: Routes = [
   
   // Rutas de restaurante
   { path: 'restaurante/main', component: RestauranteMainComponent },
-  {path: 'restaurante/pedidos', component: PedidosComponent},
-
-  { path: 'restaurante/horarios', component: PedidosComponent },
+  { path: 'restaurante/pedidos', component: PedidosComponent },
+  { path: 'restaurante/horarios', component: HorariosComponent },
 
 
 
