@@ -38,6 +38,13 @@ export class HorarioService {
     );
   }
 
+  getRestaurantePorUsuario(usuarioId: string): Observable<{ id: string }> {
+    return this.http.get<{ id: string }>(
+      `${this.apiUrl}/usuario/${usuarioId}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
   crearHorario(restauranteId: string, dto: HorarioAtencionDto): Observable<HorarioAtencion> {
     return this.http.post<HorarioAtencion>(
       `${this.apiUrl}/${restauranteId}/horarios`,
