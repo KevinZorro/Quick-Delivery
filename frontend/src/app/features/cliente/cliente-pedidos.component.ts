@@ -53,6 +53,12 @@ export class ClientePedidosComponent implements OnInit {
   comentarioRepartidor: string = '';
   enviandoCalificacionRepartidor: boolean = false;
 
+  // Toast notificación
+  toastVisible: boolean = false;
+  toastMensaje: string = '';
+  toastTipo: 'exito' | 'error' = 'exito';
+  private toastTimeout: any;
+
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
     { valor: 'INICIADO', texto: 'Iniciados' },
@@ -69,6 +75,16 @@ export class ClientePedidosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarPedidos();
+  }
+
+  mostrarToast(mensaje: string, tipo: 'exito' | 'error' = 'exito'): void {
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastMensaje = mensaje;
+    this.toastTipo = tipo;
+    this.toastVisible = true;
+    this.toastTimeout = setTimeout(() => {
+      this.toastVisible = false;
+    }, 3500);
   }
 
   cargarPedidos(): void {
@@ -215,7 +231,7 @@ export class ClientePedidosComponent implements OnInit {
             if (pedidoEnLista) pedidoEnLista.restauranteCalificado = true;
           }
 
-          alert('¡Gracias por calificar al restaurante!');
+          this.mostrarToast('✅ ¡Gracias! Calificación del restaurante enviada.');
 
           this.calificacionRestaurante = 0;
           this.comentarioRestaurante = '';
@@ -225,7 +241,7 @@ export class ClientePedidosComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          // Sin alert: el botón cambia visualmente a "ya calificado"
+          // Sin notificación: el botón cambia visualmente a "ya calificado"
           this.enviandoCalificacionRestaurante = false;
 
           if (this.pedidoParaCalificar) {
@@ -264,7 +280,7 @@ export class ClientePedidosComponent implements OnInit {
             if (pedidoEnLista) pedidoEnLista.repartidorCalificado = true;
           }
 
-          alert('¡Gracias por calificar al repartidor!');
+          this.mostrarToast('✅ ¡Gracias! Calificación del repartidor enviada.');
 
           this.calificacionRepartidor = 0;
           this.comentarioRepartidor = '';
@@ -274,7 +290,7 @@ export class ClientePedidosComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          alert('El repartidor ya fue calificado.');
+          this.mostrarToast('⚠️ El repartidor ya fue calificado anteriormente.', 'error');
           this.enviandoCalificacionRepartidor = false;
 
           if (this.pedidoParaCalificar) {
