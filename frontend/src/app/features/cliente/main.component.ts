@@ -38,7 +38,7 @@ export class MainComponent implements OnInit {
       next: (cupones) => {
         this.cuponesDisponibles = cupones.filter(c => c.aplicable);
       },
-      error: () => {} // silencioso si Edge no está disponible
+      error: () => {}
     });
   }
 
@@ -63,5 +63,11 @@ export class MainComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  formatearCalificacion(calificacion: any): string {
+    const num = parseFloat(calificacion);
+    if (!calificacion || isNaN(num)) return 'N/A';
+    return num.toFixed(1);
   }
 }
