@@ -1,120 +1,275 @@
-<div class="p-6 max-w-4xl mx-auto font-poppins">
+<div class="min-h-screen bg-slate-50 font-poppins">
+  <header class="bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 shadow-sm">
+    <div class="mx-auto max-w-7xl px-4 py-4 text-white sm:px-6 lg:px-8">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p class="text-sm font-semibold">Panel de Restaurante</p>
+          <h1 class="mt-1 text-2xl font-semibold opacity-95">{{ restauranteNombre || 'Restaurante' }}</h1>
+        </div>
 
-  <!--Linea visual YAA-->
-  <h2 class="text-3xl font-bold text-gray-800 mb-6">📦 Historial de pedidos</h2>
+        <nav class="flex flex-wrap items-center gap-3" aria-label="Navegacion restaurante">
+          <button
+            type="button"
+            (click)="irAProductos()"
+            class="rounded-lg bg-white/15 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/25">
+            Productos
+          </button>
 
-  <!-- Cargando -->
-  <div *ngIf="cargando" class="flex items-center gap-2 text-red-500">
-    <span class="animate-spin border-2 border-red-500 border-t-transparent rounded-full w-5 h-5"></span>
-    Cargando pedidos...
-  </div>
+          <button
+            type="button"
+            (click)="verReportes()"
+            class="rounded-lg bg-amber-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-500">
+            Reportes
+          </button>
 
-  <!-- Sin pedidos -->
-  <div *ngIf="!cargando && pedidos.length === 0"
-       class="bg-amber-100 text-amber-800 p-4 rounded-lg shadow-sm border-l-4 border-amber-500 text-center">
-    No hay pedidos aún.
-  </div>
+          <button
+            type="button"
+            (click)="irAPromociones()"
+            class="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600">
+            Promociones
+          </button>
 
-  <!-- Mensaje -->
-  <div *ngIf="mensaje"
-       class="bg-rose-100 text-rose-700 p-3 rounded-xl mb-4 text-center font-medium shadow">
-    {{ mensaje }}
-  </div>
+          <button
+            type="button"
+            (click)="verDirecciones()"
+            class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+            Mis Direcciones
+          </button>
 
-  <!-- Lista de pedidos -->
-  <div *ngFor="let pedido of pedidos"
-       class="bg-white mt-6 p-5 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+          <button
+            type="button"
+            class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-inner ring-2 ring-white/40">
+            Pedidos
+          </button>
 
-    <!-- Encabezado -->
-    <div class="flex justify-between items-center">
-      <h3 class="text-xl font-semibold text-gray-800">
-        🧾 Pedido <span class="text-red-500">#{{ pedido.id.slice(0, 8) }}</span>
-      </h3>
+          <button
+            type="button"
+            (click)="verHorarios()"
+            class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-700">
+            Gestionar Horarios
+          </button>
 
-      <!-- Estado actual con colores -->
-      <span
-        class="px-3 py-1 rounded-full text-sm font-semibold border"
-        [ngClass]="{
-          'bg-amber-100 text-amber-800 border-amber-300': pedido.estado === 'INICIADO',
-          'bg-orange-100 text-orange-800 border-orange-300': pedido.estado === 'EN_COCINA',
-          'bg-red-100 text-red-800 border-red-300': pedido.estado === 'CON_EL_REPARTIDOR',
-          'bg-yellow-100 text-yellow-800 border-yellow-300': pedido.estado === 'ENTREGADO'
-        }">
-        {{ pedido.estado }}
-      </span>
+          <button
+            type="button"
+            (click)="cerrarSesion()"
+            class="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800">
+            Cerrar Sesion
+          </button>
+        </nav>
+      </div>
     </div>
+  </header>
 
-    <!-- Información general -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-700 mt-4">
-
-      <div class="p-3 bg-gray-50 rounded-lg border">
-        <p class="text-sm text-gray-500">Total</p>
-        <p class="text-lg font-bold text-red-500">
-          {{ pedido.total | currency:'COP' }}
+<main class="px-4 py-6 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl space-y-6">
+    <header class="flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-red-600">Restaurante</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">Historial de pedidos</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-600">
+          Revisa lo que pidieron, cantidades, valores y estado actual de cada orden.
         </p>
       </div>
 
-      <div class="p-3 bg-gray-50 rounded-lg border">
-        <p class="text-sm text-gray-500">Fecha</p>
-        <p class="font-medium">
-          {{ pedido.fechaCreacion | date:'short' }}
-        </p>
-      </div>
+      <button
+        type="button"
+        (click)="cargarHistorial()"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+        [disabled]="cargando">
+        Actualizar
+      </button>
+    </header>
 
-      <div class="p-3 bg-gray-50 rounded-lg border">
-        <p class="text-sm text-gray-500">Productos</p>
-        <p class="font-medium">
-          {{ pedido.items?.length || 0 }} items
-        </p>
-      </div>
-
-    </div>
-
-    <!-- Cambiar estado -->
-    <div class="mt-5">
-      <label class="block text-sm font-medium text-gray-700 mb-2">Cambiar estado:</label>
-
-      <div class="flex gap-3 items-center">
-        <select
-          aria-label="Cambiar estado del pedido"
-          (change)="cambiarEstado(pedido.id, $any($event.target).value)"
-          class="border rounded-lg px-3 py-2 bg-gray-50 text-gray-800 shadow-sm"
-          [disabled]="cargandoCambio === pedido.id"
-        >
-          <option disabled selected>Selecciona estado...</option>
-
-          <option *ngFor="let estado of estados" [value]="estado">
-            {{ estado }}
-          </option>
-        </select>
-
-        <span *ngIf="cargandoCambio === pedido.id" class="text-sm text-red-500">
-          Actualizando...
-        </span>
-      </div>
-    </div>
-
-    <!-- Items -->
-    <div *ngIf="pedido.items" class="mt-6">
-      <h4 class="text-lg font-semibold text-gray-800 mb-3">🛍️ Productos del pedido</h4>
-
-      <div class="space-y-3">
-        <div *ngFor="let item of pedido.items"
-             class="p-3 bg-gray-100 rounded-xl border flex justify-between items-center">
-
-          <div>
-            <p class="font-medium text-gray-800">{{ item.nombre }}</p>
-            <p class="text-sm text-gray-600">Cantidad: <strong>{{ item.cantidad }}</strong></p>
+    <section
+      *ngIf="!cargando"
+      class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-sm font-semibold text-slate-700">Filtrar por estado</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              (click)="cambiarFiltroEstado('TODOS')"
+              class="rounded-full border px-3 py-1.5 text-sm font-semibold transition"
+              [ngClass]="filtroEstado === 'TODOS' ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'">
+              Todos ({{ pedidos.length }})
+            </button>
+            <button
+              *ngFor="let estado of estados"
+              type="button"
+              (click)="cambiarFiltroEstado(estado)"
+              class="rounded-full border px-3 py-1.5 text-sm font-semibold transition"
+              [ngClass]="filtroEstado === estado ? estadoClasses(estado) : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'">
+              {{ nombreEstado(estado) }} ({{ pedidosPorEstado(estado) }})
+            </button>
           </div>
+        </div>
 
-          <p class="font-semibold text-gray-800">
-            {{ item.subtotal | currency:'COP' }}
-          </p>
-
+        <div class="w-full sm:w-72">
+          <label for="orden-pedidos" class="block text-sm font-semibold text-slate-700">Ordenar</label>
+          <select
+            id="orden-pedidos"
+            class="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+            [value]="ordenPedidos"
+            (change)="cambiarOrden($event)">
+            <option value="RECIENTES">Mas recientes primero</option>
+            <option value="ANTIGUOS">Mas antiguos primero</option>
+            <option value="ESTADO">Por estado del pedido</option>
+          </select>
         </div>
       </div>
+    </section>
+
+    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" *ngIf="!cargando">
+      <article
+        *ngFor="let estado of estados"
+        class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-sm font-medium text-slate-500">{{ nombreEstado(estado) }}</p>
+          <span class="rounded-full border px-2.5 py-1 text-xs font-semibold" [ngClass]="estadoClasses(estado)">
+            {{ estado }}
+          </span>
+        </div>
+        <p class="mt-3 text-3xl font-bold text-slate-950">{{ pedidosPorEstado(estado) }}</p>
+      </article>
+    </section>
+
+    <div
+      *ngIf="mensaje"
+      class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+      {{ mensaje }}
     </div>
 
-  </div>
+    <div *ngIf="cargando" class="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <div class="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+      <p class="font-medium text-slate-700">Cargando pedidos...</p>
+    </div>
 
+    <div
+      *ngIf="!cargando && pedidos.length === 0"
+      class="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center">
+      <h2 class="text-lg font-semibold text-slate-900">No hay pedidos todavia</h2>
+      <p class="mt-2 text-sm text-slate-500">Cuando llegue una orden, aparecera aqui con sus productos.</p>
+    </div>
+
+    <div
+      *ngIf="!cargando && pedidos.length > 0 && pedidosVisibles.length === 0"
+      class="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center">
+      <h2 class="text-lg font-semibold text-slate-900">No hay pedidos con este estado</h2>
+      <p class="mt-2 text-sm text-slate-500">Prueba seleccionando otro filtro.</p>
+    </div>
+
+    <section class="space-y-4" *ngIf="!cargando && pedidosVisibles.length > 0">
+      <article
+        *ngFor="let pedido of pedidosVisibles; trackBy: trackByPedidoId"
+        class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="grid gap-4 border-b border-slate-200 bg-white p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="text-lg font-bold text-slate-950">Pedido #{{ pedido.id.slice(0, 8) }}</h2>
+              <span class="rounded-full border px-3 py-1 text-xs font-semibold" [ngClass]="estadoClasses(pedido.estado)">
+                {{ nombreEstado(pedido.estado) }}
+              </span>
+            </div>
+
+            <dl class="mt-3 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+              <div>
+                <dt class="font-medium text-slate-500">Fecha</dt>
+                <dd class="mt-1 text-slate-900">{{ pedido.fechaCreacion | date:'medium' }}</dd>
+              </div>
+              <div>
+                <dt class="font-medium text-slate-500">Productos</dt>
+                <dd class="mt-1 text-slate-900">{{ totalItems(pedido) }} unidades</dd>
+              </div>
+              <div>
+                <dt class="font-medium text-slate-500">Total</dt>
+                <dd class="mt-1 font-bold text-red-600">{{ pedido.total | currency:'COP':'symbol':'1.0-0' }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="flex flex-col gap-2 sm:min-w-56">
+            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500" [attr.for]="'estado-' + pedido.id">
+              Cambiar estado
+            </label>
+            <select
+              [id]="'estado-' + pedido.id"
+              class="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              [disabled]="cargandoCambio === pedido.id || !puedeCambiarEstado(pedido)"
+              [value]="pedido.estado"
+              (change)="cambiarEstado(pedido.id, $any($event.target).value)">
+              <option [value]="pedido.estado">
+                {{ nombreEstado(pedido.estado) }}
+              </option>
+              <option *ngFor="let estado of estadosDisponiblesParaPedido(pedido)" [value]="estado">
+                {{ nombreEstado(estado) }}
+              </option>
+            </select>
+            <span *ngIf="cargandoCambio === pedido.id" class="text-xs font-medium text-red-600">
+              Actualizando estado...
+            </span>
+            <span *ngIf="!puedeCambiarEstado(pedido)" class="text-xs font-medium text-slate-500">
+              Sin cambios disponibles para restaurante
+            </span>
+          </div>
+        </div>
+
+        <div class="p-4">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <h3 class="text-sm font-bold uppercase tracking-wide text-slate-700">Productos del pedido</h3>
+            <span class="text-sm text-slate-500">{{ pedido.items?.length || 0 }} lineas</span>
+          </div>
+
+          <div *ngIf="!pedido.items || pedido.items.length === 0" class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+            Este pedido no trae detalle de productos.
+          </div>
+
+          <div class="divide-y divide-slate-200 rounded-md border border-slate-200" *ngIf="pedido.items && pedido.items.length > 0">
+            <div
+              *ngFor="let item of pedido.items; trackBy: trackByProductoId"
+              class="grid gap-4 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <div class="flex min-w-0 gap-3">
+                <img
+                  *ngIf="item.imagenUrl"
+                  [src]="item.imagenUrl"
+                  [alt]="productoNombre(item)"
+                  class="h-14 w-14 rounded-md object-cover ring-1 ring-slate-200">
+                <div
+                  *ngIf="!item.imagenUrl"
+                  class="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-slate-100 text-xs font-bold text-slate-500 ring-1 ring-slate-200">
+                  QD
+                </div>
+
+                <div class="min-w-0">
+                  <p class="truncate font-semibold text-slate-950">{{ productoNombre(item) }}</p>
+                  <p class="mt-1 text-sm text-slate-500" *ngIf="item.categoria">{{ item.categoria }}</p>
+                  <p class="mt-1 text-xs text-slate-400">ID producto: {{ item.productoId.slice(0, 8) }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3 text-right text-sm sm:min-w-80">
+                <div>
+                  <p class="text-xs font-medium text-slate-500">Cant.</p>
+                  <p class="mt-1 font-semibold text-slate-900">{{ item.cantidad }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-500">Unidad</p>
+                  <p class="mt-1 font-semibold text-slate-900">{{ item.precioUnidad | currency:'COP':'symbol':'1.0-0' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-500">Subtotal</p>
+                  <p class="mt-1 font-bold text-slate-950">{{ item.subtotal | currency:'COP':'symbol':'1.0-0' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="pedido.preferencias" class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <span class="font-semibold">Preferencias:</span> {{ pedido.preferencias }}
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+</main>
 </div>

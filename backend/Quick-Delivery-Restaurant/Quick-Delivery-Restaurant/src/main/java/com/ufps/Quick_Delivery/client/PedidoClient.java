@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,8 +47,17 @@ public class PedidoClient {
     }
 
     // ⭐ Cambiar estado del pedido desde restaurante
+    public PedidoDto obtenerPedido(UUID pedidoId) {
+        String url = baseUrl + "/" + pedidoId;
+        return restTemplate.getForObject(url, PedidoDto.class);
+    }
+
     public void actualizarEstadoPedido(UUID pedidoId, String nuevoEstado) {
-        String url = baseUrl + "/" + pedidoId + "/estado?nuevoEstado=" + nuevoEstado;
-        restTemplate.put(url, null);
+        String url = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/" + pedidoId + "/estado")
+                .queryParam("estado", nuevoEstado)
+                .toUriString();
+
+        restTemplate.exchange(url, HttpMethod.PATCH, null, Void.class);
     }
 }

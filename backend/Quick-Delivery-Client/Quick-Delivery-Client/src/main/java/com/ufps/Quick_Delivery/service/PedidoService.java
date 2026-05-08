@@ -298,6 +298,9 @@ public class PedidoService {
 
         pedido.setEstado(EstadoPedido.ENTREGADO);
 
-        return pedidoRepository.save(pedido);
+        Pedido actualizado = pedidoRepository.save(pedido);
+        notificacionService.notificarCambioEstado(actualizado);
+
+        return actualizado;
     }
 }

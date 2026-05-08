@@ -2,7 +2,9 @@ package com.ufps.Quick_Delivery.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -14,7 +16,9 @@ import com.ufps.Quick_Delivery.dto.PedidoDto;
 import com.ufps.Quick_Delivery.dto.RestauranteRequestDto;
 import com.ufps.Quick_Delivery.dto.RestauranteResponseDto;
 import com.ufps.Quick_Delivery.model.Categoria;
+import com.ufps.Quick_Delivery.model.Producto;
 import com.ufps.Quick_Delivery.model.Restaurante;
+import com.ufps.Quick_Delivery.repository.ProductoRepository;
 import com.ufps.Quick_Delivery.repository.RestauranteRepository;
 
 import lombok.Builder;
@@ -33,6 +37,7 @@ public class RestauranteService {
     private final PedidoFeignClient pedidoFeignClient;
     private final UsuarioClient usuarioClient;
     private final HorarioAtencionService horarioService;
+    private final ProductoRepository productoRepository;
 
 
     @Transactional
@@ -151,6 +156,24 @@ public class RestauranteService {
     }
 
     public List<PedidoDto> listarHistorialCompleto(UUID restauranteId) {
-        return pedidoFeignClient.obtenerHistorialCompleto(restauranteId);
+        List<PedidoDto> pedidos = pedidoFeignClient.obtenerHistorialCompleto(restauranteId);
+        Map<UUID, Producto> productosPorId = productoRepository.findByRestauranteId(restauranteId).stream()
+                .collect(Collectors.toMap(Producto::getId, Function.identity()));
+
+        pedidos.stream()
+                .filter(pedido -> pedido.getItems() != null)
+                .flatMap(pedido -> pedido.getItems().stream())
+                .forEach(item -> {
+                    Producto producto = productosPorId.get(item.getProductoId());
+                    if (producto != null) {
+                        item.setNombreProducto(producto.getNombre());
+                        item.setCategoria(producto.getCategoria());
+                        item.setImagenUrl(producto.getImagenUrl());
+                    } else {
+                        item.setNombreProducto("Producto no disponible");
+                    }
+                });
+
+        return pedidos;
     }
 }

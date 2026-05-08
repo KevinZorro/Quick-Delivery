@@ -6,10 +6,24 @@ import { Observable } from 'rxjs';
 export interface PedidoDto {
   id: string;
   restauranteId: string;
+  clienteId?: string;
   total: number;
   fechaCreacion: string;
   estado: string;
-  items: any[] | null;
+  metodoPago?: string;
+  preferencias?: string;
+  tiempoEstimado?: number;
+  items: ItemPedidoDto[] | null;
+}
+
+export interface ItemPedidoDto {
+  productoId: string;
+  nombreProducto?: string;
+  categoria?: string;
+  imagenUrl?: string;
+  cantidad: number;
+  precioUnidad: number;
+  subtotal: number;
 }
 
 @Injectable({ providedIn: 'root' })

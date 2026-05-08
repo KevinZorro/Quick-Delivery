@@ -15,4 +15,5 @@ public class LoginResponseDto {
     private String nombre;
     private String correo;
     private String rol;
+    private UUID restauranteId; // ID del restaurante si el rol es RESTAURANTE
 }
