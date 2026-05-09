@@ -90,10 +90,13 @@ public class NotificacionService {
 
     private String textoEstado(String estado) {
         return switch (estado) {
-            case "INICIADO" -> "recibido por el restaurante";
+            case "NUEVO" -> "es nuevo y esta esperando confirmacion del restaurante";
+            case "ACEPTADO" -> "fue aceptado por el restaurante";
             case "EN_COCINA" -> "esta en cocina";
             case "CON_EL_REPARTIDOR" -> "va con el repartidor";
             case "ENTREGADO" -> "fue entregado";
+            case "RECHAZADO_POR_RESTAURANTE" -> "fue rechazado por el restaurante";
+            case "INICIADO" -> "recibido por el restaurante"; // Retrocompatibilidad
             default -> estado;
         };
     }

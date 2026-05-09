@@ -26,10 +26,12 @@ export class PedidosComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
 
   estados = [
-    'INICIADO',
+    'NUEVO',
+    'ACEPTADO',
     'EN_COCINA',
     'CON_EL_REPARTIDOR',
-    'ENTREGADO'
+    'ENTREGADO',
+    'RECHAZADO_POR_RESTAURANTE'
   ];
 
   restauranteId: string = ''; // ⭐ No hardcodeado, se obtiene del usuario autenticado
@@ -99,6 +101,42 @@ export class PedidosComponent implements OnInit {
       error: err => {
         console.error(err);
         this.mensaje = 'Error al actualizar';
+        this.cargandoCambio = null;
+      }
+    });
+  }
+
+  aceptarPedido(pedidoId: string): void {
+    this.cargandoCambio = pedidoId;
+    
+    this.pedidosService.aceptarPedido(pedidoId).subscribe({
+      next: () => {
+        this.mensaje = 'Pedido aceptado correctamente';
+        this.cargandoCambio = null;
+        this.cargarHistorial();
+        setTimeout(() => this.mensaje = '', 2500);
+      },
+      error: err => {
+        console.error(err);
+        this.mensaje = 'Error al aceptar el pedido';
+        this.cargandoCambio = null;
+      }
+    });
+  }
+
+  rechazarPedido(pedidoId: string): void {
+    this.cargandoCambio = pedidoId;
+    
+    this.pedidosService.rechazarPedido(pedidoId).subscribe({
+      next: () => {
+        this.mensaje = 'Pedido rechazado';
+        this.cargandoCambio = null;
+        this.cargarHistorial();
+        setTimeout(() => this.mensaje = '', 2500);
+      },
+      error: err => {
+        console.error(err);
+        this.mensaje = 'Error al rechazar el pedido';
         this.cargandoCambio = null;
       }
     });
@@ -183,10 +221,12 @@ export class PedidosComponent implements OnInit {
 
   private aplicarOrdenYFiltro(): void {
     const prioridadEstado: Record<string, number> = {
-      INICIADO: 1,
-      EN_COCINA: 2,
-      CON_EL_REPARTIDOR: 3,
-      ENTREGADO: 4
+      NUEVO: 1,
+      ACEPTADO: 2,
+      EN_COCINA: 3,
+      CON_EL_REPARTIDOR: 4,
+      ENTREGADO: 5,
+      RECHAZADO_POR_RESTAURANTE: 6
     };
 
     const pedidosFiltrados = this.filtroEstado === 'TODOS'
@@ -211,8 +251,14 @@ export class PedidosComponent implements OnInit {
   }
 
   estadosDisponiblesParaPedido(pedido: PedidoDto): string[] {
+    // Los pedidos NUEVO solo pueden ser aceptados o rechazados
+    if (pedido.estado === 'NUEVO') {
+      return ['ACEPTADO', 'RECHAZADO_POR_RESTAURANTE'];
+    }
+
+    // Las transiciones normales
     const siguienteEstado: Record<string, string> = {
-      INICIADO: 'EN_COCINA',
+      ACEPTADO: 'EN_COCINA',
       EN_COCINA: 'CON_EL_REPARTIDOR'
     };
 
@@ -225,8 +271,15 @@ export class PedidosComponent implements OnInit {
   }
 
   private esTransicionPermitida(estadoActual: string, nuevoEstado: string): boolean {
-    return (estadoActual === 'INICIADO' && nuevoEstado === 'EN_COCINA')
-      || (estadoActual === 'EN_COCINA' && nuevoEstado === 'CON_EL_REPARTIDOR');
+    // Transiciones permitidas
+    const transiciones: Record<string, string[]> = {
+      NUEVO: ['ACEPTADO', 'RECHAZADO_POR_RESTAURANTE'],
+      ACEPTADO: ['EN_COCINA'],
+      EN_COCINA: ['CON_EL_REPARTIDOR']
+    };
+
+    const estadosPermitidos = transiciones[estadoActual] || [];
+    return estadosPermitidos.includes(nuevoEstado);
   }
 
   totalItems(pedido: PedidoDto): number {
@@ -235,20 +288,24 @@ export class PedidosComponent implements OnInit {
 
   nombreEstado(estado: string): string {
     const labels: Record<string, string> = {
-      INICIADO: 'Recibido',
+      NUEVO: 'Nuevo pedido',
+      ACEPTADO: 'Aceptado',
       EN_COCINA: 'En cocina',
       CON_EL_REPARTIDOR: 'Con repartidor',
-      ENTREGADO: 'Entregado'
+      ENTREGADO: 'Entregado',
+      RECHAZADO_POR_RESTAURANTE: 'Rechazado'
     };
     return labels[estado] || estado;
   }
 
   estadoClasses(estado: string): string {
     const classes: Record<string, string> = {
-      INICIADO: 'bg-amber-50 text-amber-800 border-amber-200',
+      NUEVO: 'bg-blue-50 text-blue-800 border-blue-200',
+      ACEPTADO: 'bg-amber-50 text-amber-800 border-amber-200',
       EN_COCINA: 'bg-orange-50 text-orange-800 border-orange-200',
       CON_EL_REPARTIDOR: 'bg-sky-50 text-sky-800 border-sky-200',
-      ENTREGADO: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+      ENTREGADO: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      RECHAZADO_POR_RESTAURANTE: 'bg-red-50 text-red-800 border-red-200'
     };
     return classes[estado] || 'bg-gray-50 text-gray-700 border-gray-200';
   }

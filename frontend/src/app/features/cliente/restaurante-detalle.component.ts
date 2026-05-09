@@ -55,7 +55,7 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   direccionSeleccionada: string = '';
 
   // Direcciones
-  estadoPedido = 'INICIADO';
+  estadoPedido = 'NUEVO';
 
   // Lista de direcciones
   direcciones: Direccion[] = [];
