@@ -130,6 +130,41 @@ public class PedidoController {
     }
 
     // --------------------------------------------------------------------
+    // ACEPTAR / RECHAZAR PEDIDO (Restaurante)
+    // --------------------------------------------------------------------
+    /**
+     * Aceptar un pedido nuevo
+     * POST /api/pedidos/{id}/aceptar
+     */
+    @PostMapping("/{id}/aceptar")
+    public ResponseEntity<?> aceptarPedido(@PathVariable UUID id) {
+        try {
+            System.out.println("✅ Aceptando pedido: " + id);
+            Pedido pedidoAceptado = pedidoService.aceptarPedido(id);
+            return ResponseEntity.ok(pedidoAceptado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al aceptar pedido: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Rechazar un pedido nuevo
+     * POST /api/pedidos/{id}/rechazar
+     */
+    @PostMapping("/{id}/rechazar")
+    public ResponseEntity<?> rechazarPedido(@PathVariable UUID id) {
+        try {
+            System.out.println("❌ Rechazando pedido: " + id);
+            Pedido pedidoRechazado = pedidoService.rechazarPedido(id);
+            return ResponseEntity.ok(pedidoRechazado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body("Error al rechazar pedido: " + e.getMessage());
+        }
+    }
+
+    // --------------------------------------------------------------------
     // HISTORIAL / FILTROS / CONSULTAS
     // --------------------------------------------------------------------
     @GetMapping("/usuario/{usuarioId}")

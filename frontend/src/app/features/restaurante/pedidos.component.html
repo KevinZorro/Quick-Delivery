@@ -189,27 +189,53 @@
           </div>
 
           <div class="flex flex-col gap-2 sm:min-w-56">
-            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500" [attr.for]="'estado-' + pedido.id">
-              Cambiar estado
-            </label>
-            <select
-              [id]="'estado-' + pedido.id"
-              class="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-              [disabled]="cargandoCambio === pedido.id || !puedeCambiarEstado(pedido)"
-              [value]="pedido.estado"
-              (change)="cambiarEstado(pedido.id, $any($event.target).value)">
-              <option [value]="pedido.estado">
-                {{ nombreEstado(pedido.estado) }}
-              </option>
-              <option *ngFor="let estado of estadosDisponiblesParaPedido(pedido)" [value]="estado">
-                {{ nombreEstado(estado) }}
-              </option>
-            </select>
+            <!-- Mostrar botones de aceptar/rechazar para pedidos NUEVO -->
+            <div *ngIf="pedido.estado === 'NUEVO'" class="flex flex-col gap-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Acción requerida</p>
+              <button
+                type="button"
+                (click)="aceptarPedido(pedido.id)"
+                [disabled]="cargandoCambio === pedido.id"
+                class="h-10 rounded-md border border-green-300 bg-green-50 px-3 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-60">
+                ✓ Aceptar
+              </button>
+              <button
+                type="button"
+                (click)="rechazarPedido(pedido.id)"
+                [disabled]="cargandoCambio === pedido.id"
+                class="h-10 rounded-md border border-red-300 bg-red-50 px-3 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60">
+                ✗ Rechazar
+              </button>
+            </div>
+
+            <!-- Mostrar dropdown para cambio de estado en otros casos -->
+            <div *ngIf="pedido.estado !== 'NUEVO' && puedeCambiarEstado(pedido)">
+              <label class="text-xs font-semibold uppercase tracking-wide text-slate-500" [attr.for]="'estado-' + pedido.id">
+                Cambiar estado
+              </label>
+              <select
+                [id]="'estado-' + pedido.id"
+                class="mt-2 h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+                [disabled]="cargandoCambio === pedido.id"
+                [value]="pedido.estado"
+                (change)="cambiarEstado(pedido.id, $any($event.target).value)">
+                <option [value]="pedido.estado">
+                  {{ nombreEstado(pedido.estado) }}
+                </option>
+                <option *ngFor="let estado of estadosDisponiblesParaPedido(pedido)" [value]="estado">
+                  {{ nombreEstado(estado) }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Mostrar mensaje si no hay cambios disponibles -->
+            <div *ngIf="!puedeCambiarEstado(pedido) && pedido.estado !== 'NUEVO'" class="rounded-md border border-slate-200 bg-slate-50 p-3 text-center text-xs font-medium text-slate-500">
+              Sin cambios disponibles
+            </div>
+
+            <!-- Mostrar estado de carga -->
             <span *ngIf="cargandoCambio === pedido.id" class="text-xs font-medium text-red-600">
-              Actualizando estado...
-            </span>
-            <span *ngIf="!puedeCambiarEstado(pedido)" class="text-xs font-medium text-slate-500">
-              Sin cambios disponibles para restaurante
+              Procesando...
             </span>
           </div>
         </div>

@@ -127,7 +127,7 @@ public class RestauranteController {
                             "error", "Transicion de estado no permitida para restaurante",
                             "estadoActual", pedido.getEstado(),
                             "estadoSolicitado", nuevoEstado,
-                            "regla", "Solo se permite INICIADO -> EN_COCINA -> CON_EL_REPARTIDOR"));
+                            "regla", "Transiciones permitidas: NUEVO->ACEPTADO, NUEVO->RECHAZADO, ACEPTADO->EN_COCINA, EN_COCINA->CON_EL_REPARTIDOR"));
         }
 
         pedidoClient.actualizarEstadoPedido(pedidoId, nuevoEstado);
@@ -147,7 +147,13 @@ public class RestauranteController {
         String actual = estadoActual.trim().toUpperCase();
         String solicitado = nuevoEstado.trim().toUpperCase();
 
-        return ("INICIADO".equals(actual) && "EN_COCINA".equals(solicitado))
+        // Transiciones permitidas para el restaurante
+        return ("NUEVO".equals(actual) && "ACEPTADO".equals(solicitado))
+                || ("NUEVO".equals(actual) && "RECHAZADO_POR_RESTAURANTE".equals(solicitado))
+                || ("ACEPTADO".equals(actual) && "EN_COCINA".equals(solicitado))
+                || ("EN_COCINA".equals(actual) && "CON_EL_REPARTIDOR".equals(solicitado))
+                // Retrocompatibilidad con estado anterior INICIADO
+                || ("INICIADO".equals(actual) && "EN_COCINA".equals(solicitado))
                 || ("EN_COCINA".equals(actual) && "CON_EL_REPARTIDOR".equals(solicitado));
     }
 

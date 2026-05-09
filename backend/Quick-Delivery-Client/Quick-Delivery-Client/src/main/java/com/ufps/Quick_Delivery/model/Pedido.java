@@ -59,7 +59,7 @@ public class Pedido implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
-    private EstadoPedido estado = EstadoPedido.INICIADO;
+    private EstadoPedido estado = EstadoPedido.NUEVO;
 
     @Column(name = "preferencias", columnDefinition = "TEXT")
     private String preferencias;
@@ -72,7 +72,7 @@ public class Pedido implements Serializable {
     public void prePersist() {
         this.fechaCreacion = LocalDateTime.now();
         if (this.estado == null) {
-            this.estado = EstadoPedido.INICIADO;
+            this.estado = EstadoPedido.NUEVO;
         }
     }
 

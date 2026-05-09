@@ -48,6 +48,26 @@ export class PedidosService {
   );
 }
 
+/**
+ * Aceptar un pedido nuevo
+ */
+aceptarPedido(pedidoId: string): Observable<PedidoDto> {
+  return this.http.post<PedidoDto>(
+    `http://localhost:8080/api/pedidos/${pedidoId}/aceptar`,
+    null
+  );
+}
+
+/**
+ * Rechazar un pedido nuevo
+ */
+rechazarPedido(pedidoId: string): Observable<PedidoDto> {
+  return this.http.post<PedidoDto>(
+    `http://localhost:8080/api/pedidos/${pedidoId}/rechazar`,
+    null
+  );
+}
+
 
 getRestaurantePorUsuario(usuarioId: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}/usuario/${usuarioId}`);
