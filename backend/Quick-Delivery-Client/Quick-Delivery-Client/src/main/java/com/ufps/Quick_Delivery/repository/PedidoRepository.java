@@ -23,6 +23,16 @@ public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
 
     List<Pedido> findByCliente_UsuarioIdOrderByFechaCreacionDesc(UUID usuarioId);
 
+    @Query("""
+        SELECT DISTINCT p
+        FROM Pedido p
+        LEFT JOIN FETCH p.items
+        WHERE p.cliente.usuarioId = :usuarioId
+        ORDER BY p.fechaCreacion DESC
+    """)
+    List<Pedido> findByUsuarioIdConItemsDesc(@Param("usuarioId") UUID usuarioId);
+
+
     List<Pedido> findByCliente_UsuarioIdAndEstadoOrderByFechaCreacionDesc(
             UUID usuarioId,
             EstadoPedido estado

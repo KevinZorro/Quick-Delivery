@@ -160,66 +160,69 @@ public class DeliveryUserController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
 
-        try {
-            UUID deliveryId = service.findDeliveryIdByUsuarioId(usuarioId)
-                    .orElseThrow(() -> new RuntimeException("Repartidor no encontrado"));
-
-            List<Entrega> entregas = entregaRepository.findByRepartidorId(deliveryId);
-
-            // Aplicar filtros
-            if (estado != null && !estado.isEmpty()) {
-                entregas = entregas.stream()
-                        .filter(e -> estado.equalsIgnoreCase(e.getEstado()))
-                        .collect(Collectors.toList());
-            }
-            if (fechaInicio != null) {
-                entregas = entregas.stream()
-                        .filter(e -> e.getHoraInicio() != null && !e.getHoraInicio().toLocalDate().isBefore(fechaInicio))
-                        .collect(Collectors.toList());
-            }
-            if (fechaFin != null) {
-                entregas = entregas.stream()
-                        .filter(e -> e.getHoraInicio() != null && !e.getHoraInicio().toLocalDate().isAfter(fechaFin))
-                        .collect(Collectors.toList());
-            }
-
-            List<Map<String, Object>> historial = entregas.stream()
-                    .map(entrega -> {
-                        Map<String, Object> info = new HashMap<>();
-                        try {
-                            PedidoResponse pedido = clienteClient
-                                    .obtenerPedidoPorId(entrega.getPedidoId());
-
-                            info.put("id", entrega.getId());
-                            info.put("pedidoId", entrega.getPedidoId());
-                            info.put("estado", entrega.getEstado());
-                            info.put("codigoEntrega", entrega.getCodigoConfirmacion());
-                            info.put("comentario", entrega.getComentariosEntrega());
-                            info.put("fechaCreacion", entrega.getHoraInicio());
-                            info.put("fechaActualizacion", entrega.getHoraFin());
-                            info.put("duracionMinutos", entrega.getDuracionMinutos());
-
-                            if (pedido != null) {
-                                info.put("clienteId", pedido.getClienteId());
-                                info.put("restauranteId", pedido.getRestauranteId());
-                                info.put("total", pedido.getTotal());
-                                info.put("metodoPago", pedido.getMetodoPago());
-                                info.put("preferencias", pedido.getPreferencias());
-                                info.put("direccionEntregaId", pedido.getDireccionEntregaId());
-                            }
-
-                        } catch (Exception ignored) {}
-
-                        return info;
-                    })
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(historial);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(502).build();
+        // Buscar el repartidor — si no existe, devolver 404 (no 502)
+        Optional<UUID> deliveryIdOpt = service.findDeliveryIdByUsuarioId(usuarioId);
+        if (deliveryIdOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of());
         }
+        UUID deliveryId = deliveryIdOpt.get();
+
+        List<Entrega> entregas = entregaRepository.findByRepartidorId(deliveryId);
+
+        // Aplicar filtros
+        if (estado != null && !estado.isEmpty()) {
+            entregas = entregas.stream()
+                    .filter(e -> estado.equalsIgnoreCase(e.getEstado()))
+                    .collect(Collectors.toList());
+        }
+        if (fechaInicio != null) {
+            entregas = entregas.stream()
+                    .filter(e -> e.getHoraInicio() != null && !e.getHoraInicio().toLocalDate().isBefore(fechaInicio))
+                    .collect(Collectors.toList());
+        }
+        if (fechaFin != null) {
+            entregas = entregas.stream()
+                    .filter(e -> e.getHoraInicio() != null && !e.getHoraInicio().toLocalDate().isAfter(fechaFin))
+                    .collect(Collectors.toList());
+        }
+
+        List<Map<String, Object>> historial = entregas.stream()
+                .map(entrega -> {
+                    Map<String, Object> info = new HashMap<>();
+                    // Datos básicos de la entrega siempre presentes
+                    info.put("id", entrega.getId());
+                    info.put("pedidoId", entrega.getPedidoId());
+                    info.put("repartidorId", entrega.getRepartidorId());
+                    info.put("estado", entrega.getEstado());
+                    info.put("codigoEntrega", entrega.getCodigoConfirmacion());
+                    info.put("comentario", entrega.getComentariosEntrega());
+                    info.put("fechaCreacion", entrega.getHoraInicio());
+                    info.put("fechaActualizacion", entrega.getHoraFin());
+                    info.put("duracionMinutos", entrega.getDuracionMinutos());
+
+                    // Intentar enriquecer con datos del pedido (falla silenciosamente)
+                    try {
+                        PedidoResponse pedido = clienteClient
+                                .obtenerPedidoPorId(entrega.getPedidoId());
+
+                        if (pedido != null) {
+                            info.put("clienteId", pedido.getClienteId());
+                            info.put("restauranteId", pedido.getRestauranteId());
+                            info.put("total", pedido.getTotal());
+                            info.put("metodoPago", pedido.getMetodoPago());
+                            info.put("preferencias", pedido.getPreferencias());
+                            info.put("direccionEntregaId", pedido.getDireccionEntregaId());
+                        }
+
+                    } catch (Exception ignored) {}
+
+                    return info;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(historial);
     }
+
 
     // ----------------- REPARTIDOR ID POR USUARIO -----------------
 

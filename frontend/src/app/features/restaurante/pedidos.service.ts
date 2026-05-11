@@ -1,7 +1,9 @@
 // src/app/features/pedidos/pedidos.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface PedidoDto {
   id: string;
@@ -29,49 +31,66 @@ export interface ItemPedidoDto {
 @Injectable({ providedIn: 'root' })
 export class PedidosService {
 
-  private baseUrl = 'http://localhost:8081/api/restaurante';
+  private restaurantesBaseUrl = environment.restaurantesApi + '/api/restaurante';
+  private clientesBaseUrl = environment.clientesApi + '/api/pedidos';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+
+  private getHeaders(): HttpHeaders {
+    let token = '';
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('quick-delivery-token') || '';
+    }
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
 
   getHistorial(restauranteId: string): Observable<PedidoDto[]> {
-  return this.http.get<PedidoDto[]>(
-    `${this.baseUrl}/${restauranteId}/historial-completo`
-  );
-}
-
+    return this.http.get<PedidoDto[]>(
+      `${this.restaurantesBaseUrl}/${restauranteId}/historial-completo`,
+      { headers: this.getHeaders() }
+    );
+  }
 
   actualizarEstado(pedidoId: string, nuevoEstado: string) {
-  return this.http.put(
-    `${this.baseUrl}/pedidos/${pedidoId}/estado`,
-    null,
-    { params: { nuevoEstado } }
-  );
-}
+    return this.http.put(
+      `${this.restaurantesBaseUrl}/pedidos/${pedidoId}/estado`,
+      null,
+      { params: { nuevoEstado }, headers: this.getHeaders() }
+    );
+  }
 
-/**
- * Aceptar un pedido nuevo
- */
-aceptarPedido(pedidoId: string): Observable<PedidoDto> {
-  return this.http.post<PedidoDto>(
-    `http://localhost:8080/api/pedidos/${pedidoId}/aceptar`,
-    null
-  );
-}
+  /**
+   * Aceptar un pedido nuevo
+   */
+  aceptarPedido(pedidoId: string): Observable<PedidoDto> {
+    return this.http.post<PedidoDto>(
+      `${this.clientesBaseUrl}/${pedidoId}/aceptar`,
+      null,
+      { headers: this.getHeaders() }
+    );
+  }
 
-/**
- * Rechazar un pedido nuevo
- */
-rechazarPedido(pedidoId: string): Observable<PedidoDto> {
-  return this.http.post<PedidoDto>(
-    `http://localhost:8080/api/pedidos/${pedidoId}/rechazar`,
-    null
-  );
-}
+  /**
+   * Rechazar un pedido nuevo
+   */
+  rechazarPedido(pedidoId: string): Observable<PedidoDto> {
+    return this.http.post<PedidoDto>(
+      `${this.clientesBaseUrl}/${pedidoId}/rechazar`,
+      null,
+      { headers: this.getHeaders() }
+    );
+  }
 
-
-getRestaurantePorUsuario(usuarioId: string): Observable<any> {
-  return this.http.get<any>(`${this.baseUrl}/usuario/${usuarioId}`);
-}
-
-
+  getRestaurantePorUsuario(usuarioId: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.restaurantesBaseUrl}/usuario/${usuarioId}`,
+      { headers: this.getHeaders() }
+    );
+  }
 }

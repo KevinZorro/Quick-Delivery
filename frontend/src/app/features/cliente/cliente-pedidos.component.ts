@@ -77,7 +77,7 @@ export class ClientePedidosComponent implements OnInit {
     private pedidoService: PedidoService,
     private restauranteService: RestauranteService,
     public router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.cargarPedidos();

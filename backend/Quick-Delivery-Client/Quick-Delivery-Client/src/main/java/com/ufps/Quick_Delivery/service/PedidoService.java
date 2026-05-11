@@ -205,9 +205,8 @@ public class PedidoService {
     // -------------------------------------------------------------------------
     @Transactional(readOnly = true)
     public List<Pedido> listarPorUsuario(UUID usuarioId) {
-
-        return pedidoRepository
-                .findByCliente_UsuarioIdOrderByFechaCreacionDesc(usuarioId);
+        // Usar JOIN FETCH para cargar los items en la misma query
+        return pedidoRepository.findByUsuarioIdConItemsDesc(usuarioId);
     }
 
     @Transactional(readOnly = true)

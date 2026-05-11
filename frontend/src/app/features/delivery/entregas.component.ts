@@ -97,8 +97,15 @@ export class DeliveryEntregasComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.errorMessage = 'Error al cargar entregas';
-        console.error('❌ Error al cargar entregas:', err);
+        if (err.status === 404) {
+          // El repartidor aún no tiene entregas asignadas o no está registrado
+          this.entregas = [];
+          this.entregasEnCamino = [];
+          this.entregasEntregadas = [];
+        } else {
+          this.errorMessage = 'Error al cargar entregas';
+          console.error('❌ Error al cargar entregas:', err);
+        }
         this.loading = false;
       }
     });
