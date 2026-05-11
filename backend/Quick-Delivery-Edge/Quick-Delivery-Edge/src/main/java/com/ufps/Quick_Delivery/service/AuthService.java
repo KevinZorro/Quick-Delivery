@@ -41,6 +41,10 @@ public class AuthService {
 
     @Transactional
     public Usuario registrar(UsuarioDto dto) {
+        if (usuarioRepository.existsByCorreo(dto.getCorreo())) {
+            throw new RuntimeException("El correo ya está registrado");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setNombre(dto.getNombre());
         usuario.setCorreo(dto.getCorreo());

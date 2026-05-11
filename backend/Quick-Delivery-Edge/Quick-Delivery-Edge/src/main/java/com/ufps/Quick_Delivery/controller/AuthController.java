@@ -38,10 +38,18 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UsuarioDto dto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            String mensaje = bindingResult.getFieldErrors().stream()
+                .map(e -> e.getDefaultMessage())
+                .findFirst()
+                .orElse("Datos inválidos");
+            return ResponseEntity.badRequest().body(mensaje);
         }
-        Usuario nuevo = authService.registrar(dto);
-        return ResponseEntity.ok(nuevo);
+        try {
+            Usuario nuevo = authService.registrar(dto);
+            return ResponseEntity.ok(nuevo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/verificar-correo")
