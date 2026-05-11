@@ -1,17 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PedidoService, Pedido, ItemPedido } from './pedido.service';
-import { RestauranteService, Producto } from './restaurante.service';
+import { PedidoService, Pedido } from './pedido.service';
+import { RestauranteService } from './restaurante.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from './header.component';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
 
 interface PedidoDetallado extends Pedido {
   fechaFormateada?: string;
   estadoColor?: string;
   estadoTexto?: string;
+  restauranteCalificado?: boolean;
+  repartidorCalificado?: boolean;
 }
 
 @Component({
@@ -24,32 +24,40 @@ export class ClientePedidosComponent implements OnInit {
 
   pedidos: PedidoDetallado[] = [];
   pedidosFiltrados: PedidoDetallado[] = [];
+
   loading: boolean = true;
   error: string = '';
+
   filtroEstado: string = 'TODOS';
   ordenamiento: string = 'reciente';
 
-  // Filtros de fecha
   filtroFechaDesde: string = '';
   filtroFechaHasta: string = '';
 
-  // Modal Detalles
+  // Modal detalles
   mostrarModal: boolean = false;
   pedidoSeleccionado: PedidoDetallado | null = null;
   loadingDetalles: boolean = false;
 
-  // Modal Calificación
+  // Modal calificación
   mostrarModalCalificacion: boolean = false;
   pedidoParaCalificar: PedidoDetallado | null = null;
 
-  // Estado calificación
+  // Restaurante
   calificacionRestaurante: number = 0;
   comentarioRestaurante: string = '';
   enviandoCalificacionRestaurante: boolean = false;
 
+  // Repartidor
   calificacionRepartidor: number = 0;
   comentarioRepartidor: string = '';
   enviandoCalificacionRepartidor: boolean = false;
+
+  // Toast notificación
+  toastVisible: boolean = false;
+  toastMensaje: string = '';
+  toastTipo: 'exito' | 'error' = 'exito';
+  private toastTimeout: any;
 
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
@@ -75,6 +83,16 @@ export class ClientePedidosComponent implements OnInit {
     this.cargarPedidos();
   }
 
+  mostrarToast(mensaje: string, tipo: 'exito' | 'error' = 'exito'): void {
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastMensaje = mensaje;
+    this.toastTipo = tipo;
+    this.toastVisible = true;
+    this.toastTimeout = setTimeout(() => {
+      this.toastVisible = false;
+    }, 3500);
+  }
+
   cargarPedidos(): void {
     this.loading = true;
     this.error = '';
@@ -82,37 +100,41 @@ export class ClientePedidosComponent implements OnInit {
     const usuarioId = localStorage.getItem('quick-delivery-userId');
 
     if (!usuarioId) {
-      this.error = 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.';
+      this.error = 'No se pudo identificar al usuario.';
       this.loading = false;
       return;
     }
 
-    console.log('📦 Cargando pedidos del usuario:', usuarioId);
-
     this.pedidoService.listarPedidosUsuario(usuarioId).subscribe({
       next: (pedidos) => {
-        console.log('✅ Pedidos recibidos:', pedidos);
+        this.pedidos = pedidos.map(pedido => {
+          const restauranteCalificado =
+            localStorage.getItem(`restaurante-${pedido.id}`) === 'true';
+          const repartidorCalificado =
+            localStorage.getItem(`repartidor-${pedido.id}`) === 'true';
 
-        this.pedidos = pedidos.map(pedido => ({
-          ...pedido,
-          fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
-          estadoColor: this.obtenerColorEstado(pedido.estado),
-          estadoTexto: this.obtenerTextoEstado(pedido.estado)
-        }));
+          return {
+            ...pedido,
+            fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
+            estadoColor: this.obtenerColorEstado(pedido.estado),
+            estadoTexto: this.obtenerTextoEstado(pedido.estado),
+            restauranteCalificado,
+            repartidorCalificado
+          };
+        });
 
         this.aplicarFiltros();
         this.loading = false;
       },
       error: (error) => {
-        console.error('❌ Error al cargar pedidos:', error);
-        this.error = 'No se pudieron cargar los pedidos. Por favor, intenta de nuevo.';
+        console.error('Error al cargar pedidos:', error);
+        this.error = 'No se pudieron cargar los pedidos.';
         this.loading = false;
       }
     });
   }
 
   aplicarFiltros(): void {
-    // 1) Filtrar por estado
     if (this.filtroEstado === 'TODOS') {
       this.pedidosFiltrados = [...this.pedidos];
     } else {
@@ -121,36 +143,29 @@ export class ClientePedidosComponent implements OnInit {
       );
     }
 
-    // 2) Filtrar por rango de fechas
     if (this.filtroFechaDesde || this.filtroFechaHasta) {
       const desde = this.filtroFechaDesde ? new Date(this.filtroFechaDesde) : null;
       const hasta = this.filtroFechaHasta ? new Date(this.filtroFechaHasta) : null;
 
       this.pedidosFiltrados = this.pedidosFiltrados.filter(p => {
         const fecha = new Date(p.fechaCreacion);
-
-        if (desde && fecha < desde) {
-          return false;
-        }
+        if (desde && fecha < desde) return false;
         if (hasta) {
           const hastaInclusive = new Date(hasta);
           hastaInclusive.setDate(hastaInclusive.getDate() + 1);
-          if (fecha >= hastaInclusive) {
-            return false;
-          }
+          if (fecha >= hastaInclusive) return false;
         }
         return true;
       });
     }
 
-    // 3) Ordenar
     if (this.ordenamiento === 'reciente') {
-      this.pedidosFiltrados.sort((a, b) =>
-        new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
+      this.pedidosFiltrados.sort(
+        (a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
       );
     } else if (this.ordenamiento === 'antiguo') {
-      this.pedidosFiltrados.sort((a, b) =>
-        new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()
+      this.pedidosFiltrados.sort(
+        (a, b) => new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()
       );
     } else if (this.ordenamiento === 'mayor') {
       this.pedidosFiltrados.sort((a, b) => b.total - a.total);
@@ -159,117 +174,24 @@ export class ClientePedidosComponent implements OnInit {
     }
   }
 
-  cambiarFiltroEstado(estado: string): void {
-    this.filtroEstado = estado;
-    this.aplicarFiltros();
-  }
-
-  cambiarOrdenamiento(orden: string): void {
-    this.ordenamiento = orden;
-    this.aplicarFiltros();
-  }
-
-  // Cargar detalles del pedido con información de productos
-  verDetallePedido(pedidoId: string): void {
-    console.log('🔍 Cargando detalles completos del pedido:', pedidoId);
-    this.loadingDetalles = true;
-
-    this.pedidoService.obtenerPedido(pedidoId).subscribe({
-      next: (pedidoCompleto) => {
-        console.log('✅ Pedido completo recibido:', pedidoCompleto);
-
-        if (pedidoCompleto.items && pedidoCompleto.items.length > 0) {
-          this.cargarInformacionProductos(pedidoCompleto);
-        } else {
-          this.mostrarPedidoEnModal(pedidoCompleto);
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error al cargar detalles del pedido:', error);
-        this.loadingDetalles = false;
-
-        const pedido = this.pedidos.find(p => p.id === pedidoId);
-        if (pedido) {
-          this.mostrarPedidoEnModal(pedido);
-        }
-      }
-    });
-  }
-
-  // Cargar información de productos desde el microservicio
-  private cargarInformacionProductos(pedido: Pedido): void {
-    console.log('🛒 Cargando información de productos...');
-
-    const productosObservables = pedido.items!.map(item =>
-      this.restauranteService.getProductosByRestaurante(pedido.restauranteId).pipe(
-        map(productos => {
-          const producto = productos.find(p => p.id === item.productoId);
-          return { item, producto };
-        }),
-        catchError(error => {
-          console.error(`❌ Error al cargar producto ${item.productoId}:`, error);
-          return of({ item, producto: null });
-        })
-      )
-    );
-
-    forkJoin(productosObservables).subscribe({
-      next: (resultados) => {
-        console.log('✅ Información de productos cargada:', resultados);
-
-        const itemsConProductos = resultados.map(({ item, producto }) => ({
-          ...item,
-          nombreProducto: producto?.nombre || 'Producto no disponible',
-          descripcionProducto: producto?.descripcion || '',
-          imagenProducto: producto?.imagenUrl || ''
-        }));
-
-        const pedidoActualizado = {
-          ...pedido,
-          items: itemsConProductos
-        };
-
-        this.mostrarPedidoEnModal(pedidoActualizado);
-      },
-      error: (error) => {
-        console.error('❌ Error al cargar información de productos:', error);
-        this.mostrarPedidoEnModal(pedido);
-      }
-    });
-  }
-
-  // Mostrar pedido en el modal
-  private mostrarPedidoEnModal(pedido: Pedido): void {
-    this.pedidoSeleccionado = {
-      ...pedido,
-      fechaFormateada: this.formatearFecha(pedido.fechaCreacion),
-      estadoColor: this.obtenerColorEstado(pedido.estado),
-      estadoTexto: this.obtenerTextoEstado(pedido.estado)
-    };
-
-    this.mostrarModal = true;
-    this.loadingDetalles = false;
-    document.body.style.overflow = 'hidden';
-
-    console.log('✅ Modal abierto con pedido:', this.pedidoSeleccionado);
-  }
-
-  cerrarModal(): void {
-    console.log('❌ Cerrando modal');
-    this.mostrarModal = false;
-    this.pedidoSeleccionado = null;
-    this.loadingDetalles = false;
-    document.body.style.overflow = 'auto';
-  }
-
-  // Modal calificación
   abrirModalCalificacion(pedido: PedidoDetallado, event: Event): void {
     event.stopPropagation();
+
+    if (pedido.restauranteCalificado && pedido.repartidorCalificado) {
+      alert('Este pedido ya fue calificado completamente.');
+      return;
+    }
+
     this.pedidoParaCalificar = pedido;
+
     this.calificacionRestaurante = 0;
     this.comentarioRestaurante = '';
+    this.enviandoCalificacionRestaurante = false;
+
     this.calificacionRepartidor = 0;
     this.comentarioRepartidor = '';
+    this.enviandoCalificacionRepartidor = false;
+
     this.mostrarModalCalificacion = true;
     document.body.style.overflow = 'hidden';
   }
@@ -281,116 +203,155 @@ export class ClientePedidosComponent implements OnInit {
   }
 
   setCalificacionRestaurante(stars: number): void {
+    if (this.pedidoParaCalificar?.restauranteCalificado) return;
     this.calificacionRestaurante = stars;
   }
 
   setCalificacionRepartidor(stars: number): void {
+    if (this.pedidoParaCalificar?.repartidorCalificado) return;
     this.calificacionRepartidor = stars;
   }
 
   enviarCalificacionRestaurante(): void {
-    if (!this.pedidoParaCalificar || this.calificacionRestaurante === 0) return;
+    if (
+      !this.pedidoParaCalificar ||
+      this.calificacionRestaurante === 0 ||
+      this.pedidoParaCalificar.restauranteCalificado
+    ) return;
+
     this.enviandoCalificacionRestaurante = true;
 
-    this.pedidoService.calificarRestaurante(
-      this.pedidoParaCalificar.id,
-      this.calificacionRestaurante,
-      this.comentarioRestaurante
-    ).subscribe({
-      next: () => {
-        alert('¡Gracias por calificar al restaurante!');
-        this.calificacionRestaurante = 0;
-        this.comentarioRestaurante = '';
-        this.enviandoCalificacionRestaurante = false;
-        this.checkCerrarModal();
-      },
-      error: (err) => {
-        console.error('Error calificar restaurante:', err);
-        alert('Error al enviar calificación del restaurante.');
-        this.enviandoCalificacionRestaurante = false;
-      }
-    });
+    this.pedidoService
+      .calificarRestaurante(
+        this.pedidoParaCalificar.id,
+        this.calificacionRestaurante,
+        this.comentarioRestaurante
+      )
+      .subscribe({
+        next: () => {
+          if (this.pedidoParaCalificar) {
+            this.pedidoParaCalificar.restauranteCalificado = true;
+            localStorage.setItem(`restaurante-${this.pedidoParaCalificar.id}`, 'true');
+
+            const pedidoEnLista = this.pedidos.find(p => p.id === this.pedidoParaCalificar!.id);
+            if (pedidoEnLista) pedidoEnLista.restauranteCalificado = true;
+          }
+
+          this.mostrarToast('✅ ¡Gracias! Calificación del restaurante enviada.');
+
+          this.calificacionRestaurante = 0;
+          this.comentarioRestaurante = '';
+          this.enviandoCalificacionRestaurante = false;
+
+          this.checkCerrarModal();
+        },
+        error: (err) => {
+          console.error(err);
+          // Sin notificación: el botón cambia visualmente a "ya calificado"
+          this.enviandoCalificacionRestaurante = false;
+
+          if (this.pedidoParaCalificar) {
+            this.pedidoParaCalificar.restauranteCalificado = true;
+            localStorage.setItem(`restaurante-${this.pedidoParaCalificar.id}`, 'true');
+
+            const pedidoEnLista = this.pedidos.find(p => p.id === this.pedidoParaCalificar!.id);
+            if (pedidoEnLista) pedidoEnLista.restauranteCalificado = true;
+          }
+        }
+      });
   }
 
   enviarCalificacionRepartidor(): void {
-    if (!this.pedidoParaCalificar || this.calificacionRepartidor === 0) return;
+    if (
+      !this.pedidoParaCalificar ||
+      this.calificacionRepartidor === 0 ||
+      this.pedidoParaCalificar.repartidorCalificado
+    ) return;
+
     this.enviandoCalificacionRepartidor = true;
 
-    this.pedidoService.calificarRepartidor(
-      this.pedidoParaCalificar.id,
-      this.calificacionRepartidor,
-      this.comentarioRepartidor
-    ).subscribe({
-      next: () => {
-        alert('¡Gracias por calificar al repartidor!');
-        this.calificacionRepartidor = 0;
-        this.comentarioRepartidor = '';
-        this.enviandoCalificacionRepartidor = false;
-        this.checkCerrarModal();
-      },
-      error: (err) => {
-        console.error('Error calificar repartidor:', err);
-        alert('Error al enviar calificación del repartidor.');
-        this.enviandoCalificacionRepartidor = false;
-      }
-    });
+    this.pedidoService
+      .calificarRepartidor(
+        this.pedidoParaCalificar.id,
+        this.calificacionRepartidor,
+        this.comentarioRepartidor
+      )
+      .subscribe({
+        next: () => {
+          if (this.pedidoParaCalificar) {
+            this.pedidoParaCalificar.repartidorCalificado = true;
+            localStorage.setItem(`repartidor-${this.pedidoParaCalificar.id}`, 'true');
+
+            const pedidoEnLista = this.pedidos.find(p => p.id === this.pedidoParaCalificar!.id);
+            if (pedidoEnLista) pedidoEnLista.repartidorCalificado = true;
+          }
+
+          this.mostrarToast('✅ ¡Gracias! Calificación del repartidor enviada.');
+
+          this.calificacionRepartidor = 0;
+          this.comentarioRepartidor = '';
+          this.enviandoCalificacionRepartidor = false;
+
+          this.checkCerrarModal();
+        },
+        error: (err) => {
+          console.error(err);
+          this.mostrarToast('⚠️ El repartidor ya fue calificado anteriormente.', 'error');
+          this.enviandoCalificacionRepartidor = false;
+
+          if (this.pedidoParaCalificar) {
+            this.pedidoParaCalificar.repartidorCalificado = true;
+            localStorage.setItem(`repartidor-${this.pedidoParaCalificar.id}`, 'true');
+
+            const pedidoEnLista = this.pedidos.find(p => p.id === this.pedidoParaCalificar!.id);
+            if (pedidoEnLista) pedidoEnLista.repartidorCalificado = true;
+          }
+        }
+      });
   }
 
   checkCerrarModal(): void {
-    // Lógica opcional para cerrar modal automáticamente
+    if (!this.pedidoParaCalificar) return;
+
+    const ambosCaificados =
+      this.pedidoParaCalificar.restauranteCalificado &&
+      this.pedidoParaCalificar.repartidorCalificado;
+
+    if (ambosCaificados) {
+      setTimeout(() => {
+        this.cerrarModalCalificacion();
+      }, 1500);
+    }
   }
 
-  // Obtener código y confirmar entrega
+  verDetallePedido(pedidoId: string): void {
+    const pedido = this.pedidos.find(p => p.id === pedidoId);
+    if (!pedido) return;
+
+    this.pedidoSeleccionado = pedido;
+    this.mostrarModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarModal(): void {
+    this.mostrarModal = false;
+    this.pedidoSeleccionado = null;
+    document.body.style.overflow = 'auto';
+  }
+
   obtenerCodigoEntrega(pedidoId: string): void {
-    console.log('🔑 Obtener código de entrega para pedido:', pedidoId);
-
-    this.pedidoService.obtenerCodigoEntrega(pedidoId).subscribe({
-      next: (codigo: string) => {
-        console.log('✅ Código de entrega recibido:', codigo);
-
-        const confirmar = confirm(
-          `Código de entrega: ${codigo}\n\n¿Quieres confirmar la entrega de este pedido?`
-        );
-
-        if (!confirmar) {
-          return;
-        }
-
-        this.pedidoService.confirmarEntregaPedido(pedidoId).subscribe({
-          next: (pedidoActualizado) => {
-            alert('Entrega confirmada. ¡Gracias!');
-
-            const idx = this.pedidos.findIndex(p => p.id === pedidoId);
-            if (idx !== -1) {
-              this.pedidos[idx].estado = pedidoActualizado.estado;
-              this.pedidos[idx].estadoColor = this.obtenerColorEstado(pedidoActualizado.estado);
-              this.pedidos[idx].estadoTexto = this.obtenerTextoEstado(pedidoActualizado.estado);
-            }
-            this.aplicarFiltros();
-          },
-          error: (err) => {
-            console.error('❌ Error al confirmar entrega de pedido:', err);
-            alert('No se pudo confirmar la entrega. Intenta nuevamente.');
-          }
-        });
-      },
-      error: (error) => {
-        console.error('❌ Error al obtener código de entrega:', error);
-        alert('No se pudo obtener el código de entrega. Intenta nuevamente.');
-      }
-    });
+    alert(`Código para pedido ${pedidoId}`);
   }
 
   formatearFecha(fecha: string): string {
     const date = new Date(fecha);
-    const opciones: Intl.DateTimeFormatOptions = {
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    };
-    return date.toLocaleDateString('es-ES', opciones);
+    });
   }
 
   formatearId(id: string | undefined | null): string {
@@ -441,7 +402,6 @@ export class ClientePedidosComponent implements OnInit {
     if (isNaN(precio) || precio === null || precio === undefined) {
       return 'Precio no disponible';
     }
-
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -451,7 +411,8 @@ export class ClientePedidosComponent implements OnInit {
 
   calcularCantidadTotal(): number {
     if (!this.pedidoSeleccionado?.items) return 0;
-
-    return this.pedidoSeleccionado.items.reduce((total, item) => total + item.cantidad, 0);
+    return this.pedidoSeleccionado.items.reduce(
+      (total, item) => total + item.cantidad, 0
+    );
   }
 }

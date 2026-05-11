@@ -36,7 +36,6 @@
       <!-- Filtros -->
       <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-amber-100">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Filtro por estado -->
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Filtrar por estado</label>
             <select
@@ -48,8 +47,6 @@
               </option>
             </select>
           </div>
-
-          <!-- Ordenar -->
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Ordenar por</label>
             <select
@@ -64,7 +61,6 @@
           </div>
         </div>
 
-        <!-- Filtros por fecha -->
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Desde (fecha)</label>
@@ -152,9 +148,17 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2 justify-end">
-                  <!-- Calificar -->
+
+                  <!-- Botón calificar: ambos ya calificados -->
+                  <span
+                    *ngIf="pedido.estado === 'ENTREGADO' && pedido.restauranteCalificado && pedido.repartidorCalificado"
+                    class="inline-flex items-center gap-1 bg-green-100 text-green-700 border border-green-400 px-4 py-2 rounded-lg text-sm font-medium">
+                    ✓ Calificado
+                  </span>
+
+                  <!-- Botón calificar: pendiente alguno -->
                   <button
-                    *ngIf="pedido.estado === 'ENTREGADO'"
+                    *ngIf="pedido.estado === 'ENTREGADO' && !(pedido.restauranteCalificado && pedido.repartidorCalificado)"
                     (click)="abrirModalCalificacion(pedido, $event)"
                     class="bg-yellow-400 text-white px-4 py-2 rounded-lg hover:bg-yellow-500 transition font-medium shadow-sm">
                     ⭐ Calificar
@@ -221,7 +225,9 @@
   </div>
 </div>
 
-<!-- Modal de calificación -->
+<!-- ═══════════════════════════════════════════════════════
+     MODAL DE CALIFICACIÓN
+═══════════════════════════════════════════════════════ -->
 <div
   *ngIf="mostrarModalCalificacion"
   class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
@@ -231,6 +237,7 @@
     class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all"
     (click)="$event.stopPropagation()">
 
+    <!-- Header del modal -->
     <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4 flex justify-between items-center">
       <h2 class="text-xl font-bold text-white flex items-center gap-2">
         <span>⭐</span> Califica tu experiencia
@@ -244,12 +251,23 @@
 
     <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50">
 
-      <!-- Restaurante -->
+      <!-- ── RESTAURANTE ── -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span class="text-2xl">🍽️</span> Restaurante
+          <span class="text-2xl">🍽️</span>
+          Restaurante
+          <!-- Badge "Calificado" cuando ya fue enviado -->
+          <span
+            *ngIf="pedidoParaCalificar?.restauranteCalificado"
+            class="ml-auto text-xs font-semibold bg-green-100 text-green-700 border border-green-400 rounded-full px-2 py-0.5">
+            ✓ Calificado
+          </span>
         </h3>
-        <div class="flex flex-col items-center mb-4">
+
+        <!-- Estrellas -->
+        <div class="flex flex-col items-center mb-4"
+             [class.opacity-40]="pedidoParaCalificar?.restauranteCalificado"
+             [class.pointer-events-none]="pedidoParaCalificar?.restauranteCalificado">
           <p class="text-sm text-gray-500 mb-2">¿Qué tal estuvo la comida?</p>
           <div class="flex gap-2 text-3xl cursor-pointer mb-4">
             <span
@@ -262,13 +280,26 @@
             </span>
           </div>
         </div>
+
+        <!-- Textarea -->
         <textarea
+          *ngIf="!pedidoParaCalificar?.restauranteCalificado"
           [(ngModel)]="comentarioRestaurante"
           rows="3"
           class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-amber-400 outline-none mb-4"
           placeholder="Escribe tu opinión sobre la comida...">
         </textarea>
+
+        <!-- BOTÓN: Ya calificado -->
+        <div
+          *ngIf="pedidoParaCalificar?.restauranteCalificado"
+          class="w-full py-2 text-center text-sm font-semibold text-green-700 bg-green-50 border border-green-400 rounded-lg">
+          ✓ Restaurante ya calificado
+        </div>
+
+        <!-- BOTÓN: Enviar -->
         <button
+          *ngIf="!pedidoParaCalificar?.restauranteCalificado"
           (click)="enviarCalificacionRestaurante()"
           [disabled]="calificacionRestaurante === 0 || enviandoCalificacionRestaurante"
           class="w-full bg-amber-500 text-white py-2 rounded-lg font-medium hover:bg-amber-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
@@ -276,12 +307,23 @@
         </button>
       </div>
 
-      <!-- Repartidor -->
+      <!-- ── REPARTIDOR ── -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span class="text-2xl">🚴</span> Repartidor
+          <span class="text-2xl">🚴</span>
+          Repartidor
+          <!-- Badge "Calificado" cuando ya fue enviado -->
+          <span
+            *ngIf="pedidoParaCalificar?.repartidorCalificado"
+            class="ml-auto text-xs font-semibold bg-green-100 text-green-700 border border-green-400 rounded-full px-2 py-0.5">
+            ✓ Calificado
+          </span>
         </h3>
-        <div class="flex flex-col items-center mb-4">
+
+        <!-- Estrellas -->
+        <div class="flex flex-col items-center mb-4"
+             [class.opacity-40]="pedidoParaCalificar?.repartidorCalificado"
+             [class.pointer-events-none]="pedidoParaCalificar?.repartidorCalificado">
           <p class="text-sm text-gray-500 mb-2">¿Cómo fue la entrega?</p>
           <div class="flex gap-2 text-3xl cursor-pointer mb-4">
             <span
@@ -294,13 +336,26 @@
             </span>
           </div>
         </div>
+
+        <!-- Textarea -->
         <textarea
+          *ngIf="!pedidoParaCalificar?.repartidorCalificado"
           [(ngModel)]="comentarioRepartidor"
           rows="3"
           class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-amber-400 outline-none mb-4"
           placeholder="Escribe tu opinión sobre la entrega...">
         </textarea>
+
+        <!-- BOTÓN: Ya calificado -->
+        <div
+          *ngIf="pedidoParaCalificar?.repartidorCalificado"
+          class="w-full py-2 text-center text-sm font-semibold text-green-700 bg-green-50 border border-green-400 rounded-lg">
+          ✓ Repartidor ya calificado
+        </div>
+
+        <!-- BOTÓN: Enviar -->
         <button
+          *ngIf="!pedidoParaCalificar?.repartidorCalificado"
           (click)="enviarCalificacionRepartidor()"
           [disabled]="calificacionRepartidor === 0 || enviandoCalificacionRepartidor"
           class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
@@ -311,7 +366,9 @@
   </div>
 </div>
 
-<!-- Modal Detalles -->
+<!-- ═══════════════════════════════════════════════════════
+     MODAL DETALLES
+═══════════════════════════════════════════════════════ -->
 <div
   *ngIf="mostrarModal && pedidoSeleccionado"
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4"
@@ -352,8 +409,19 @@
           Cantidad de productos: {{ calcularCantidadTotal() }}
         </div>
       </div>
-
-      <!-- Aquí podrías añadir el listado de items si lo necesitas -->
     </div>
   </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOAST DE NOTIFICACIÓN
+═══════════════════════════════════════════════════════ -->
+<div
+  *ngIf="toastVisible"
+  class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold transition-all duration-500"
+  [ngClass]="{
+    'bg-green-600 text-white': toastTipo === 'exito',
+    'bg-red-500 text-white':   toastTipo === 'error'
+  }">
+  {{ toastMensaje }}
 </div>
