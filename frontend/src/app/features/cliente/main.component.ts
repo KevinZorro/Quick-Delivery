@@ -45,7 +45,12 @@ export class MainComponent implements OnInit {
   loadRestaurantes(): void {
     this.restauranteService.getRestaurantes().subscribe({
       next: (data) => {
-        this.restaurantes = data;
+        // Ordenar restaurantes: abiertos primero, luego cerrados
+        this.restaurantes = data.sort((a, b) => {
+          if (a.disponible && !b.disponible) return -1;
+          if (!a.disponible && b.disponible) return 1;
+          return 0;
+        });
         this.loading = false;
       },
       error: (err) => {

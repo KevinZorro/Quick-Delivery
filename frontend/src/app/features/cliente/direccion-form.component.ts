@@ -2,6 +2,7 @@ import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DireccionService, Direccion } from './direccion.service';
 import { HeaderComponent } from './header.component';
 
@@ -24,6 +25,8 @@ export class DireccionFormComponent implements OnInit {
 
   tiposReferencia = ['CASA', 'TRABAJO', 'OTRO'];
 
+  private readonly callePattern = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s\-\.\#]{3,100}$/;
+  private readonly nombrePattern = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]{3,100}$/;
 
   constructor(
     private fb: FormBuilder,
@@ -48,10 +51,25 @@ export class DireccionFormComponent implements OnInit {
     }
 
     this.direccionForm = this.fb.group({
-      calle: ['', Validators.required],
+      calle: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+        Validators.pattern(this.callePattern)
+      ]],
       referencia: [''],
-      ciudad: ['', Validators.required],
-      barrio: ['', Validators.required],
+      ciudad: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+        Validators.pattern(this.nombrePattern)
+      ]],
+      barrio: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100),
+        Validators.pattern(this.nombrePattern)
+      ]],
       coordenadas: [''],
       tipoReferencia: ['CASA', Validators.required]
     });
@@ -85,6 +103,7 @@ export class DireccionFormComponent implements OnInit {
     }
 
     this.loading = true;
+    this.errorMessage = null;
     
     // ⭐ Construir el request con el userId del localStorage
     const direccionData: Direccion = {
@@ -101,9 +120,9 @@ export class DireccionFormComponent implements OnInit {
         this.loading = false;
         this.router.navigate(['/cliente/direcciones']);
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.loading = false;
-        this.errorMessage = 'Error al guardar la dirección';
+        this.errorMessage = this.getErrorMessage(err);
         console.error(err);
       }
     });
@@ -111,5 +130,31 @@ export class DireccionFormComponent implements OnInit {
 
   cancelar(): void {
     this.router.navigate(['/cliente/direcciones']);
+  }
+
+  private getErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 0) {
+      return 'No se pudo conectar con el servidor. Intenta nuevamente más tarde.';
+    }
+
+    if (error.error) {
+      if (typeof error.error === 'string') {
+        return error.error;
+      }
+
+      if (error.error.message) {
+        return error.error.message;
+      }
+
+      if (error.error.errors) {
+        const firstError = Object.values(error.error.errors)[0];
+        if (Array.isArray(firstError)) {
+          return firstError[0] as string;
+        }
+        return firstError as string;
+      }
+    }
+
+    return 'Error al guardar la dirección. Por favor verifica los datos e intenta nuevamente.';
   }
 }

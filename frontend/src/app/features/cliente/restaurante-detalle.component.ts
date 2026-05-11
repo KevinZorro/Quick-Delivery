@@ -55,7 +55,7 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   direccionSeleccionada: string = '';
 
   // Direcciones
-  estadoPedido = 'INICIADO';
+  estadoPedido = 'NUEVO';
 
   // Lista de direcciones
   direcciones: Direccion[] = [];
@@ -241,6 +241,18 @@ export class RestauranteDetalleComponent implements OnInit, OnDestroy {
   }
 
   agregarAlCarrito(producto: Producto): void {
+    if (!this.restaurante?.disponible) {
+      this.errorMessage = 'No puedes agregar productos al carrito porque el restaurante está cerrado.';
+      setTimeout(() => this.errorMessage = null, 5000);
+      return;
+    }
+
+    if (!producto.disponible) {
+      this.errorMessage = 'Este producto no está disponible.';
+      setTimeout(() => this.errorMessage = null, 3000);
+      return;
+    }
+
     this.carritoService.agregarProducto(producto, 1);
     this.abrirPanelCarrito();
   }

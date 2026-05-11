@@ -56,6 +56,13 @@ export class ProductoService {
     );
   }
 
+  obtenerProductosPorRestaurante(restauranteId: string): Observable<ProductoResponse[]> {
+    return this.http.get<ProductoResponse[]>(
+      `${this.apiUrl}/restaurante/${restauranteId}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
   obtenerProductoPorId(id: string): Observable<ProductoResponse> {
     return this.http.get<ProductoResponse>(
       `${this.apiUrl}/${id}`,

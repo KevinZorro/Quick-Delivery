@@ -41,6 +41,10 @@ public class AuthService {
 
     @Transactional
     public Usuario registrar(UsuarioDto dto) {
+        if (usuarioRepository.existsByCorreo(dto.getCorreo())) {
+            throw new RuntimeException("El correo ya está registrado");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setNombre(dto.getNombre());
         usuario.setCorreo(dto.getCorreo());
@@ -99,6 +103,19 @@ public class AuthService {
                         res.setNombre(usuario.getNombre());
                         res.setCorreo(usuario.getCorreo());
                         res.setRol(usuario.getRol().name());
+                        
+                        // ⭐ Si es RESTAURANTE, obtener el restauranteId
+                        if (usuario.getRol() == Rol.RESTAURANTE) {
+                            try {
+                                var response = restauranteClient.obtenerPorUsuarioId(usuario.getId());
+                                if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                                    res.setRestauranteId(response.getBody().getId());
+                                }
+                            } catch (Exception e) {
+                                System.out.println("⚠️ No se pudo obtener restauranteId: " + e.getMessage());
+                            }
+                        }
+                        
                         return res;
                     });
         } catch (Exception e) {

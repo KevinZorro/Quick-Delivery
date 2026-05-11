@@ -185,10 +185,11 @@
 
           <!-- Barra de progreso -->
           <div
-            *ngIf="pedido.estado !== 'ENTREGADO'"
+            *ngIf="pedido.estado !== 'ENTREGADO' && pedido.estado !== 'RECHAZADO_POR_RESTAURANTE'"
             class="bg-amber-50 px-6 py-3 border-t border-amber-100">
             <div class="flex justify-between items-center text-xs text-gray-600">
-              <span [class.text-amber-600]="pedido.estado === 'INICIADO'">Iniciado</span>
+              <span [class.text-amber-600]="pedido.estado === 'NUEVO' || pedido.estado === 'INICIADO'">Nuevo</span>
+              <span [class.text-amber-600]="pedido.estado === 'ACEPTADO'">Aceptado</span>
               <span [class.text-amber-600]="pedido.estado === 'EN_COCINA'">En cocina</span>
               <span [class.text-amber-600]="pedido.estado === 'CON_EL_REPARTIDOR'">Con repartidor</span>
               <span>Entregado</span>
@@ -197,9 +198,10 @@
               <div
                 class="h-full bg-amber-500 transition-all duration-500"
                 [style.width]="
-                  pedido.estado === 'INICIADO' ? '25%' :
-                  pedido.estado === 'EN_COCINA' ? '50%' :
-                  pedido.estado === 'CON_EL_REPARTIDOR' ? '75%' : '0%'">
+                  (pedido.estado === 'NUEVO' || pedido.estado === 'INICIADO') ? '15%' :
+                  pedido.estado === 'ACEPTADO' ? '30%' :
+                  pedido.estado === 'EN_COCINA' ? '60%' :
+                  pedido.estado === 'CON_EL_REPARTIDOR' ? '85%' : '0%'">
               </div>
             </div>
           </div>
@@ -209,6 +211,13 @@
             *ngIf="pedido.estado === 'ENTREGADO'"
             class="bg-green-50 px-6 py-3 border-t border-green-200 text-center text-green-800 font-medium">
             ✅ Pedido entregado exitosamente
+          </div>
+
+          <!-- Pedido rechazado -->
+          <div
+            *ngIf="pedido.estado === 'RECHAZADO_POR_RESTAURANTE'"
+            class="bg-red-50 px-6 py-3 border-t border-red-200 text-center text-red-800 font-medium">
+            ❌ El restaurante rechazó tu pedido. Tu dinero será reembolsado.
           </div>
         </div>
       </div>

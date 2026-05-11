@@ -1,5 +1,6 @@
 package com.ufps.Quick_Delivery.config;
 
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -9,6 +10,6 @@ public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        return new RestTemplate(new JdkClientHttpRequestFactory());
     }
 }

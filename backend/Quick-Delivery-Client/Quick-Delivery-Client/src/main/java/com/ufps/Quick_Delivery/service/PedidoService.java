@@ -65,7 +65,7 @@ public class PedidoService {
         pedido.setRestauranteId(request.getRestauranteId());
         pedido.setDireccionEntregaId(request.getDireccionEntregaId());
         pedido.setPreferencias(request.getPreferencias());
-        pedido.setEstado(EstadoPedido.INICIADO);
+        pedido.setEstado(EstadoPedido.NUEVO);
 
         // ⭐ ASIGNAR MÉTODO DE PAGO desde el request
         if (request.getMetodoPago() != null && !request.getMetodoPago().isEmpty()) {
@@ -298,6 +298,51 @@ public class PedidoService {
 
         pedido.setEstado(EstadoPedido.ENTREGADO);
 
-        return pedidoRepository.save(pedido);
+        Pedido actualizado = pedidoRepository.save(pedido);
+        notificacionService.notificarCambioEstado(actualizado);
+
+        return actualizado;
+    }
+
+    // -------------------------------------------------------------------------
+    // ACEPTAR PEDIDO (Restaurante)
+    // -------------------------------------------------------------------------
+    @Transactional
+    public Pedido aceptarPedido(@NonNull UUID pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (!pedido.getEstado().equals(EstadoPedido.NUEVO)) {
+            throw new RuntimeException("Solo se pueden aceptar pedidos en estado NUEVO. Estado actual: " + pedido.getEstado());
+        }
+
+        pedido.setEstado(EstadoPedido.ACEPTADO);
+        Pedido actualizado = pedidoRepository.save(pedido);
+        
+        System.out.println("✅ Pedido " + pedidoId + " aceptado por el restaurante");
+        notificacionService.notificarCambioEstado(actualizado);
+
+        return actualizado;
+    }
+
+    // -------------------------------------------------------------------------
+    // RECHAZAR PEDIDO (Restaurante)
+    // -------------------------------------------------------------------------
+    @Transactional
+    public Pedido rechazarPedido(@NonNull UUID pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (!pedido.getEstado().equals(EstadoPedido.NUEVO)) {
+            throw new RuntimeException("Solo se pueden rechazar pedidos en estado NUEVO. Estado actual: " + pedido.getEstado());
+        }
+
+        pedido.setEstado(EstadoPedido.RECHAZADO_POR_RESTAURANTE);
+        Pedido actualizado = pedidoRepository.save(pedido);
+        
+        System.out.println("❌ Pedido " + pedidoId + " rechazado por el restaurante");
+        notificacionService.notificarCambioEstado(actualizado);
+
+        return actualizado;
     }
 }

@@ -3,6 +3,7 @@ package com.ufps.Quick_Delivery.service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class HorarioAtencionService {
+
+    private static final ZoneId ZONA_HORARIA_NEGOCIO = ZoneId.of("America/Bogota");
 
     private final RestauranteRepository restauranteRepository;
     private final HorarioAtencionRepository horarioRepo;
@@ -108,24 +111,84 @@ public class HorarioAtencionService {
 
     // Disponibilidad
     public boolean estaDisponible(UUID restauranteId) {
+        LocalDate fechaActual = LocalDate.now(ZONA_HORARIA_NEGOCIO);
+        LocalTime horaActual = LocalTime.now(ZONA_HORARIA_NEGOCIO);
+
         // 1. Interrupciones para hoy
         boolean tieneInterrupcion = !interrupcionRepo
-                .findByRestauranteIdAndFecha(restauranteId, LocalDate.now())
+                .findByRestauranteIdAndFecha(restauranteId, fechaActual)
                 .isEmpty();
 
         if (tieneInterrupcion) return false;
 
         // 2. Horario del dia
-        DayOfWeek hoy = LocalDate.now().getDayOfWeek();
-        DiaSemana dia = DiaSemana.valueOf(hoy.name()); // adaptamos nombre
+        List<HorarioAtencion> horarios = horarioRepo.findByRestauranteId(restauranteId);
+        if (horarios.isEmpty()) return false;
 
-        HorarioAtencion horario = horarioRepo.findByRestauranteIdAndDiaSemana(restauranteId, dia);
-        if (horario == null) return false;
+        DiaSemana diaActual = convertirDiaInglesAEspanol(fechaActual.getDayOfWeek());
+        DiaSemana diaAnterior = convertirDiaInglesAEspanol(fechaActual.minusDays(1).getDayOfWeek());
 
-        LocalTime ahora = LocalTime.now();
+        return horarios.stream()
+                .anyMatch(horario -> estaDentroDelHorario(horario, diaActual, diaAnterior, horaActual));
+    }
 
-        // Considerar inclusivo en apertura y exclusivo en cierre (ajustable)
-        return !ahora.isBefore(horario.getHoraApertura()) && ahora.isBefore(horario.getHoraCierre());
+    private boolean estaDentroDelHorario(
+            HorarioAtencion horario,
+            DiaSemana diaActual,
+            DiaSemana diaAnterior,
+            LocalTime horaActual
+    ) {
+        if (horario.getDiaSemana() == null
+                || horario.getHoraApertura() == null
+                || horario.getHoraCierre() == null) {
+            return false;
+        }
+
+        LocalTime apertura = horario.getHoraApertura();
+        LocalTime cierre = horario.getHoraCierre();
+
+        if (apertura.equals(cierre)) {
+            return true;
+        }
+
+        boolean horarioCruzaMedianoche = cierre.isBefore(apertura);
+        boolean coincideHoy = esMismoDia(horario.getDiaSemana(), diaActual);
+
+        if (!horarioCruzaMedianoche) {
+            return coincideHoy && !horaActual.isBefore(apertura) && horaActual.isBefore(cierre);
+        }
+
+        boolean coincideAyer = esMismoDia(horario.getDiaSemana(), diaAnterior);
+        return (coincideHoy && !horaActual.isBefore(apertura))
+                || (coincideAyer && horaActual.isBefore(cierre));
+    }
+
+    private boolean esMismoDia(DiaSemana guardado, DiaSemana diaEspanol) {
+        return convertirDiaAEspanol(guardado) == diaEspanol;
+    }
+
+    private DiaSemana convertirDiaAEspanol(DiaSemana dia) {
+        return switch (dia) {
+            case MONDAY, LUNES -> DiaSemana.LUNES;
+            case TUESDAY, MARTES -> DiaSemana.MARTES;
+            case WEDNESDAY, MIERCOLES -> DiaSemana.MIERCOLES;
+            case THURSDAY, JUEVES -> DiaSemana.JUEVES;
+            case FRIDAY, VIERNES -> DiaSemana.VIERNES;
+            case SATURDAY, SABADO -> DiaSemana.SABADO;
+            case SUNDAY, DOMINGO -> DiaSemana.DOMINGO;
+        };
+    }
+
+    private DiaSemana convertirDiaInglesAEspanol(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> DiaSemana.LUNES;
+            case TUESDAY -> DiaSemana.MARTES;
+            case WEDNESDAY -> DiaSemana.MIERCOLES;
+            case THURSDAY -> DiaSemana.JUEVES;
+            case FRIDAY -> DiaSemana.VIERNES;
+            case SATURDAY -> DiaSemana.SABADO;
+            case SUNDAY -> DiaSemana.DOMINGO;
+        };
     }
 
     // Listar todos los restaurantes con disponibilidad calculada

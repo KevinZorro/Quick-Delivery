@@ -61,7 +61,13 @@ export class ClientePedidosComponent implements OnInit {
 
   estados = [
     { valor: 'TODOS', texto: 'Todos los pedidos' },
-    { valor: 'INICIADO', texto: 'Iniciados' },
+    { valor: 'NUEVO', texto: 'Nuevo' },
+    { valor: 'ACEPTADO', texto: 'Aceptado' },
+    { valor: 'EN_COCINA', texto: 'En cocina' },
+    { valor: 'CON_EL_REPARTIDOR', texto: 'Con repartidor' },
+    { valor: 'ENTREGADO', texto: 'Entregado' },
+    { valor: 'RECHAZADO_POR_RESTAURANTE', texto: 'Rechazado' },
+    { valor: 'INICIADO', texto: 'Iniciados' }, // Retrocompatibilidad
     { valor: 'EN_COCINA', texto: 'En cocina' },
     { valor: 'CON_EL_REPARTIDOR', texto: 'Con el repartidor' },
     { valor: 'ENTREGADO', texto: 'Entregados' }
@@ -355,30 +361,39 @@ export class ClientePedidosComponent implements OnInit {
 
   obtenerColorEstado(estado: string): string {
     const colores: { [key: string]: string } = {
-      INICIADO: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      EN_COCINA: 'bg-blue-100 text-blue-800 border-blue-300',
-      CON_EL_REPARTIDOR: 'bg-purple-100 text-purple-800 border-purple-300',
-      ENTREGADO: 'bg-green-100 text-green-800 border-green-300'
+      'NUEVO': 'bg-blue-100 text-blue-800 border-blue-300',
+      'ACEPTADO': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      'EN_COCINA': 'bg-orange-100 text-orange-800 border-orange-300',
+      'CON_EL_REPARTIDOR': 'bg-purple-100 text-purple-800 border-purple-300',
+      'ENTREGADO': 'bg-green-100 text-green-800 border-green-300',
+      'RECHAZADO_POR_RESTAURANTE': 'bg-red-100 text-red-800 border-red-300',
+      'INICIADO': 'bg-yellow-100 text-yellow-800 border-yellow-300' // Retrocompatibilidad
     };
     return colores[estado] || 'bg-gray-100 text-gray-800 border-gray-300';
   }
 
   obtenerTextoEstado(estado: string): string {
     const textos: { [key: string]: string } = {
-      INICIADO: 'Iniciado',
-      EN_COCINA: 'En cocina',
-      CON_EL_REPARTIDOR: 'Con el repartidor',
-      ENTREGADO: 'Entregado'
+      'NUEVO': 'Nuevo',
+      'ACEPTADO': 'Aceptado',
+      'EN_COCINA': 'En cocina',
+      'CON_EL_REPARTIDOR': 'Con el repartidor',
+      'ENTREGADO': 'Entregado',
+      'RECHAZADO_POR_RESTAURANTE': 'Rechazado',
+      'INICIADO': 'Iniciado' // Retrocompatibilidad
     };
     return textos[estado] || estado;
   }
 
   obtenerIconoEstado(estado: string): string {
     const iconos: { [key: string]: string } = {
-      INICIADO: '⏳',
-      EN_COCINA: '👨‍🍳',
-      CON_EL_REPARTIDOR: '🚴',
-      ENTREGADO: '✅'
+      'NUEVO': '📋',
+      'ACEPTADO': '✓',
+      'EN_COCINA': '👨‍🍳',
+      'CON_EL_REPARTIDOR': '🚴',
+      'ENTREGADO': '✅',
+      'RECHAZADO_POR_RESTAURANTE': '❌',
+      'INICIADO': '⏳' // Retrocompatibilidad
     };
     return iconos[estado] || '📦';
   }

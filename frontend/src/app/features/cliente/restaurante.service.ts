@@ -10,6 +10,7 @@ export interface Restaurante {
   categoria: string;
   calificacionPromedio: number;
   imagenUrl: string;
+  disponible: boolean;
 }
 
 export interface Producto {

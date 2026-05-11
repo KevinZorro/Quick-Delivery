@@ -6,10 +6,24 @@ import { Observable } from 'rxjs';
 export interface PedidoDto {
   id: string;
   restauranteId: string;
+  clienteId?: string;
   total: number;
   fechaCreacion: string;
   estado: string;
-  items: any[] | null;
+  metodoPago?: string;
+  preferencias?: string;
+  tiempoEstimado?: number;
+  items: ItemPedidoDto[] | null;
+}
+
+export interface ItemPedidoDto {
+  productoId: string;
+  nombreProducto?: string;
+  categoria?: string;
+  imagenUrl?: string;
+  cantidad: number;
+  precioUnidad: number;
+  subtotal: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -31,6 +45,26 @@ export class PedidosService {
     `${this.baseUrl}/pedidos/${pedidoId}/estado`,
     null,
     { params: { nuevoEstado } }
+  );
+}
+
+/**
+ * Aceptar un pedido nuevo
+ */
+aceptarPedido(pedidoId: string): Observable<PedidoDto> {
+  return this.http.post<PedidoDto>(
+    `http://localhost:8080/api/pedidos/${pedidoId}/aceptar`,
+    null
+  );
+}
+
+/**
+ * Rechazar un pedido nuevo
+ */
+rechazarPedido(pedidoId: string): Observable<PedidoDto> {
+  return this.http.post<PedidoDto>(
+    `http://localhost:8080/api/pedidos/${pedidoId}/rechazar`,
+    null
   );
 }
 

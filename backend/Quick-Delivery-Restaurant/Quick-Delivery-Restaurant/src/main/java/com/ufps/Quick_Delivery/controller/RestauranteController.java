@@ -63,13 +63,15 @@ public class RestauranteController {
     }
 
     @GetMapping("/categoria/{categoria}")
-    public ResponseEntity<List<RestauranteResponseDto>> listarPorCategoria(@PathVariable("categoria") Categoria categoria) {
+    public ResponseEntity<List<RestauranteResponseDto>> listarPorCategoria(
+            @PathVariable("categoria") Categoria categoria) {
         List<RestauranteResponseDto> restaurantes = restauranteService.listarPorCategoria(categoria);
         return ResponseEntity.ok(restaurantes);
     }
 
     @GetMapping("/calificacion/{minima}")
-    public ResponseEntity<List<RestauranteResponseDto>> listarPorCalificacionMinima(@PathVariable("minima") Double minima) {
+    public ResponseEntity<List<RestauranteResponseDto>> listarPorCalificacionMinima(
+            @PathVariable("minima") Double minima) {
         List<RestauranteResponseDto> restaurantes = restauranteService.listarPorCalificacionMinima(minima);
         return ResponseEntity.ok(restaurantes);
     }
@@ -98,43 +100,68 @@ public class RestauranteController {
 
     @GetMapping("/{restauranteId}/pedidos/historial")
     public ResponseEntity<List<PedidoDto>> obtenerHistorialPedidos(
-    @PathVariable("restauranteId") UUID restauranteId,
-    @RequestParam(value = "fechaInicio", required = false) String fechaInicio,
-    @RequestParam(value = "fechaFin", required = false) String fechaFin,
-    @RequestParam(value = "estado", required = false) String estado,
-    @RequestParam(value = "clienteId", required = false) UUID clienteId
-    ) {
-    List<PedidoDto> historial = pedidoClient.obtenerHistorialPedidos(
-            restauranteId, fechaInicio, fechaFin, estado, clienteId
-    );
-    return ResponseEntity.ok(historial);
+            @PathVariable("restauranteId") UUID restauranteId,
+            @RequestParam(value = "fechaInicio", required = false) String fechaInicio,
+            @RequestParam(value = "fechaFin", required = false) String fechaFin,
+            @RequestParam(value = "estado", required = false) String estado,
+            @RequestParam(value = "clienteId", required = false) UUID clienteId) {
+        List<PedidoDto> historial = pedidoClient.obtenerHistorialPedidos(
+                restauranteId, fechaInicio, fechaFin, estado, clienteId);
+        return ResponseEntity.ok(historial);
     }
 
-@PutMapping("/pedidos/{pedidoId}/estado")
-public ResponseEntity<?> actualizarEstado(
-        @PathVariable("pedidoId") UUID pedidoId,
-        @RequestParam("nuevoEstado") String nuevoEstado
-) {
-    pedidoClient.actualizarEstadoPedido(pedidoId, nuevoEstado);
+    @PutMapping("/pedidos/{pedidoId}/estado")
+    public ResponseEntity<?> actualizarEstado(
+            @PathVariable("pedidoId") UUID pedidoId,
+            @RequestParam("nuevoEstado") String nuevoEstado) {
+        PedidoDto pedido = pedidoClient.obtenerPedido(pedidoId);
 
-    return ResponseEntity.ok(
-        Map.of(
-            "mensaje", "Estado actualizado correctamente",
-            "pedidoId", pedidoId.toString(),
-            "nuevoEstado", nuevoEstado
-        )
-    );
-}
+        if (pedido == null || pedido.getEstado() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Pedido no encontrado"));
+        }
 
+        if (!esTransicionPermitidaParaRestaurante(pedido.getEstado(), nuevoEstado)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "error", "Transicion de estado no permitida para restaurante",
+                            "estadoActual", pedido.getEstado(),
+                            "estadoSolicitado", nuevoEstado,
+                            "regla", "Transiciones permitidas: NUEVO->ACEPTADO, NUEVO->RECHAZADO, ACEPTADO->EN_COCINA, EN_COCINA->CON_EL_REPARTIDOR"));
+        }
 
+        pedidoClient.actualizarEstadoPedido(pedidoId, nuevoEstado);
 
+        return ResponseEntity.ok(
+                Map.of(
+                        "mensaje", "Estado actualizado correctamente",
+                        "pedidoId", pedidoId.toString(),
+                        "nuevoEstado", nuevoEstado));
+    }
+
+    private boolean esTransicionPermitidaParaRestaurante(String estadoActual, String nuevoEstado) {
+        if (estadoActual == null || nuevoEstado == null) {
+            return false;
+        }
+
+        String actual = estadoActual.trim().toUpperCase();
+        String solicitado = nuevoEstado.trim().toUpperCase();
+
+        // Transiciones permitidas para el restaurante
+        return ("NUEVO".equals(actual) && "ACEPTADO".equals(solicitado))
+                || ("NUEVO".equals(actual) && "RECHAZADO_POR_RESTAURANTE".equals(solicitado))
+                || ("ACEPTADO".equals(actual) && "EN_COCINA".equals(solicitado))
+                || ("EN_COCINA".equals(actual) && "CON_EL_REPARTIDOR".equals(solicitado))
+                // Retrocompatibilidad con estado anterior INICIADO
+                || ("INICIADO".equals(actual) && "EN_COCINA".equals(solicitado))
+                || ("EN_COCINA".equals(actual) && "CON_EL_REPARTIDOR".equals(solicitado));
+    }
 
     @GetMapping("/{restauranteId}/historial-completo")
     public List<PedidoDto> historialCompleto(@PathVariable("restauranteId") UUID restauranteId) {
         return restauranteService.listarHistorialCompleto(restauranteId);
     }
 
-    
     @PostMapping("/{restauranteId}/horarios")
     public ResponseEntity<?> crearHorario(
             @PathVariable UUID restauranteId,
@@ -165,14 +192,12 @@ public ResponseEntity<?> actualizarEstado(
         }
     }
 
-
     @GetMapping("/{restauranteId}/horarios")
     public ResponseEntity<List<HorarioAtencion>> listarHorarios(
             @PathVariable UUID restauranteId) {
 
         return ResponseEntity.ok(
-                restauranteService.getHorarioService().listarHorarios(restauranteId)
-        );
+                restauranteService.getHorarioService().listarHorarios(restauranteId));
     }
 
     @PutMapping("/{restauranteId}/horarios/{horarioId}")
@@ -182,8 +207,7 @@ public ResponseEntity<?> actualizarEstado(
             @RequestBody HorarioAtencionDto dto) {
 
         dto.setRestauranteId(restauranteId);
-        HorarioAtencion actualizado =
-                restauranteService.getHorarioService().actualizar(horarioId, dto);
+        HorarioAtencion actualizado = restauranteService.getHorarioService().actualizar(horarioId, dto);
 
         return ResponseEntity.ok(actualizado);
     }
@@ -197,15 +221,13 @@ public ResponseEntity<?> actualizarEstado(
         return ResponseEntity.noContent().build();
     }
 
-
     @PostMapping("/{restauranteId}/horarios/interrupciones")
     public ResponseEntity<InterrupcionEspecial> crearInterrupcion(
             @PathVariable UUID restauranteId,
             @RequestBody InterrupcionEspecialDto dto) {
 
         dto.setRestauranteId(restauranteId);
-        InterrupcionEspecial nueva =
-                restauranteService.getHorarioService().guardarInterrupcion(dto);
+        InterrupcionEspecial nueva = restauranteService.getHorarioService().guardarInterrupcion(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
     }
@@ -215,8 +237,7 @@ public ResponseEntity<?> actualizarEstado(
             @PathVariable UUID restauranteId) {
 
         return ResponseEntity.ok(
-                restauranteService.getHorarioService().listarInterrupciones(restauranteId)
-        );
+                restauranteService.getHorarioService().listarInterrupciones(restauranteId));
     }
 
     @DeleteMapping("/{restauranteId}/horarios/interrupciones/{interrupcionId}")
@@ -227,7 +248,5 @@ public ResponseEntity<?> actualizarEstado(
         restauranteService.getHorarioService().eliminarInterrupcion(interrupcionId);
         return ResponseEntity.noContent().build();
     }
-
-
 
 }

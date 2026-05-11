@@ -39,6 +39,28 @@
                 {{ restaurante.calificacionPromedio || "N/A" }}
               </span>
             </div>
+
+            <!-- Indicador de disponibilidad -->
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold"
+                   [ngClass]="restaurante.disponible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                <div class="w-2 h-2 rounded-full" [ngClass]="restaurante.disponible ? 'bg-green-500' : 'bg-red-500'"></div>
+                {{ restaurante.disponible ? 'Abierto' : 'Cerrado' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Mensaje cuando está cerrado -->
+          <div *ngIf="!restaurante.disponible" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center gap-3">
+              <svg class="w-6 h-6 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <p class="text-red-800 font-semibold">Restaurante cerrado</p>
+                <p class="text-red-700 text-sm">Este restaurante está cerrado en este momento. Puedes ver el menú pero no puedes realizar pedidos.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -263,8 +285,13 @@
           </div>
 
           <div class="mt-2 flex space-x-2 items-center">
-            <button (click)="agregarAlCarrito(producto)" [disabled]="!producto.disponible" class="bg-amber-500 text-white rounded px-3 py-2 hover:bg-orange-600 transition">
-              Agregar
+            <button (click)="agregarAlCarrito(producto)"
+                    [disabled]="!producto.disponible || !restaurante?.disponible"
+                    class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [ngClass]="(!producto.disponible || !restaurante?.disponible) ? 'bg-gray-400 text-gray-200' : 'bg-amber-500 text-white hover:bg-orange-600'">
+              <span *ngIf="!producto.disponible">No disponible</span>
+              <span *ngIf="producto.disponible && !restaurante?.disponible">Restaurante cerrado</span>
+              <span *ngIf="producto.disponible && restaurante?.disponible">Agregar</span>
             </button>
           </div>
         </div>

@@ -28,6 +28,7 @@ export class AuthService {
   private userIdKey = 'quick-delivery-userId';
   private userNameKey = 'quick-delivery-userName';
   private userRoleKey = 'quick-delivery-userRole';
+  private restauranteIdKey = 'quick-delivery-restauranteId';
 
   constructor(
     private http: HttpClient,
@@ -44,6 +45,10 @@ export class AuthService {
             if (res.userId) localStorage.setItem(this.userIdKey, res.userId);
             if (res.nombre) localStorage.setItem(this.userNameKey, res.nombre);
             if (res.rol) localStorage.setItem(this.userRoleKey, res.rol);
+            // ⭐ Guardar restauranteId si existe
+            if ((res as any).restauranteId) {
+              localStorage.setItem(this.restauranteIdKey, (res as any).restauranteId);
+            }
           }
         })
       );
@@ -82,12 +87,20 @@ export class AuthService {
     return null;
   }
 
+  getRestauranteId(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem(this.restauranteIdKey);
+    }
+    return null;
+  }
+
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);
       localStorage.removeItem(this.userIdKey);
       localStorage.removeItem(this.userNameKey);
       localStorage.removeItem(this.userRoleKey);
+      localStorage.removeItem(this.restauranteIdKey);
     }
   }
 
