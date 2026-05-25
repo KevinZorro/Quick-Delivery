@@ -1,3 +1,84 @@
-frontend/.angular/cache/
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
 frontend/node_modules/
+
+# ===========================
+# Build output
+# ===========================
+build/
+bin/
+dist/
+out/
+target/
+frontend/dist/
+frontend/.angular/
 frontend/.angular/cache/
+
+# ===========================
+# Gradle
+# ===========================
+.gradle/
+**/.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# ===========================
+# Spring Boot
+# ===========================
+*.jar
+!**/gradle/wrapper/*.jar
+HELP.md
+
+# ===========================
+# IDE
+# ===========================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.project
+.classpath
+.settings/
+.factorypath
+.apt_generated/
+.sts4-cache/
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ===========================
+# Logs / temp
+# ===========================
+*.log
+logs/
+*.tmp
+*.swp
+*.bak
+
+# ===========================
+# OS
+# ===========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===========================
+# Secrets / env
+# ===========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ===========================
+# Datos locales (H2, archivos generados)
+# ===========================
+data/
+backend/**/data/
+notificaciones.json
