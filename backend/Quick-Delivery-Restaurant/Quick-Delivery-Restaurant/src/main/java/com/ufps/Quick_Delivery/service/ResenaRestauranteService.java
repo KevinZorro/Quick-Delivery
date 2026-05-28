@@ -41,7 +41,9 @@ public class ResenaRestauranteService {
 
         // Actualizar promedio
         List<ResenaRestaurante> todas = resenaRepo.findByRestauranteIdOrderByFechaCreacionDesc(dto.getRestauranteId());
-        double promedio = todas.stream().mapToInt(ResenaRestaurante::getCalificacion).average().orElse(0.0);
+        double promedioCrudo = todas.stream().mapToInt(ResenaRestaurante::getCalificacion).average().orElse(0.0);
+        // Redondear a 1 decimal para evitar valores como 3.3333333335
+        double promedio = Math.round(promedioCrudo * 10.0) / 10.0;
 
         Restaurante restaurante = restauranteRepo.findById(dto.getRestauranteId())
                 .orElseThrow(() -> new RuntimeException("Restaurante no existe"));

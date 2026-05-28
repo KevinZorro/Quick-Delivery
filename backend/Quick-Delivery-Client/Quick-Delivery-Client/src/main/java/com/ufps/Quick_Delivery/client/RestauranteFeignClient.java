@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "restaurante-service-2", url = "http://localhost:8081")
+@FeignClient(name = "restaurante-service-2", url = "${restaurante-service.url}")
 public interface RestauranteFeignClient {
 
     // Registrar una reseña/opinión del restaurante
