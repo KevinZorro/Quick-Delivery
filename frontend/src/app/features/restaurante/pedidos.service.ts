@@ -2,6 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface PedidoDto {
   id: string;
@@ -29,7 +30,8 @@ export interface ItemPedidoDto {
 @Injectable({ providedIn: 'root' })
 export class PedidosService {
 
-  private baseUrl = 'http://localhost:8081/api/restaurante';
+  private baseUrl = `${environment.restaurantesApi}/api/restaurante`;
+  private pedidosUrl = `${environment.clientesApi}/api/pedidos`;
 
   constructor(private http: HttpClient) {}
 
@@ -53,7 +55,7 @@ export class PedidosService {
  */
 aceptarPedido(pedidoId: string): Observable<PedidoDto> {
   return this.http.post<PedidoDto>(
-    `http://localhost:8080/api/pedidos/${pedidoId}/aceptar`,
+    `${this.pedidosUrl}/${pedidoId}/aceptar`,
     null
   );
 }
@@ -63,7 +65,7 @@ aceptarPedido(pedidoId: string): Observable<PedidoDto> {
  */
 rechazarPedido(pedidoId: string): Observable<PedidoDto> {
   return this.http.post<PedidoDto>(
-    `http://localhost:8080/api/pedidos/${pedidoId}/rechazar`,
+    `${this.pedidosUrl}/${pedidoId}/rechazar`,
     null
   );
 }
