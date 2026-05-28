@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "edge-service", url = "http://localhost:8083")
+@FeignClient(name = "edge-service", url = "${edge-service.url}")
 public interface EdgeClient {
 
     // Desde tu ClienteDireccion original

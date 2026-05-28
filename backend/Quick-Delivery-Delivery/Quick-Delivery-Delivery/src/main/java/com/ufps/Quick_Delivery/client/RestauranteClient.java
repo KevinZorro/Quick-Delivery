@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "restaurante-service", url = "http://localhost:8081")
+@FeignClient(name = "restaurante-service", url = "${restaurante-service.url}")
 public interface RestauranteClient {
 
     // Productos
