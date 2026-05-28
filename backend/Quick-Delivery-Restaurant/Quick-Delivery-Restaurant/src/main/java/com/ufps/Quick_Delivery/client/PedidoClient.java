@@ -2,6 +2,7 @@ package com.ufps.Quick_Delivery.client;
 
 import com.ufps.Quick_Delivery.dto.PedidoDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,8 +20,16 @@ public class PedidoClient {
 
     private final RestTemplate restTemplate;
 
-    // ⭐ URL base del microservicio de pedidos
-    private final String baseUrl = "http://localhost:8080/api/pedidos";
+    // ⭐ URL base del microservicio de pedidos (parametrizada por entorno)
+    @Value("${pedido-service.url}")
+    private String pedidoServiceUrl;
+
+    private String baseUrl;
+
+    @PostConstruct
+    private void init() {
+        this.baseUrl = pedidoServiceUrl + "/api/pedidos";
+    }
 
     public List<PedidoDto> obtenerHistorialPedidos(
             UUID restauranteId,
